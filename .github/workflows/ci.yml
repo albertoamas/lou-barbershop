@@ -12,8 +12,8 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.400
           cache: true
@@ -31,8 +31,8 @@ jobs:
       run:
         working-directory: src/frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24.20.0
           cache: npm
@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: api
@@ -58,7 +59,7 @@ jobs:
           - name: web
             dockerfile: deploy/docker/web.Dockerfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
@@ -67,7 +68,7 @@ jobs:
           push: false
           load: true
           tags: lou-barbershop/${{ matrix.name }}:ci
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: lou-barbershop/${{ matrix.name }}:ci
           format: table
@@ -80,7 +81,7 @@ jobs:
     needs: [backend, frontend]
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build and start the complete stack
         run: docker compose up --build --detach --wait --wait-timeout 120
       - name: Verify HTTP and PWA resources
