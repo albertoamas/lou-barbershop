@@ -12,7 +12,7 @@
 | AC-01-03 núcleo sin frameworks | 2/2 pruebas estáticas de referencias mediante metadatos PE | VERIFIED |
 | AC-01-04 PWA instalable y mutación offline bloqueada | manifest/SW, iconos PNG 192/512, prueba Playwright offline y captura móvil | VERIFIED local; instalación manual pendiente |
 | AC-01-05 runtime sin SDK/secretos y no root | API uid `1654`, web uid `1000`, SDK ausente y metadatos/historial revisados | VERIFIED local |
-| AC-01-06 CI parte de cero | workflow de backend, frontend, iconos reproducibles, imágenes, escaneo y smoke test de Compose | IMPLEMENTED; ejecución remota pendiente |
+| AC-01-06 CI parte de cero | workflow de backend, frontend, iconos reproducibles, imágenes, escaneo y smoke test de Compose | VERIFIED en GitHub Actions `ci #3` |
 | AC-01-07 ProblemDetails consistente con requestId | integración automatizada y `404 application/problem+json` externo con `requestId` | VERIFIED local |
 
 ## Decisiones de alcance
@@ -25,8 +25,7 @@
 ## Pendientes para aprobar G1
 
 1. Confirmar el diálogo de instalación en un teléfono o navegador compatible; el funcionamiento offline y el bloqueo ya fueron verificados con Playwright.
-2. Ejecutar el workflow remoto en el repositorio GitHub elegido.
-3. Definir y desplegar el staging técnico; requiere proveedor/destino de despliegue.
+2. Definir y desplegar el staging técnico; Railway fue elegido como destino posterior, todavía aplazado.
 
 G1 no se considera aprobada hasta completar estos puntos, aunque el código local compile.
 
@@ -57,7 +56,8 @@ G1 no se considera aprobada hasta completar estos puntos, aunque el código loca
 - El manifest declara `id`, iconos PNG `192x192` y `512x512` más fallback SVG; los PNG se generan de forma reproducible con `npm run icons:generate` y CI rechaza diferencias.
 - La imagen web reconstruida sirve ambos PNG como `image/png`; PWA, manifest, service worker, liveness y readiness responden `200`.
 - CI incluye una prueba desde cero del Compose completo, recursos PWA, usuarios runtime no root y semántica `live=200`/`ready=503` durante pérdida de PostgreSQL; la misma secuencia fue validada localmente el 1 de septiembre de 2026.
+- GitHub Actions [`ci #3`](https://github.com/albertoamas/lou-barbershop/actions/runs/33528326721) finalizó correctamente en `fc4ffcf`: backend, frontend, smoke test de Compose y los dos builds/escaneos de imágenes quedaron verdes y sin anotaciones.
 
-AC-01-01, AC-01-02 y AC-01-05 quedan verificados localmente, incluido el escaneo de vulnerabilidades. La fase entra en `ACCEPTANCE`; G1 continúa pendiente de CI remoto, staging e instalación manual de la PWA.
+AC-01-01, AC-01-02, AC-01-05 y AC-01-06 quedan verificados, incluido CI remoto y el escaneo de vulnerabilidades. La fase continúa en `ACCEPTANCE`; G1 queda pendiente únicamente de staging y de la instalación manual de la PWA.
 
 Observaciones no bloqueantes: ESLint 9 se mantiene fijado porque los plugins actuales de accesibilidad/imports aún rechazan ESLint 10; `npm audit` reporta 0 vulnerabilidades. Storybook advierte sobre chunks grandes de su entorno de diseño, no del bundle productivo de la PWA.

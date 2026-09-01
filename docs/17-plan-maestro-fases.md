@@ -219,7 +219,7 @@ Plan, alcance y decisiones técnicas aprobados. Cualquier cambio posterior sigue
 **Objetivo:** disponer de un repositorio que compile, pruebe, se ejecute con Docker y se despliegue sin lógica de negocio falsa.  
 **Dependencias:** G0.  
 **Tamaño:** L.  
-**Estado:** `ACCEPTANCE`; implementación local verificada, G1 aún no aprobada por CI/staging e instalación manual. Evidencia en [24-evidencia-fase-1-g1.md](24-evidencia-fase-1-g1.md).
+**Estado:** `ACCEPTANCE`; implementación local y CI remoto verificados, G1 aún no aprobada por staging e instalación manual. Evidencia en [24-evidencia-fase-1-g1.md](24-evidencia-fase-1-g1.md).
 
 ### Backend
 
