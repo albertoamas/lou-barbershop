@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/LouBarbershop.Api/LouBarbershop.Api.csproj" />
+    <Project Path="src/backend/LouBarbershop.Application/LouBarbershop.Application.csproj" />
+    <Project Path="src/backend/LouBarbershop.Domain/LouBarbershop.Domain.csproj" />
+    <Project Path="src/backend/LouBarbershop.Infrastructure/LouBarbershop.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/backend/">
+    <Project Path="tests/backend/LouBarbershop.Application.Tests/LouBarbershop.Application.Tests.csproj" />
+    <Project Path="tests/backend/LouBarbershop.Architecture.Tests/LouBarbershop.Architecture.Tests.csproj" />
+    <Project Path="tests/backend/LouBarbershop.Domain.Tests/LouBarbershop.Domain.Tests.csproj" />
+    <Project Path="tests/backend/LouBarbershop.Integration.Tests/LouBarbershop.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

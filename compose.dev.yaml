@@ -1,0 +1,12 @@
+services:
+  db:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+  web:
+    ports:
+      - "${WEB_PORT:-8088}:8080"

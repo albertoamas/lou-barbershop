@@ -1,0 +1,9 @@
+@LouBarbershop.Api_HostAddress = http://localhost:8080
+
+GET {{LouBarbershop.Api_HostAddress}}/health/live
+Accept: application/json
+
+###
+
+GET {{LouBarbershop.Api_HostAddress}}/health/ready
+Accept: application/json

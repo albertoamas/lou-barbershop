@@ -1,0 +1,108 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.400
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+      - run: dotnet tool restore
+      - run: dotnet restore LouBarbershop.slnx
+      - run: dotnet list LouBarbershop.slnx package --vulnerable --include-transitive
+      - run: dotnet format LouBarbershop.slnx --verify-no-changes --no-restore
+      - run: dotnet build LouBarbershop.slnx --configuration Release --no-restore
+      - run: dotnet test LouBarbershop.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.20.0
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run icons:generate
+      - run: git diff --exit-code -- public/icons
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+      - run: npm run build-storybook
+      - run: npm audit --audit-level=high
+
+  containers:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    strategy:
+      matrix:
+        include:
+          - name: api
+            dockerfile: deploy/docker/api.Dockerfile
+          - name: web
+            dockerfile: deploy/docker/web.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: true
+          tags: lou-barbershop/${{ matrix.name }}:ci
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: lou-barbershop/${{ matrix.name }}:ci
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  compose-smoke:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start the complete stack
+        run: docker compose up --build --detach --wait --wait-timeout 120
+      - name: Verify HTTP and PWA resources
+        run: |
+          curl --fail --silent --show-error http://127.0.0.1:8088/ > /dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8088/health/live > /dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8088/health/ready > /dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8088/manifest.webmanifest > /dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8088/icons/icon-192.png > /dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8088/icons/icon-512.png > /dev/null
+      - name: Verify non-root runtime users
+        run: |
+          test "$(docker compose exec -T api id -u)" != "0"
+          test "$(docker compose exec -T web id -u)" != "0"
+      - name: Verify readiness fails while liveness survives database loss
+        run: |
+          docker compose stop db
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8088/health/live)" = "200"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8088/health/ready)" = "503"
+      - name: Show service logs after a failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Remove the ephemeral stack
+        if: always()
+        run: docker compose down --volumes --remove-orphans

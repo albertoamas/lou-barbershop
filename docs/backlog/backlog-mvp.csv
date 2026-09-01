@@ -1,0 +1,44 @@
+id,type,epic,title,priority,phase,size,status,depends_on,acceptance_gate,source
+TEC-001,technical,governance,Establecer gobierno convenciones y baseline,P0,0,S,DONE,,G0,docs/17-plan-maestro-fases.md
+TEC-002,technical,design,Validar wireframes de seis flujos,P0,0,M,DONE,TEC-001,G0,docs/21-wireframes-flujos-criticos.md
+TEC-010,technical,foundation,Inicializar repositorio y solucion .NET,P0,1,M,DONE,G0,G1,docs/17-plan-maestro-fases.md
+TEC-011,technical,foundation,Crear PWA y limites frontend,P0,1,M,DONE,G0,G1,docs/17-plan-maestro-fases.md
+TEC-012,technical,foundation,Preparar Docker Compose y PostgreSQL,P0,1,M,IN_PROGRESS,TEC-010;TEC-011,G1,docs/17-plan-maestro-fases.md
+TEC-013,technical,foundation,Preparar API Controllers ProblemDetails y OpenAPI,P0,1,M,DONE,TEC-010,G1,docs/17-plan-maestro-fases.md
+TEC-014,technical,quality,Configurar CI analyzers lint y arquitectura,P0,1,M,DONE,TEC-010;TEC-011;TEC-013,G1,docs/17-plan-maestro-fases.md
+TEC-015,technical,operations,Desplegar staging tecnico y observabilidad base,P0,1,S,IN_PROGRESS,TEC-012;TEC-014,G1,docs/17-plan-maestro-fases.md
+TEC-020,technical,domain,Implementar value objects estados y politicas,P0,2,L,PENDING,G1,G2,docs/17-plan-maestro-fases.md
+TEC-021,technical,data,Implementar puertos EF migraciones y concurrencia,P0,2,L,PENDING,TEC-020,G2,docs/17-plan-maestro-fases.md
+HU-001,functional,access,Acceso interno,P0,3,M,PENDING,G2,G3,docs/04-historias-de-usuario.md
+HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,PENDING,HU-001,G4,docs/04-historias-de-usuario.md
+HU-003,functional,catalog,Configurar servicios y ofertas,P0,4,M,PENDING,HU-002,G4,docs/04-historias-de-usuario.md
+HU-004,functional,scheduling,Configurar horarios,P0,5,M,PENDING,HU-002,G5,docs/04-historias-de-usuario.md
+HU-010,functional,customers,Buscar o crear cliente,P0,6,M,PENDING,G5,G6,docs/04-historias-de-usuario.md
+HU-011,functional,scheduling,Consultar disponibilidad,P0,5,L,PENDING,HU-003;HU-004,G5,docs/04-historias-de-usuario.md
+HU-012,functional,scheduling,Crear cita,P0,6,L,PENDING,HU-010;HU-011,G6,docs/04-historias-de-usuario.md
+HU-013,functional,scheduling,Cambiar cita,P0,6,M,PENDING,HU-012,G6,docs/04-historias-de-usuario.md
+HU-014,functional,scheduling,Cancelar o marcar inasistencia,P0,6,S,PENDING,HU-012,G6,docs/04-historias-de-usuario.md
+HU-015,functional,scheduling,Ver agenda propia,P0,6,M,PENDING,HU-001;HU-012,G6,docs/04-historias-de-usuario.md
+HU-016,functional,public-booking,Reserva publica sin cuenta,P1,11,L,PENDING,G6,G11,docs/04-historias-de-usuario.md
+HU-020,functional,sales,Registrar llegada directa,P0,7,M,PENDING,G6,G7,docs/04-historias-de-usuario.md
+HU-021,functional,sales,Confirmar servicios realizados,P0,7,M,PENDING,HU-020,G7,docs/04-historias-de-usuario.md
+HU-022,functional,inventory,Vender productos,P0,8,M,PENDING,HU-024;HU-030,G8,docs/04-historias-de-usuario.md
+HU-023,functional,sales,Aplicar descuento o cortesia,P0,7,M,PENDING,HU-021,G7,docs/04-historias-de-usuario.md
+HU-024,functional,payments,Cobrar con uno o dos medios,P0,7,L,PENDING,HU-021;HU-023,G7,docs/04-historias-de-usuario.md
+HU-025,functional,reversals,Revertir operacion,P1,9,L,PENDING,HU-024;HU-043,G9,docs/04-historias-de-usuario.md
+HU-030,functional,inventory,Registrar entrada de producto,P0,8,L,PENDING,G7,G8,docs/04-historias-de-usuario.md
+HU-031,functional,inventory,Ajustar por conteo o perdida,P1,8,M,PENDING,HU-030,G8,docs/04-historias-de-usuario.md
+HU-032,functional,expenses,Registrar gasto,P0,8,M,PENDING,G7,G8,docs/04-historias-de-usuario.md
+HU-040,functional,commissions,Configurar condiciones,P0,4,M,PENDING,HU-002,G4,docs/04-historias-de-usuario.md
+HU-041,functional,commissions,Consultar comisiones propias,P1,9,M,PENDING,HU-024;HU-040,G9,docs/04-historias-de-usuario.md
+HU-042,functional,settlements,Crear liquidacion,P0,9,L,PENDING,HU-041,G9,docs/04-historias-de-usuario.md
+HU-043,functional,settlements,Pagar liquidacion,P0,9,M,PENDING,HU-042,G9,docs/04-historias-de-usuario.md
+HU-050,functional,reports,Panel del dia,P0,10,M,PENDING,G8;G9,G10,docs/04-historias-de-usuario.md
+HU-051,functional,reports,Resultado por periodo,P1,10,L,PENDING,HU-050,G10,docs/04-historias-de-usuario.md
+HU-052,functional,reports,Produccion por barbero,P1,10,M,PENDING,HU-050,G10,docs/04-historias-de-usuario.md
+HU-053,functional,exports,Exportar CSV,P2,10,S,PENDING,HU-051;HU-052,G10,docs/04-historias-de-usuario.md
+TEC-090,technical,security,Ejecutar hardening y threat model,P0,12,L,PENDING,G10;G11,G12,docs/17-plan-maestro-fases.md
+TEC-091,technical,quality,Validar rendimiento accesibilidad y compatibilidad,P0,12,M,PENDING,G10;G11,G12,docs/17-plan-maestro-fases.md
+OPS-001,operations,recovery,Configurar backup restauracion alertas y runbooks,P0,12,M,PENDING,TEC-090,G12,docs/17-plan-maestro-fases.md
+OPS-010,operations,migration,Ejecutar migraciones de ensayo y corte,P0,13,L,PENDING,G12,G13,docs/17-plan-maestro-fases.md
+OPS-011,operations,launch,Capacitar ejecutar piloto y go-live,P0,13,L,PENDING,OPS-010,G13,docs/17-plan-maestro-fases.md

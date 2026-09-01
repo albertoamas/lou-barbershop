@@ -1,0 +1,13 @@
+.git
+.github
+.tools
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/coverage
+**/TestResults
+docs
+*.md
+.env*
+!.env.example
