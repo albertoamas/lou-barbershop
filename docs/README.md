@@ -30,6 +30,9 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 22. [Acta de Fase 0 y puerta G0](22-acta-fase-0-g0.md)
 23. [Guía de desarrollo local](23-guia-desarrollo-local.md)
 24. [Evidencia de Fase 1 y puerta G1](24-evidencia-fase-1-g1.md)
+25. [Excepción local G1 → Fase 2](25-excepcion-g1-local.md)
+26. [Evidencia de avance de Fase 2](26-evidencia-avance-fase-2.md)
+27. [Acta de Fase 2 y puerta G2](27-acta-fase-2-g2.md)
 
 ## Convenciones
 

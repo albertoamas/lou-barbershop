@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\backend\LouBarbershop.Api\LouBarbershop.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\backend\LouBarbershop.Infrastructure\LouBarbershop.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,8 @@
+using LouBarbershop.Application.Abstractions;
+using LouBarbershop.Infrastructure.CurrentActor;
+using LouBarbershop.Infrastructure.Identifiers;
 using LouBarbershop.Infrastructure.Persistence;
+using LouBarbershop.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +27,10 @@ public static class DependencyInjection
             options.UseNpgsql(
                 connectionString,
                 npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+        services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<IIdGenerator, GuidIdGenerator>();
+        services.AddScoped<ICurrentActor, AnonymousCurrentActor>();
+        services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         return services;
     }

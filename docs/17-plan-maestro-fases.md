@@ -288,6 +288,7 @@ Repositorio reproducible y desplegado en staging. No avanzar si la arquitectura 
 **Objetivo:** implementar los tipos, políticas e infraestructura mínima que protegerán agenda y economía.  
 **Dependencias:** G1.  
 **Tamaño:** L.
+**Estado:** `DONE` mediante excepción única aprobada el 1 de septiembre de 2026: G2 fue aceptada localmente el 1 de septiembre de 2026. G1 conserva pendientes de staging e instalación manual; la excepción no autoriza despliegue ni libera G1.
 
 ### Dominio/Application
 

@@ -13,18 +13,23 @@ La API es interna a la aplicación web, pero se documenta como contrato para sep
 }
 ```
 
-### Error
+### Error `ProblemDetails`
 
 ```json
 {
-  "error": {
-    "code": "SLOT_TAKEN",
-    "message": "El horario acaba de ser reservado.",
-    "fieldErrors": {}
-  },
-  "meta": { "requestId": "uuid" }
+  "type": "https://lou-barbershop.local/errors/state.invalid_transition",
+  "title": "La solicitud no puede procesarse.",
+  "status": 409,
+  "detail": "La transición de estado no está permitida.",
+  "code": "state.invalid_transition",
+  "requestId": "uuid"
 }
 ```
+
+`code` es estable para que la PWA tome decisiones sin analizar texto. Los
+códigos de validación devuelven 400; conflictos de estado, 409; y desbordes
+que no puede corregir el usuario, 422. Nunca se incluyen secretos ni detalles
+internos de excepción.
 
 ### Códigos relevantes
 
