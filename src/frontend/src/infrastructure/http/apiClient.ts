@@ -29,5 +29,9 @@ export const apiRequest = async <T>(path: string, init: RequestInit = {}): Promi
     throw new ApiError(problem)
   }
 
+  if (response.status === 204) {
+    return undefined as T
+  }
+
   return (await response.json()) as T
 }

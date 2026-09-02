@@ -7,10 +7,10 @@ TEC-012,technical,foundation,Preparar Docker Compose y PostgreSQL,P0,1,M,IN_PROG
 TEC-013,technical,foundation,Preparar API Controllers ProblemDetails y OpenAPI,P0,1,M,DONE,TEC-010,G1,docs/17-plan-maestro-fases.md
 TEC-014,technical,quality,Configurar CI analyzers lint y arquitectura,P0,1,M,DONE,TEC-010;TEC-011;TEC-013,G1,docs/17-plan-maestro-fases.md
 TEC-015,technical,operations,Desplegar staging tecnico y observabilidad base,P0,1,S,IN_PROGRESS,TEC-012;TEC-014,G1,docs/17-plan-maestro-fases.md
-TEC-020,technical,domain,Implementar value objects estados y politicas,P0,2,L,PENDING,G1,G2,docs/17-plan-maestro-fases.md
-TEC-021,technical,data,Implementar puertos EF migraciones y concurrencia,P0,2,L,PENDING,TEC-020,G2,docs/17-plan-maestro-fases.md
-HU-001,functional,access,Acceso interno,P0,3,M,PENDING,G2,G3,docs/04-historias-de-usuario.md
-HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,PENDING,HU-001,G4,docs/04-historias-de-usuario.md
+TEC-020,technical,domain,Implementar value objects estados y politicas,P0,2,L,DONE,G1,G2,docs/17-plan-maestro-fases.md
+TEC-021,technical,data,Implementar puertos EF migraciones y concurrencia,P0,2,L,DONE,TEC-020,G2,docs/17-plan-maestro-fases.md
+HU-001,functional,access,Acceso interno,P0,3,M,DONE,G2,G3,docs/04-historias-de-usuario.md
+HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,IN_PROGRESS,HU-001,G4,docs/04-historias-de-usuario.md
 HU-003,functional,catalog,Configurar servicios y ofertas,P0,4,M,PENDING,HU-002,G4,docs/04-historias-de-usuario.md
 HU-004,functional,scheduling,Configurar horarios,P0,5,M,PENDING,HU-002,G5,docs/04-historias-de-usuario.md
 HU-010,functional,customers,Buscar o crear cliente,P0,6,M,PENDING,G5,G6,docs/04-historias-de-usuario.md

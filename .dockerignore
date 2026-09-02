@@ -6,6 +6,7 @@
 **/node_modules
 **/dist
 **/coverage
+**/storybook-static
 **/TestResults
 docs
 *.md

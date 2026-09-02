@@ -35,8 +35,8 @@ No se permite `DONE` sin evidencia de los criterios de aceptación.
 | TEC-013 | 1 | P0 | M | API Controllers, ProblemDetails y OpenAPI | TEC-010 | DONE | AC-01-07 |
 | TEC-014 | 1 | P0 | M | CI, analyzers, lint y pruebas de arquitectura | TEC-010–013 | DONE | AC-01-03/06 |
 | TEC-015 | 1 | P0 | S | Staging técnico, health y observabilidad base | TEC-012–014 | IN_PROGRESS | ENT-01-05 |
-| TEC-020 | 2 | P0 | L | Value objects, estados y políticas puras | G1 | PENDING | AC-02-01–04 |
-| TEC-021 | 2 | P0 | L | Puertos, EF Core, migraciones y concurrencia | TEC-020 | PENDING | AC-02-05/06 |
+| TEC-020 | 2 | P0 | L | Value objects, estados y políticas puras | excepción G1 | DONE | AC-02-01–04 / G2 |
+| TEC-021 | 2 | P0 | L | Puertos, EF Core, migraciones y concurrencia | TEC-020 | DONE | AC-02-05/06 / G2 |
 | TEC-090 | 12 | P0 | L | Hardening, threat model y seguridad | G10, G11 | PENDING | AC-12-01–03 |
 | TEC-091 | 12 | P0 | M | Rendimiento, accesibilidad y compatibilidad | G10, G11 | PENDING | AC-12-05/08 |
 | OPS-001 | 12 | P0 | M | Backup, restauración, alertas y runbooks | TEC-090 | PENDING | AC-12-04/07 |
@@ -47,8 +47,8 @@ No se permite `DONE` sin evidencia de los criterios de aceptación.
 
 | ID | Fase | Prioridad | Tamaño | Dependencias principales | Estado | Puerta |
 |---|---:|---:|:---:|---|---|---|
-| HU-001 | 3 | P0 | M | G2, TEC-021 | PENDING | G3 |
-| HU-002 | 3–4 | P0 | M | HU-001 | PENDING | G4 |
+| HU-001 | 3 | P0 | M | G2, TEC-021 | DONE | G3 |
+| HU-002 | 3–4 | P0 | M | HU-001 | IN_PROGRESS | G4 |
 | HU-003 | 4 | P0 | M | HU-002 | PENDING | G4 |
 | HU-004 | 5 | P0 | M | HU-002 | PENDING | G5 |
 | HU-010 | 6 | P0 | M | G5 | PENDING | G6 |

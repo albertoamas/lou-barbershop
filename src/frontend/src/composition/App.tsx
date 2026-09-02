@@ -3,6 +3,9 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ErrorBoundary } from '../presentation/components/ErrorBoundary'
 import { AppShell } from '../presentation/layout/AppShell'
 import { FoundationPage } from '../presentation/pages/FoundationPage'
+import { AuthStatePage } from '../presentation/pages/AuthStatePage'
+import { LoginPage } from '../presentation/pages/LoginPage'
+import { SessionBoundary } from '../presentation/components/SessionBoundary'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +20,33 @@ export const App = () => (
       <BrowserRouter>
         <AppShell>
           <Routes>
-            <Route path="*" element={<FoundationPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/session-expired"
+              element={
+                <AuthStatePage
+                  title="Tu sesión terminó"
+                  message="Vuelve a ingresar para continuar de forma segura."
+                />
+              }
+            />
+            <Route
+              path="/access-denied"
+              element={
+                <AuthStatePage
+                  title="Acceso restringido"
+                  message="Tu cuenta no tiene permiso para realizar esta acción."
+                />
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <SessionBoundary>
+                  <FoundationPage />
+                </SessionBoundary>
+              }
+            />
           </Routes>
         </AppShell>
       </BrowserRouter>

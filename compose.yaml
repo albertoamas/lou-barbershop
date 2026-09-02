@@ -26,6 +26,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Http__UseHttpsRedirection: "false"
+      Security__RequireSecureCookies: "false"
       ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-lou_barbershop};Username=${POSTGRES_USER:-lou};Password=${POSTGRES_PASSWORD:-lou_local_password};Timeout=3;Command Timeout=10
     depends_on:
       db:
@@ -40,7 +41,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Http__UseHttpsRedirection: "false"
+      Security__RequireSecureCookies: "false"
       ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-lou_barbershop};Username=${POSTGRES_USER:-lou};Password=${POSTGRES_PASSWORD:-lou_local_password};Timeout=3;Command Timeout=10
+      DataProtection__KeysPath: /var/lib/lou-keys
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -51,6 +54,8 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    volumes:
+      - data_protection_keys:/var/lib/lou-keys
     networks: [backend]
 
   web:
@@ -72,6 +77,7 @@ services:
 
 volumes:
   postgres_data:
+  data_protection_keys:
 
 networks:
   backend:

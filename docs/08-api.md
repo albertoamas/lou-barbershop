@@ -41,14 +41,23 @@ Las mutaciones sensibles aceptan `Idempotency-Key`. Los recursos editables recib
 
 | Método | Ruta | Permiso |
 |---|---|---|
-| POST | `/auth/login` | Público |
-| POST | `/auth/logout` | Autenticado |
-| GET | `/me` | Autenticado |
+| GET | `/auth/antiforgery` | Público; entrega token ligado a cookie |
+| POST | `/auth/login` | Público; antiforgery y rate limit |
+| POST | `/auth/logout` | Autenticado; antiforgery |
+| GET | `/auth/me` | Autenticado |
+| GET/POST | `/users` | Dueño |
+| GET | `/users/{id}` | Dueño |
+| PUT | `/users/{id}/roles` | Dueño |
+| POST | `/users/{id}/activate` | Dueño |
+| POST | `/users/{id}/deactivate` | Dueño; revoca sesiones |
+| POST | `/users/{id}/reset-password` | Dueño; revoca sesiones |
 | GET/POST | `/staff` | Dueño |
 | PATCH | `/staff/{id}` | Dueño |
 | GET/POST | `/barbers` | Lectura personal / escritura dueño |
 | PATCH | `/barbers/{id}` | Dueño |
 | GET/POST | `/barbers/{id}/commission-rules` | Dueño |
+
+Todas las rutas de la tabla se publican bajo `/api/v1`. La cuenta en `users` es identidad técnica; `staff` y `barbers`, incorporados en Fase 4, contienen el perfil humano y laboral. La PWA no almacena tokens en Web Storage: usa cookie de sesión `HttpOnly` same-origin y envía `X-CSRF-TOKEN` en mutaciones.
 
 ## 3. Catálogo y disponibilidad
 

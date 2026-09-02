@@ -46,6 +46,24 @@ La posibilidad de que un barbero cree citas propias puede activarse después de 
 - Recuperación inicialmente administrada por el dueño; correo automatizado solo si se configura un canal fiable.
 - Autenticación multifactor recomendada para el dueño cuando el producto esté estable.
 
+Producción exige `Secure=Always` por defecto. La única excepción es Compose local sobre `http://localhost`: configura `Security__RequireSecureCookies=false` y aplica `SameAsRequest` para poder probar el proxy sin TLS. Esa variable no debe trasladarse a staging ni producción.
+
+### Alta inicial y recuperación administrada
+
+Las credenciales se suministran únicamente mediante .NET Secret Manager o variables de entorno efímeras; nunca se escriben en `.env`, Compose, scripts, documentación ni argumentos del proceso.
+
+```powershell
+dotnet user-secrets set "BootstrapOwner:UserName" "<usuario>" --project src/backend/LouBarbershop.Api
+dotnet user-secrets set "BootstrapOwner:Password" "<contraseña-larga>" --project src/backend/LouBarbershop.Api
+dotnet run --project src/backend/LouBarbershop.Api -- --bootstrap-owner
+```
+
+En Compose se exportan `BootstrapOwner__UserName` y `BootstrapOwner__Password` solo para la sesión actual y se ejecuta el contenedor de API con `--bootstrap-owner`. Docker recibe los valores con `-e NOMBRE` sin incorporarlos a la línea de comandos ni al repositorio. Después se eliminan las variables de la sesión.
+
+El dueño administra cuentas con `/api/v1/users`: crea, activa/desactiva, sustituye roles y asigna una nueva contraseña. Cambiar roles, contraseña o desactivar actualiza el sello de seguridad y revoca cookies existentes. Si se pierde el único acceso OWNER, el operador autorizado ejecuta el mismo proceso seguro con `--recover-owner`; este reactiva la cuenta, restablece la contraseña y conserva `OWNER + BARBER`. El proceso es idempotente y nunca imprime la credencial.
+
+No existe autorrecuperación por correo en esta fase porque la barbería no tiene un canal verificado. El procedimiento debe ejecutarse desde el host autorizado y rotar/eliminar las variables inmediatamente.
+
 ## 4. Autorización
 
 Cada caso de aplicación recibe `actor` y verifica:
@@ -121,4 +139,3 @@ Actor, fecha, acción, entidad, identificador, valores relevantes antes/después
 - Verificar que logs no contengan contraseñas, tokens o teléfonos completos.
 - Crear usuario dueño mediante procedimiento seguro.
 - Documentar revocación de acceso cuando alguien deja de trabajar.
-

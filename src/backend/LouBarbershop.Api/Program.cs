@@ -1,10 +1,16 @@
 using System.Threading.RateLimiting;
+using LouBarbershop.Api.Authorization;
 using LouBarbershop.Api.Health;
 using LouBarbershop.Api.Middleware;
 using LouBarbershop.Infrastructure;
+using LouBarbershop.Infrastructure.Identity;
 using LouBarbershop.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Timeouts;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +24,58 @@ builder.Logging.AddJsonConsole(options =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddControllers();
+var cookieSecurePolicy = builder.Configuration.GetValue("Security:RequireSecureCookies", true)
+    ? CookieSecurePolicy.Always
+    : CookieSecurePolicy.SameAsRequest;
+builder.Services
+    .AddAuthentication(IdentityConstants.ApplicationScheme)
+    .AddCookie(IdentityConstants.ApplicationScheme, options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = cookieSecurePolicy;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var signInManager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<AppUser>>();
+            var user = await signInManager.ValidateSecurityStampAsync(context.Principal!);
+
+            if (user is null || !user.Active)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            }
+        };
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    });
+builder.Services.AddLouAuthorization();
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "lou-antiforgery";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = cookieSecurePolicy;
+});
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("LouBarbershop")
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>
@@ -38,6 +95,7 @@ builder.Services.AddRequestTimeouts(options =>
 });
 builder.Services.AddRateLimiter(options =>
 {
+    var loginPermitLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLimit", 5);
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -46,6 +104,16 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = 120,
                 Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+    options.AddPolicy("login", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = loginPermitLimit,
+                Window = TimeSpan.FromMinutes(15),
                 QueueLimit = 0,
                 AutoReplenishment = true,
             }));
@@ -72,6 +140,7 @@ if (app.Configuration.GetValue("Http:UseHttpsRedirection", true))
 {
     app.UseHttpsRedirection();
 }
+app.UseAuthentication();
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
@@ -94,6 +163,22 @@ if (args.Contains("--migrate", StringComparer.Ordinal))
     await using var scope = app.Services.CreateAsyncScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
+    return;
+}
+
+if (args.Contains("--bootstrap-owner", StringComparer.Ordinal))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var bootstrapper = scope.ServiceProvider.GetRequiredService<OwnerBootstrapper>();
+    await bootstrapper.BootstrapAsync(CancellationToken.None);
+    return;
+}
+
+if (args.Contains("--recover-owner", StringComparer.Ordinal))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var bootstrapper = scope.ServiceProvider.GetRequiredService<OwnerBootstrapper>();
+    await bootstrapper.BootstrapAsync(CancellationToken.None, resetExistingPassword: true);
     return;
 }
 

@@ -8,7 +8,7 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 
 | Área | Reglas | Requisitos | Casos de uso | Historias | Pruebas clave |
 |---|---|---|---|---|---|
-| Acceso/roles | Matriz permisos | RF-001–005 | CU-01 | HU-001–002 | T-014 + seguridad |
+| Acceso/roles | Matriz permisos | RF-001–005 | CU-01 | HU-001–002 | `IdentityEndpointTests` + T-014 |
 | Catálogo/ofertas | RN-ATE-03, 07 | RF-010–014 | CU-02 | HU-003 | T-016 |
 | Horarios/disponibilidad | RN-AGEN-01–06 | RF-004, 021 | CU-03–04 | HU-004, 011 | T-001–002 |
 | Clientes/reserva | RN-AGEN-04–10 | RF-020–028 | CU-05–08 | HU-010–016, 020 | T-001–004 |

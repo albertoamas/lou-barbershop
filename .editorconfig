@@ -1,5 +1,10 @@
 root = true
 
+[**/Persistence/Migrations/*.cs]
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.CA1861.severity = none
+
 [*]
 charset = utf-8
 end_of_line = lf

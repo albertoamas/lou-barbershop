@@ -36,7 +36,6 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnName("updated_at")
             .IsRequired();
         builder.Property(customer => customer.Version)
-            .HasColumnName("version")
             .IsRowVersion();
 
         builder.HasIndex(customer => customer.PhoneNumber).HasDatabaseName("ix_customers_phone_e164");

@@ -4,7 +4,7 @@ import { registerSW } from 'virtual:pwa-register'
 import { App } from './composition/App'
 import './index.css'
 
-registerSW({ immediate: false })
+registerSW({ immediate: true })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

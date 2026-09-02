@@ -1,8 +1,10 @@
 using LouBarbershop.Application.Abstractions;
 using LouBarbershop.Infrastructure.CurrentActor;
 using LouBarbershop.Infrastructure.Identifiers;
+using LouBarbershop.Infrastructure.Identity;
 using LouBarbershop.Infrastructure.Persistence;
 using LouBarbershop.Infrastructure.Time;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,10 +29,29 @@ public static class DependencyInjection
             options.UseNpgsql(
                 connectionString,
                 npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+        services.AddIdentityCore<AppUser>(options =>
+            {
+                options.Password.RequiredLength = 12;
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.User.RequireUniqueEmail = false;
+            })
+            .AddRoles<AppRole>()
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders()
+            .AddSignInManager();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, GuidIdGenerator>();
-        services.AddScoped<ICurrentActor, AnonymousCurrentActor>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentActor, HttpCurrentActor>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+        services.AddScoped<OwnerBootstrapper>();
+        services.AddScoped<InternalUserAdministration>();
 
         return services;
     }

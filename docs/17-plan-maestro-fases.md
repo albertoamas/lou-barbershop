@@ -346,6 +346,7 @@ Invariantes fundamentales verdes y modelo técnico capaz de soportar slices sin 
 **Dependencias:** G2.  
 **Cobertura:** RF-001–003, CU-01, HU-001 y base de HU-002.  
 **Tamaño:** M.
+**Estado:** `DONE`; G3 aprobada localmente el 2 de septiembre de 2026. La validación detrás de proxy se ejecutó con Compose/Caddy local bajo la excepción de despliegue ya aprobada; Railway continúa diferido. Evidencia en [28-acta-fase-3-g3.md](28-acta-fase-3-g3.md).
 
 ### Trabajo
 

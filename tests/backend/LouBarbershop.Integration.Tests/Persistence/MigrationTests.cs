@@ -35,6 +35,9 @@ public sealed class MigrationTests
             Assert.Contains("20260901010253_InitialTechnicalBaseline", migrations);
             Assert.Contains("20260901164600_AddCustomerFoundation", migrations);
             Assert.Contains("20260901201104_AddAuditLog", migrations);
+            Assert.Contains("20260901203102_AddInternalIdentity", migrations);
+            Assert.Contains("20260902034855_NormalizeIdentitySchema", migrations);
+            Assert.Contains("20260902035330_UsePostgreSqlXminConcurrency", migrations);
         }
 
         await using var verificationContext = new AppDbContext(options);
