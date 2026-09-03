@@ -1,5 +1,9 @@
 using LouBarbershop.Application.Abstractions;
+using LouBarbershop.Domain.Catalog;
+using LouBarbershop.Domain.Commissions;
 using LouBarbershop.Domain.Customers;
+using LouBarbershop.Domain.Expenses;
+using LouBarbershop.Domain.Staff;
 using LouBarbershop.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -13,6 +17,13 @@ public sealed class AppDbContext(
     IClock? clock = null) : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<StaffProfile> StaffProfiles => Set<StaffProfile>();
+    public DbSet<BarberProfile> BarberProfiles => Set<BarberProfile>();
+    public DbSet<Service> Services => Set<Service>();
+    public DbSet<BarberServiceOffering> BarberServiceOfferings => Set<BarberServiceOffering>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
@@ -106,21 +117,46 @@ public sealed class AppDbContext(
 
     private void AddAuditLogs()
     {
-        var changedCustomers = ChangeTracker.Entries<Customer>()
-            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+        var auditableTypes = new HashSet<Type>
+        {
+            typeof(Customer), typeof(StaffProfile), typeof(BarberProfile), typeof(Service),
+            typeof(BarberServiceOffering), typeof(Product), typeof(CommissionRule), typeof(ExpenseCategory),
+        };
+        var changedEntries = ChangeTracker.Entries()
+            .Where(entry => auditableTypes.Contains(entry.Entity.GetType()) && entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .ToArray();
 
-        foreach (var entry in changedCustomers)
+        foreach (var entry in changedEntries)
         {
+            var before = entry.State is EntityState.Added ? null : SerializeValues(entry.OriginalValues.Properties.ToDictionary(p => p.Name, p => entry.OriginalValues[p]));
+            var after = entry.State is EntityState.Deleted ? null : SerializeValues(entry.CurrentValues.Properties.ToDictionary(p => p.Name, p => entry.CurrentValues[p]));
             AuditLogs.Add(new AuditLog
             {
                 Id = Guid.NewGuid(),
                 ActorUserId = currentActor?.UserId,
                 Action = entry.State.ToString(),
-                EntityType = "customer",
-                EntityId = entry.Entity.Id,
+                EntityType = AuditEntityName(entry.Entity.GetType()),
+                EntityId = (Guid)(entry.Property("Id").CurrentValue ?? Guid.Empty),
+                BeforeData = before,
+                AfterData = after,
                 CreatedAt = (clock?.UtcNow ?? DateTimeOffset.UtcNow).ToUniversalTime(),
             });
         }
     }
+
+    private static string SerializeValues(IReadOnlyDictionary<string, object?> values) =>
+        System.Text.Json.JsonSerializer.Serialize(values);
+
+    private static string AuditEntityName(Type type) => type.Name switch
+    {
+        nameof(Customer) => "customer",
+        nameof(StaffProfile) => "staff_profile",
+        nameof(BarberProfile) => "barber_profile",
+        nameof(Service) => "service",
+        nameof(BarberServiceOffering) => "barber_service_offering",
+        nameof(Product) => "product",
+        nameof(CommissionRule) => "commission_rule",
+        nameof(ExpenseCategory) => "expense_category",
+        _ => type.Name,
+    };
 }

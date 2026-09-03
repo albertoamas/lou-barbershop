@@ -48,8 +48,8 @@ No se permite `DONE` sin evidencia de los criterios de aceptación.
 | ID | Fase | Prioridad | Tamaño | Dependencias principales | Estado | Puerta |
 |---|---:|---:|:---:|---|---|---|
 | HU-001 | 3 | P0 | M | G2, TEC-021 | DONE | G3 |
-| HU-002 | 3–4 | P0 | M | HU-001 | IN_PROGRESS | G4 |
-| HU-003 | 4 | P0 | M | HU-002 | PENDING | G4 |
+| HU-002 | 3–4 | P0 | M | HU-001 | DONE | G4 |
+| HU-003 | 4 | P0 | M | HU-002 | DONE | G4 |
 | HU-004 | 5 | P0 | M | HU-002 | PENDING | G5 |
 | HU-010 | 6 | P0 | M | G5 | PENDING | G6 |
 | HU-011 | 5 | P0 | L | HU-003–004 | PENDING | G5 |
@@ -67,7 +67,7 @@ No se permite `DONE` sin evidencia de los criterios de aceptación.
 | HU-030 | 8 | P0 | L | G7, HU-003 | PENDING | G8 |
 | HU-031 | 8 | P1 | M | HU-030 | PENDING | G8 |
 | HU-032 | 8 | P0 | M | G7 | PENDING | G8 |
-| HU-040 | 4 | P0 | M | HU-002 | PENDING | G4 |
+| HU-040 | 4 | P0 | M | HU-002 | DONE | G4 |
 | HU-041 | 9 | P1 | M | HU-024, HU-040 | PENDING | G9 |
 | HU-042 | 9 | P0 | L | HU-041 | PENDING | G9 |
 | HU-043 | 9 | P0 | M | HU-042 | PENDING | G9 |

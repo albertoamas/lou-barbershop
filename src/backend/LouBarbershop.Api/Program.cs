@@ -1,5 +1,7 @@
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using LouBarbershop.Api.Authorization;
+using LouBarbershop.Api.Errors;
 using LouBarbershop.Api.Health;
 using LouBarbershop.Api.Middleware;
 using LouBarbershop.Infrastructure;
@@ -68,7 +70,8 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SecurePolicy = cookieSecurePolicy;
 });
 builder.Services.AddControllersWithViews(options =>
-    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()))
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
 if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 {
@@ -76,6 +79,7 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
         .SetApplicationName("LouBarbershop")
         .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 }
+builder.Services.AddExceptionHandler<PersistenceConflictExceptionHandler>();
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>

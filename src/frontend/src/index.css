@@ -41,7 +41,10 @@ a:focus-visible {
 .app-shell {
   min-height: 100vh;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto 1fr auto;
+  min-width: 0;
+  width: 100%;
 }
 .topbar {
   align-items: center;
@@ -97,6 +100,7 @@ a:focus-visible {
 .content {
   margin: 0 auto;
   max-width: 1120px;
+  min-width: 0;
   padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem);
   width: 100%;
 }
@@ -192,6 +196,16 @@ h1 {
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
+.session-bar nav {
+  display: flex;
+  gap: 0.9rem;
+  margin-right: auto;
+}
+.session-bar a {
+  color: var(--accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
 
 .session-bar button {
   padding: 0.55rem 0.8rem;
@@ -248,6 +262,259 @@ h1 {
   padding: 0.75rem;
 }
 
+.configuration-page {
+  max-width: 1240px;
+  padding-top: clamp(1.5rem, 4vw, 3rem);
+}
+.page-heading {
+  align-items: end;
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+}
+.page-heading h1 {
+  font-size: clamp(2.2rem, 6vw, 4rem);
+}
+.page-heading .lead {
+  margin-bottom: 0;
+}
+.history-badge {
+  background: #e7eee7;
+  border: 1px solid #b9cabd;
+  border-radius: 14px;
+  color: #31523a;
+  font-size: 0.85rem;
+  max-width: 260px;
+  padding: 0.9rem 1rem;
+}
+.section-tabs {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 0.35rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+.section-tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: #656964;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-weight: 700;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+}
+.section-tabs button[aria-current='page'] {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+}
+.master-layout {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(360px, 1.2fr);
+  margin-bottom: 1.5rem;
+}
+.master-layout > *,
+.version-columns > * {
+  min-width: 0;
+}
+.form-stack {
+  display: grid;
+  gap: 1rem;
+}
+.master-form,
+.master-list,
+.version-panel,
+.compact-form {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.master-form {
+  align-content: start;
+  display: grid;
+  gap: 1rem;
+  padding: 1.3rem;
+}
+.master-form h2,
+.master-list h2,
+.version-panel h2,
+.compact-form h3 {
+  margin: 0;
+}
+.master-form p {
+  color: #676b68;
+  margin: 0.35rem 0 0;
+}
+.step-number {
+  color: var(--accent) !important;
+  font:
+    700 1.3rem Georgia,
+    serif;
+}
+.master-form label,
+.compact-form label {
+  display: grid;
+  font-size: 0.85rem;
+  font-weight: 750;
+  gap: 0.4rem;
+}
+.master-form input,
+.master-form select,
+.compact-form input,
+.compact-form select,
+.version-intro select {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  min-height: 46px;
+  padding: 0.65rem 0.75rem;
+  width: 100%;
+}
+.field-pair {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+.primary-button,
+.secondary-button {
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: 750;
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+}
+.primary-button {
+  background: var(--ink);
+  color: white;
+}
+.secondary-button {
+  background: #ede5d9;
+  color: var(--ink);
+}
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.master-list {
+  align-content: start;
+  display: grid;
+  padding: 0.6rem 1.1rem;
+}
+.list-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.7rem 0.2rem 1rem;
+}
+.list-heading span {
+  color: #676b68;
+  font-size: 0.85rem;
+}
+.master-row {
+  align-items: center;
+  border-top: 1px solid #e7e1d6;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem 0.2rem;
+}
+.master-row strong,
+.master-row small {
+  display: block;
+}
+.master-row small {
+  color: #676b68;
+  margin-top: 0.25rem;
+}
+.master-row button,
+.period-row button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 38px;
+  padding: 0.45rem 0.65rem;
+}
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: end;
+}
+.context-note {
+  background: #f3eee5;
+  border-radius: 9px;
+  color: #5c554c;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.8rem;
+}
+.empty-state {
+  color: #777b77;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+.empty-state span {
+  font:
+    400 2rem Georgia,
+    serif;
+}
+.form-success {
+  background: #e4f0e5;
+  border-radius: 8px;
+  color: #24502b;
+  padding: 0.75rem;
+}
+.version-panel {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(240px, 0.6fr) minmax(500px, 1.4fr);
+  padding: 1.2rem;
+}
+.version-intro label {
+  display: grid;
+  font-size: 0.85rem;
+  font-weight: 750;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+.version-columns {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+.compact-form {
+  align-content: start;
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+.period-row {
+  align-items: center;
+  border-top: 1px solid #e7e1d6;
+  display: flex;
+  font-size: 0.86rem;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+}
+.period-row small {
+  color: #676b68;
+  display: block;
+  margin-top: 0.2rem;
+}
+.owner-rule {
+  background: #fff0cf;
+  border-radius: 8px;
+  color: #664b0c;
+  font-size: 0.82rem;
+  margin: 0;
+  padding: 0.7rem;
+}
+
 @media (max-width: 760px) {
   .foundation-grid {
     grid-template-columns: 1fr;
@@ -258,6 +525,45 @@ h1 {
   }
   .phase-pill {
     display: none;
+  }
+  .session-bar {
+    align-items: center;
+    display: grid;
+    gap: 0.7rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .session-bar nav {
+    grid-column: 1 / -1;
+    margin-right: 0;
+  }
+  .session-bar > span {
+    font-size: 0.86rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .history-badge {
+    max-width: none;
+  }
+  .master-layout,
+  .version-panel,
+  .version-columns {
+    grid-template-columns: 1fr;
+  }
+  .field-pair {
+    grid-template-columns: 1fr;
+  }
+  .master-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .row-actions {
+    justify-content: start;
   }
 }
 

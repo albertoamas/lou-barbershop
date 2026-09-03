@@ -9,14 +9,14 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 | Área | Reglas | Requisitos | Casos de uso | Historias | Pruebas clave |
 |---|---|---|---|---|---|
 | Acceso/roles | Matriz permisos | RF-001–005 | CU-01 | HU-001–002 | `IdentityEndpointTests` + T-014 |
-| Catálogo/ofertas | RN-ATE-03, 07 | RF-010–014 | CU-02 | HU-003 | T-016 |
+| Catálogo/ofertas | RN-ATE-03, 07 | RF-010–014 | CU-02 | HU-003 | `PhaseFourDomainTests` + `PhaseFourEndpointTests` |
 | Horarios/disponibilidad | RN-AGEN-01–06 | RF-004, 021 | CU-03–04 | HU-004, 011 | T-001–002 |
 | Clientes/reserva | RN-AGEN-04–10 | RF-020–028 | CU-05–08 | HU-010–016, 020 | T-001–004 |
 | Atención real | RN-ATE-01–10 | RF-030–034 | CU-09–10 | HU-020–023 | T-003–004, 007–008 |
 | Pagos | RN-PAG-01–06 | RF-035–037 | CU-11, 18 | HU-024–025 | T-005–006, 012–015 |
 | Inventario | RN-INV-01–07 | RF-032, 040–043 | CU-11–12, 18 | HU-022, 030–031 | T-009, 012–013 |
-| Gastos | RN-GAS-01–04 | RF-045–046 | CU-13 | HU-032 | T-017 |
-| Comisión | RN-COM-01–07 | RF-005, 050–051 | CU-11, 16 | HU-040–041 | T-007–010 |
+| Gastos | RN-GAS-01–04 | RF-045–046 | CU-13 | HU-032 | categorías en migración F4 + T-017 |
+| Comisión | RN-COM-01–07 | RF-005, 050–051 | CU-11, 16 | HU-040–041 | `PhaseFourEndpointTests` + T-007–010 |
 | Liquidación | RN-COM-08–12 | RF-052–055 | CU-14 | HU-042–043 | T-011–013 |
 | Reportes | RN-REP-01–03 | RF-060–066 | CU-17 | HU-050–053 | consultas/reconciliación |
 | Auditoría | D-15, D-19 | RF-065 | transversal | transversal | seguridad e integridad |

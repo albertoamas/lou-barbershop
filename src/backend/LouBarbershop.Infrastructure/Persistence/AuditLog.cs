@@ -12,6 +12,10 @@ public sealed class AuditLog
 
     public Guid EntityId { get; set; }
 
+    public string? BeforeData { get; set; }
+
+    public string? AfterData { get; set; }
+
     public string? RequestId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

@@ -9,7 +9,8 @@ using Testcontainers.PostgreSql;
 
 namespace LouBarbershop.Integration.Tests;
 
-public sealed class IdentityEndpointTests : IClassFixture<IdentityApiFixture>
+[Collection("identity-api")]
+public sealed class IdentityEndpointTests
 {
     private readonly IdentityApiFixture _fixture;
 
@@ -162,21 +163,38 @@ public sealed class IdentityEndpointTests : IClassFixture<IdentityApiFixture>
     private sealed record UserResponse(Guid Id, string UserName, bool Active, IReadOnlyCollection<string> Roles);
 }
 
+[CollectionDefinition("identity-api")]
+public sealed class IdentityApiTestGroup : ICollectionFixture<IdentityApiFixture>;
+
 public sealed class IdentityApiFixture : IAsyncLifetime
 {
     public const string OwnerUserName = "owner-integration";
     public const string OwnerPassword = "Owner-test!8426";
 
-    private readonly PostgreSqlContainer _database =
-        new PostgreSqlBuilder("postgres:18.6-alpine3.24").Build();
+    private readonly PostgreSqlContainer? _database;
+    private readonly string? _externalConnectionString;
     private WebApplicationFactory<Program>? _factory;
+
+    public IdentityApiFixture()
+    {
+        _externalConnectionString = Environment.GetEnvironmentVariable("LOU_IDENTITY_TEST_CONNECTION");
+        if (string.IsNullOrWhiteSpace(_externalConnectionString))
+        {
+            _database = new PostgreSqlBuilder("postgres:18.6-alpine3.24").Build();
+        }
+    }
 
     public async Task InitializeAsync()
     {
-        await _database.StartAsync();
+        if (_database is not null)
+        {
+            await _database.StartAsync();
+        }
+
+        var connectionString = _externalConnectionString ?? _database!.GetConnectionString();
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Database", _database.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Database", connectionString);
             builder.UseSetting("BootstrapOwner:UserName", OwnerUserName);
             builder.UseSetting("BootstrapOwner:Password", OwnerPassword);
             builder.UseSetting("Http:UseHttpsRedirection", "false");
@@ -200,6 +218,8 @@ public sealed class IdentityApiFixture : IAsyncLifetime
         return client;
     }
 
+    public IServiceProvider Services => _factory!.Services;
+
     public async Task RecoverOwnerAsync()
     {
         await using var scope = _factory!.Services.CreateAsyncScope();
@@ -214,6 +234,9 @@ public sealed class IdentityApiFixture : IAsyncLifetime
             await _factory.DisposeAsync();
         }
 
-        await _database.DisposeAsync();
+        if (_database is not null)
+        {
+            await _database.DisposeAsync();
+        }
     }
 }

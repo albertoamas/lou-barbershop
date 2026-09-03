@@ -1,4 +1,5 @@
 using LouBarbershop.Application.Abstractions;
+using LouBarbershop.Application.Configuration;
 using LouBarbershop.Infrastructure.CurrentActor;
 using LouBarbershop.Infrastructure.Identifiers;
 using LouBarbershop.Infrastructure.Identity;
@@ -50,6 +51,8 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentActor, HttpCurrentActor>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+        services.AddScoped<IConfigurationStore, EfConfigurationStore>();
+        services.AddScoped<ConfigurationService>();
         services.AddScoped<OwnerBootstrapper>();
         services.AddScoped<InternalUserAdministration>();
 

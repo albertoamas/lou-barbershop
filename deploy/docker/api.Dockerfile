@@ -13,11 +13,18 @@ COPY tests/backend/LouBarbershop.Integration.Tests/*.csproj tests/backend/LouBar
 RUN dotnet restore LouBarbershop.slnx
 
 COPY src/backend src/backend
+COPY tests/backend tests/backend
 RUN dotnet publish src/backend/LouBarbershop.Api/LouBarbershop.Api.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish \
     /p:UseAppHost=false
+
+FROM build AS tests
+RUN dotnet build LouBarbershop.slnx \
+    --configuration Release \
+    --no-restore
+ENTRYPOINT ["dotnet", "test", "LouBarbershop.slnx", "--configuration", "Release", "--no-build", "--no-restore", "--verbosity", "minimal"]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-alpine3.24 AS runtime
 RUN apk upgrade --no-cache \

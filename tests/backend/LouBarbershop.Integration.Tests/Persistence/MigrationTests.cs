@@ -10,11 +10,16 @@ public sealed class MigrationTests
     [Fact]
     public async Task MigrationsApplyToEmptyPostgreSqlAndPersistCustomer()
     {
-        await using var postgreSql = new PostgreSqlBuilder("postgres:18.6-alpine3.24").Build();
-        await postgreSql.StartAsync();
+        var externalConnectionString = Environment.GetEnvironmentVariable("LOU_MIGRATION_TEST_CONNECTION");
+        PostgreSqlContainer? postgreSql = null;
+        if (string.IsNullOrWhiteSpace(externalConnectionString))
+        {
+            postgreSql = new PostgreSqlBuilder("postgres:18.6-alpine3.24").Build();
+            await postgreSql.StartAsync();
+        }
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(postgreSql.GetConnectionString())
+            .UseNpgsql(externalConnectionString ?? postgreSql!.GetConnectionString())
             .Options;
 
         var phoneNumber = PhoneNumber.Create("+59171234567").Value;
@@ -38,6 +43,8 @@ public sealed class MigrationTests
             Assert.Contains("20260901203102_AddInternalIdentity", migrations);
             Assert.Contains("20260902034855_NormalizeIdentitySchema", migrations);
             Assert.Contains("20260902035330_UsePostgreSqlXminConcurrency", migrations);
+            Assert.Contains("20260902193625_AddPhaseFourMasterData", migrations);
+            Assert.Contains("20260902203000_ProtectCommissionRuleHistory", migrations);
         }
 
         await using var verificationContext = new AppDbContext(options);
@@ -49,5 +56,10 @@ public sealed class MigrationTests
         Assert.True(persisted.Active);
         Assert.Equal(customer.Id, auditLog.EntityId);
         Assert.Equal("customer", auditLog.EntityType);
+
+        if (postgreSql is not null)
+        {
+            await postgreSql.DisposeAsync();
+        }
     }
 }

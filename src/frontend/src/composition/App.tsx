@@ -6,6 +6,7 @@ import { FoundationPage } from '../presentation/pages/FoundationPage'
 import { AuthStatePage } from '../presentation/pages/AuthStatePage'
 import { LoginPage } from '../presentation/pages/LoginPage'
 import { SessionBoundary } from '../presentation/components/SessionBoundary'
+import { ConfigurationPage } from '../presentation/pages/ConfigurationPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,22 @@ export const App = () => (
                   title="Acceso restringido"
                   message="Tu cuenta no tiene permiso para realizar esta acción."
                 />
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <SessionBoundary>
+                  <FoundationPage />
+                </SessionBoundary>
+              }
+            />
+            <Route
+              path="/configuration"
+              element={
+                <SessionBoundary>
+                  <ConfigurationPage />
+                </SessionBoundary>
               }
             />
             <Route

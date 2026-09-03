@@ -35,3 +35,21 @@ export const apiRequest = async <T>(path: string, init: RequestInit = {}): Promi
 
   return (await response.json()) as T
 }
+
+interface AntiforgeryResponse {
+  token: string
+}
+
+export const secureApiRequest = async <T>(
+  path: string,
+  method: 'POST' | 'PATCH' | 'PUT',
+  body?: unknown,
+): Promise<T> => {
+  const { token } = await apiRequest<AntiforgeryResponse>('/api/v1/auth/antiforgery')
+  const request: RequestInit = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+  }
+  if (body !== undefined) request.body = JSON.stringify(body)
+  return apiRequest<T>(path, request)
+}

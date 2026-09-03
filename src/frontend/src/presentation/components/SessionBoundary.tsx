@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
 
@@ -44,6 +44,10 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   return (
     <>
       <div className="session-bar" aria-label="Sesión actual">
+        <nav aria-label="Navegación interna">
+          <Link to="/">Inicio</Link>
+          {session.data.roles.includes('OWNER') && <Link to="/configuration">Configuración</Link>}
+        </nav>
         <span>
           Sesión: <strong>{session.data.userName}</strong>
         </span>

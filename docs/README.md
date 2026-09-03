@@ -34,6 +34,7 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 26. [Evidencia de avance de Fase 2](26-evidencia-avance-fase-2.md)
 27. [Acta de Fase 2 y puerta G2](27-acta-fase-2-g2.md)
 28. [Acta de Fase 3 y puerta G3](28-acta-fase-3-g3.md)
+29. [Acta de Fase 4 y puerta G4](29-acta-fase-4-g4.md)
 
 ## Convenciones
 

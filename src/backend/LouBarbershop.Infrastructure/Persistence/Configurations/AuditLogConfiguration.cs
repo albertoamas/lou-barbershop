@@ -14,6 +14,8 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(auditLog => auditLog.Action).HasColumnName("action").HasMaxLength(40).IsRequired();
         builder.Property(auditLog => auditLog.EntityType).HasColumnName("entity_type").HasMaxLength(80).IsRequired();
         builder.Property(auditLog => auditLog.EntityId).HasColumnName("entity_id");
+        builder.Property(auditLog => auditLog.BeforeData).HasColumnName("before_data").HasColumnType("jsonb");
+        builder.Property(auditLog => auditLog.AfterData).HasColumnName("after_data").HasColumnType("jsonb");
         builder.Property(auditLog => auditLog.RequestId).HasColumnName("request_id").HasMaxLength(128);
         builder.Property(auditLog => auditLog.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.HasIndex(auditLog => new { auditLog.EntityType, auditLog.EntityId, auditLog.CreatedAt })

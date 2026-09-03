@@ -70,6 +70,8 @@ Todas las rutas de la tabla se publican bajo `/api/v1`. La cuenta en `users` es 
 | GET/POST | `/barbers/{id}/exceptions` | Ausencia/bloqueo |
 | GET/POST | `/products` | Catálogo de productos |
 | PATCH | `/products/{id}` | Modificar/desactivar |
+| GET/POST | `/expense-categories` | Categorías de gasto |
+| PATCH | `/expense-categories/{id}` | Modificar/desactivar categoría |
 | GET | `/availability` | Horarios válidos |
 
 Ejemplo:
@@ -79,6 +81,19 @@ GET /api/v1/availability?serviceId=...&barberId=any&dateFrom=2026-09-01&dateTo=2
 ```
 
 Respuesta devuelve `startsAt`, `endsAt`, `barberId`, `priceCents` y `durationMinutes`.
+
+### Contratos de maestros incorporados en Fase 4
+
+- `POST /staff` vincula una cuenta existente mediante `userId`, `displayName` y `phone` opcional. Una cuenta no puede tener dos perfiles.
+- `POST /barbers` recibe `staffProfileId`, `employmentType` (`OWNER`/`CONTRACTOR`), `settlementFrequency` y color opcional. El mismo perfil no se duplica.
+- `POST /services` y `POST /products` reciben los importes en centavos enteros. Sus `PATCH` exigen el `version` devuelto por la última lectura y permiten desactivación lógica.
+- `POST /barbers/{id}/offerings` crea una nueva condición con `serviceId`, `durationMinutes`, `priceCents`, `validFrom` y `validTo` opcional. No edita una vigencia previa.
+- `GET /barbers/{id}/offerings/effective?serviceId=...&date=YYYY-MM-DD` reproduce la condición aplicable: primero oferta activa del barbero y, si no existe, referencia del servicio.
+- `POST /barbers/{id}/commission-rules` recibe `kind`, `rateBasisPoints`, `validFrom` y `validTo`. Sólo acepta contratados y rechaza períodos solapados del mismo tipo.
+- `GET /barbers/{id}/commission-rules/effective?kind=SERVICE&date=YYYY-MM-DD` devuelve la tasa reproducible para esa fecha o `404` si no existe.
+- ofertas y reglas se desactivan mediante `POST /barbers/{barberId}/.../{id}/deactivate` con `version`; el registro histórico permanece.
+
+PostgreSQL refuerza las vigencias con restricciones de exclusión, además de la validación de Application. Una colisión concurrente o versión obsoleta devuelve `409 ProblemDetails`; un importe, duración, tasa o período inválido devuelve `400`.
 
 ## 4. Clientes y citas
 

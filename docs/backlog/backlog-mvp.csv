@@ -10,8 +10,8 @@ TEC-015,technical,operations,Desplegar staging tecnico y observabilidad base,P0,
 TEC-020,technical,domain,Implementar value objects estados y politicas,P0,2,L,DONE,G1,G2,docs/17-plan-maestro-fases.md
 TEC-021,technical,data,Implementar puertos EF migraciones y concurrencia,P0,2,L,DONE,TEC-020,G2,docs/17-plan-maestro-fases.md
 HU-001,functional,access,Acceso interno,P0,3,M,DONE,G2,G3,docs/04-historias-de-usuario.md
-HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,IN_PROGRESS,HU-001,G4,docs/04-historias-de-usuario.md
-HU-003,functional,catalog,Configurar servicios y ofertas,P0,4,M,PENDING,HU-002,G4,docs/04-historias-de-usuario.md
+HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,DONE,HU-001,G4,docs/04-historias-de-usuario.md
+HU-003,functional,catalog,Configurar servicios y ofertas,P0,4,M,DONE,HU-002,G4,docs/04-historias-de-usuario.md
 HU-004,functional,scheduling,Configurar horarios,P0,5,M,PENDING,HU-002,G5,docs/04-historias-de-usuario.md
 HU-010,functional,customers,Buscar o crear cliente,P0,6,M,PENDING,G5,G6,docs/04-historias-de-usuario.md
 HU-011,functional,scheduling,Consultar disponibilidad,P0,5,L,PENDING,HU-003;HU-004,G5,docs/04-historias-de-usuario.md
@@ -29,7 +29,7 @@ HU-025,functional,reversals,Revertir operacion,P1,9,L,PENDING,HU-024;HU-043,G9,d
 HU-030,functional,inventory,Registrar entrada de producto,P0,8,L,PENDING,G7,G8,docs/04-historias-de-usuario.md
 HU-031,functional,inventory,Ajustar por conteo o perdida,P1,8,M,PENDING,HU-030,G8,docs/04-historias-de-usuario.md
 HU-032,functional,expenses,Registrar gasto,P0,8,M,PENDING,G7,G8,docs/04-historias-de-usuario.md
-HU-040,functional,commissions,Configurar condiciones,P0,4,M,PENDING,HU-002,G4,docs/04-historias-de-usuario.md
+HU-040,functional,commissions,Configurar condiciones,P0,4,M,DONE,HU-002,G4,docs/04-historias-de-usuario.md
 HU-041,functional,commissions,Consultar comisiones propias,P1,9,M,PENDING,HU-024;HU-040,G9,docs/04-historias-de-usuario.md
 HU-042,functional,settlements,Crear liquidacion,P0,9,L,PENDING,HU-041,G9,docs/04-historias-de-usuario.md
 HU-043,functional,settlements,Pagar liquidacion,P0,9,M,PENDING,HU-042,G9,docs/04-historias-de-usuario.md
