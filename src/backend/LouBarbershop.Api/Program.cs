@@ -4,6 +4,7 @@ using LouBarbershop.Api.Authorization;
 using LouBarbershop.Api.Errors;
 using LouBarbershop.Api.Health;
 using LouBarbershop.Api.Middleware;
+using LouBarbershop.Api.Serialization;
 using LouBarbershop.Infrastructure;
 using LouBarbershop.Infrastructure.Identity;
 using LouBarbershop.Infrastructure.Persistence;
@@ -71,7 +72,7 @@ builder.Services.AddAntiforgery(options =>
 });
 builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()))
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(new UpperSnakeCaseJsonNamingPolicy())));
 var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
 if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 {

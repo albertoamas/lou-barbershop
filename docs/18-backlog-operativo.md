@@ -50,9 +50,9 @@ No se permite `DONE` sin evidencia de los criterios de aceptación.
 | HU-001 | 3 | P0 | M | G2, TEC-021 | DONE | G3 |
 | HU-002 | 3–4 | P0 | M | HU-001 | DONE | G4 |
 | HU-003 | 4 | P0 | M | HU-002 | DONE | G4 |
-| HU-004 | 5 | P0 | M | HU-002 | PENDING | G5 |
+| HU-004 | 5 | P0 | M | HU-002 | DONE | G5 |
 | HU-010 | 6 | P0 | M | G5 | PENDING | G6 |
-| HU-011 | 5 | P0 | L | HU-003–004 | PENDING | G5 |
+| HU-011 | 5 | P0 | L | HU-003–004 | DONE | G5 |
 | HU-012 | 6 | P0 | L | HU-010–011 | PENDING | G6 |
 | HU-013 | 6 | P0 | M | HU-012 | PENDING | G6 |
 | HU-014 | 6 | P0 | S | HU-012 | PENDING | G6 |

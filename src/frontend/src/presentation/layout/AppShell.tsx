@@ -21,7 +21,7 @@ export const AppShell = ({ children }: AppShellProps) => {
             <small>Una sola sucursal</small>
           </span>
         </div>
-        <span className="phase-pill">Maestros operativos · Fase 4</span>
+        <span className="phase-pill">Disponibilidad confiable · Fase 5</span>
       </header>
       <ConnectivityBanner connectivity={connectivity} />
       {children}

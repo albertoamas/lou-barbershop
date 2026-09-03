@@ -19,4 +19,7 @@ public static class DomainErrors
     public static readonly DomainError InvalidEffectivePeriod = new("catalog.invalid_effective_period", "La fecha final no puede ser anterior a la fecha inicial.");
     public static readonly DomainError InvalidStaffProfile = new("staff.invalid_profile", "El perfil de personal requiere usuario y nombre válidos.");
     public static readonly DomainError InvalidBarberProfile = new("barber.invalid_profile", "El perfil de barbero no es válido.");
+    public static readonly DomainError InvalidSchedule = new("schedule.invalid", "El horario requiere un día y un intervalo local válidos.");
+    public static readonly DomainError InvalidAvailabilityException = new("availability_exception.invalid", "La excepción de disponibilidad no es válida.");
+    public static readonly DomainError InvalidAppointment = new("appointment.invalid", "La cita no contiene un intervalo o referencias válidas.");
 }

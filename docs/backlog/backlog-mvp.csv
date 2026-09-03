@@ -12,9 +12,9 @@ TEC-021,technical,data,Implementar puertos EF migraciones y concurrencia,P0,2,L,
 HU-001,functional,access,Acceso interno,P0,3,M,DONE,G2,G3,docs/04-historias-de-usuario.md
 HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,DONE,HU-001,G4,docs/04-historias-de-usuario.md
 HU-003,functional,catalog,Configurar servicios y ofertas,P0,4,M,DONE,HU-002,G4,docs/04-historias-de-usuario.md
-HU-004,functional,scheduling,Configurar horarios,P0,5,M,PENDING,HU-002,G5,docs/04-historias-de-usuario.md
+HU-004,functional,scheduling,Configurar horarios,P0,5,M,DONE,HU-002,G5,docs/04-historias-de-usuario.md
 HU-010,functional,customers,Buscar o crear cliente,P0,6,M,PENDING,G5,G6,docs/04-historias-de-usuario.md
-HU-011,functional,scheduling,Consultar disponibilidad,P0,5,L,PENDING,HU-003;HU-004,G5,docs/04-historias-de-usuario.md
+HU-011,functional,scheduling,Consultar disponibilidad,P0,5,L,DONE,HU-003;HU-004,G5,docs/04-historias-de-usuario.md
 HU-012,functional,scheduling,Crear cita,P0,6,L,PENDING,HU-010;HU-011,G6,docs/04-historias-de-usuario.md
 HU-013,functional,scheduling,Cambiar cita,P0,6,M,PENDING,HU-012,G6,docs/04-historias-de-usuario.md
 HU-014,functional,scheduling,Cancelar o marcar inasistencia,P0,6,S,PENDING,HU-012,G6,docs/04-historias-de-usuario.md

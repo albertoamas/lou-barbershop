@@ -7,6 +7,7 @@ import { AuthStatePage } from '../presentation/pages/AuthStatePage'
 import { LoginPage } from '../presentation/pages/LoginPage'
 import { SessionBoundary } from '../presentation/components/SessionBoundary'
 import { ConfigurationPage } from '../presentation/pages/ConfigurationPage'
+import { SchedulingPage } from '../presentation/pages/SchedulingPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +54,14 @@ export const App = () => (
               element={
                 <SessionBoundary>
                   <ConfigurationPage />
+                </SessionBoundary>
+              }
+            />
+            <Route
+              path="/scheduling"
+              element={
+                <SessionBoundary>
+                  <SchedulingPage />
                 </SessionBoundary>
               }
             />

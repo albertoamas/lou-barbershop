@@ -10,7 +10,7 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 |---|---|---|---|---|---|
 | Acceso/roles | Matriz permisos | RF-001–005 | CU-01 | HU-001–002 | `IdentityEndpointTests` + T-014 |
 | Catálogo/ofertas | RN-ATE-03, 07 | RF-010–014 | CU-02 | HU-003 | `PhaseFourDomainTests` + `PhaseFourEndpointTests` |
-| Horarios/disponibilidad | RN-AGEN-01–06 | RF-004, 021 | CU-03–04 | HU-004, 011 | T-001–002 |
+| Horarios/disponibilidad | RN-AGEN-01–06 | RF-004, 012, 021 | CU-03–04 | HU-004, 011 | `PhaseFiveAvailabilityTests` + `PhaseFiveEndpointTests` + T-001–002 |
 | Clientes/reserva | RN-AGEN-04–10 | RF-020–028 | CU-05–08 | HU-010–016, 020 | T-001–004 |
 | Atención real | RN-ATE-01–10 | RF-030–034 | CU-09–10 | HU-020–023 | T-003–004, 007–008 |
 | Pagos | RN-PAG-01–06 | RF-035–037 | CU-11, 18 | HU-024–025 | T-005–006, 012–015 |

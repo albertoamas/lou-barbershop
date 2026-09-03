@@ -1,8 +1,10 @@
 using LouBarbershop.Application.Abstractions;
+using LouBarbershop.Domain.Appointments;
 using LouBarbershop.Domain.Catalog;
 using LouBarbershop.Domain.Commissions;
 using LouBarbershop.Domain.Customers;
 using LouBarbershop.Domain.Expenses;
+using LouBarbershop.Domain.Scheduling;
 using LouBarbershop.Domain.Staff;
 using LouBarbershop.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -24,6 +26,9 @@ public sealed class AppDbContext(
     public DbSet<Product> Products => Set<Product>();
     public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
+    public DbSet<WorkingSchedule> WorkingSchedules => Set<WorkingSchedule>();
+    public DbSet<AvailabilityExceptionRule> AvailabilityExceptions => Set<AvailabilityExceptionRule>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
@@ -121,6 +126,7 @@ public sealed class AppDbContext(
         {
             typeof(Customer), typeof(StaffProfile), typeof(BarberProfile), typeof(Service),
             typeof(BarberServiceOffering), typeof(Product), typeof(CommissionRule), typeof(ExpenseCategory),
+            typeof(WorkingSchedule), typeof(AvailabilityExceptionRule), typeof(Appointment),
         };
         var changedEntries = ChangeTracker.Entries()
             .Where(entry => auditableTypes.Contains(entry.Entity.GetType()) && entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
@@ -157,6 +163,9 @@ public sealed class AppDbContext(
         nameof(Product) => "product",
         nameof(CommissionRule) => "commission_rule",
         nameof(ExpenseCategory) => "expense_category",
+        nameof(WorkingSchedule) => "working_schedule",
+        nameof(AvailabilityExceptionRule) => "availability_exception",
+        nameof(Appointment) => "appointment",
         _ => type.Name,
     };
 }

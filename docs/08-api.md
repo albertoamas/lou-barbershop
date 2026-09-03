@@ -67,12 +67,15 @@ Todas las rutas de la tabla se publican bajo `/api/v1`. La cuenta en `users` es 
 | PATCH | `/services/{id}` | Modificar/desactivar |
 | GET/POST | `/barbers/{id}/offerings` | Oferta por barbero |
 | GET/POST | `/barbers/{id}/schedules` | Horario semanal |
-| GET/POST | `/barbers/{id}/exceptions` | Ausencia/bloqueo |
+| PATCH | `/barbers/{id}/schedules/{scheduleId}` | Cambiar vigencia/estado con versión |
+| GET/POST | `/barbers/{id}/availability-exceptions` | Ausencia u horario extraordinario |
+| POST | `/barbers/{id}/availability-exceptions/{exceptionId}/deactivate` | Desactivar excepción con versión |
 | GET/POST | `/products` | Catálogo de productos |
 | PATCH | `/products/{id}` | Modificar/desactivar |
 | GET/POST | `/expense-categories` | Categorías de gasto |
 | PATCH | `/expense-categories/{id}` | Modificar/desactivar categoría |
 | GET | `/availability` | Horarios válidos |
+| GET | `/availability/barbers` | Barberos activos visibles en agenda |
 
 Ejemplo:
 
@@ -80,7 +83,11 @@ Ejemplo:
 GET /api/v1/availability?serviceId=...&barberId=any&dateFrom=2026-09-01&dateTo=2026-09-07
 ```
 
-Respuesta devuelve `startsAt`, `endsAt`, `barberId`, `priceCents` y `durationMinutes`.
+Respuesta devuelve `startsAt`, `endsAt`, `barberId`, `barberName`, `serviceId`, `priceCents` y `durationMinutes`. `barberId=any` resuelve cada alternativa a un barbero concreto. El rango es inclusivo y admite de 1 a 31 días; las horas pasadas no se devuelven.
+
+Los horarios reciben `weekday` (lunes `1` a domingo `7`), `startLocalTime`, `endLocalTime`, `validFrom` y `validTo` opcional. Se permiten varios bloques adyacentes, pero un solapamiento de hora y vigencia para el mismo barbero devuelve `409`. Las excepciones reciben instantes ISO 8601, `kind` (`UNAVAILABLE` o `AVAILABLE_OVERRIDE`) y un motivo obligatorio.
+
+Una modificación de horario o ausencia nunca cancela citas. La respuesta de la mutación contiene `conflicts` con las citas activas que quedaron fuera de cobertura para revisión humana. OWNER y ADMIN administran horarios; OWNER, ADMIN y BARBER consultan disponibilidad. Las consultas se calculan desde información derivable y no mantienen caché persistente, evitando resultados obsoletos tras cambios de oferta, horario, excepción o cita.
 
 ### Contratos de maestros incorporados en Fase 4
 
