@@ -54,7 +54,7 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 
 ### Evidencia de Fase 6
 
-HU-010/012/013/014/015 y RF-020–027 están implementados en clientes/agenda, con `PhaseSixEndpointTests`, pruebas del núcleo y de interfaz. T-001/T-002 verificados; T-003/T-004 continúan pendientes de atención/cobro en Fase 7. Estado de aceptación y criterio contradictorio: [acta G6](31-acta-fase-6-g6.md). No equivale a aprobación operativa ni migración de Calendar.
+HU-010/012/013/014/015 y RF-020–027 están implementados en clientes/agenda, con `PhaseSixEndpointTests`, pruebas del núcleo y de interfaz. T-001/T-002 verificados y exigidos por AC-06-08; T-003/T-004 continúan pendientes de atención/cobro y son exigidos por AC-07-08 en Fase 7. La dependencia circular se corrigió con autorización del usuario; decisión y aceptación operativa pendiente: [acta G6](31-acta-fase-6-g6.md). No equivale a aprobación operativa ni migración de Calendar.
 
 Si una regla cambia:
 

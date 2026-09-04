@@ -33,11 +33,13 @@ Reserva y operación económica siguen separadas. Esta fase no incluye cobro, co
 | AC-06-05 | Verificado técnicamente | Cancelación permite ocupar nuevamente el intervalo; no-show desaparece de ocupación activa y conserva evento. No se invoca ni existe en este flujo creación económica |
 | AC-06-06 | Verificado técnicamente | Cambiar catálogo no modifica snapshot; una reprogramación explícita sí toma nueva condición y conserva la anterior |
 | AC-06-07 | Verificación técnica realizada; aceptación de uso pendiente | Navegador 390×844 y 1024×768, estados textuales, controles etiquetados y modal nativo; no es auditoría WCAG completa ni prueba con dispositivos físicos |
-| AC-06-08 | Inconsistencia documental pendiente de decisión | T-001/T-002 pasan. T-003 WALK_IN y T-004 detalle real/cobro pertenecen a Fase 7 y no están implementados |
+| AC-06-08 | Verificado técnicamente; dependencia corregida | T-001/T-002 pasan. T-003 WALK_IN y T-004 detalle real/cobro siguen pendientes y son exigidos por AC-07-08 en Fase 7 |
 
-### Resolución propuesta para AC-06-08
+### Resolución aplicada para AC-06-08
 
-Cambiar su alcance a T-001/T-002 en G6 y exigir T-003/T-004 en G7, donde se construyen sus capacidades. No se ha cambiado silenciosamente el criterio original ni se declara que esos casos pasan. La aprobación del dueño debe quedar registrada antes de aprobar G6 y avanzar a Fase 7.
+Tras presentar la inconsistencia y recibir del usuario «Perfecto, haz lo que veas optimo», se aplica la corrección de planificación: AC-06-08 exige T-001/T-002; T-003/T-004 permanecen en AC-07-08, que ya los incluía. Antes se exigían T-001–004 para G6, creando una dependencia circular con capacidades que solo se construyen después de G6.
+
+No se elimina ninguna prueba, se modifica ninguna regla de negocio ni se declara implementado el cobro. Esta autorización permite corregir la planificación; no se interpreta como evidencia de una prueba humana realizada ni como aprobación de G6. El backlog conserva `ACCEPTANCE` y Fase 7 permanece pendiente.
 
 ## Arquitectura y datos
 
@@ -76,7 +78,17 @@ Capturas de datos ficticios: `output/playwright/fase-6/agenda-tablet.png`, `mi-d
 5. Cancelar una reserva y comprobar que el espacio vuelve a ofrecerse. Para no-show usar una cita cuyo inicio ya pasó, sin adelantar el reloj operativo.
 6. Ingresar como barbero vinculado: ver únicamente sus citas, registrar llegada/inicio; comprobar ausencia de cancelación/precio/notas.
 7. Desconectar la red: no debe poder confirmar ni cambiar citas. Recuperar conexión y actualizar.
-8. Aprobar esta simulación y la corrección propuesta de AC-06-08. Solo entonces registrar G6 `DONE`.
+8. Registrar el resultado de la simulación y la aceptación del dueño y usuario del flujo. La corrección documental de AC-06-08 ya está aplicada. Solo después de la aceptación operativa registrar G6 `DONE`.
+
+### Registro a completar después de la prueba
+
+- Fecha y versión probada: pendiente.
+- Administración y barbero participantes: pendiente.
+- Tiempo de reserva habitual (objetivo menor a 60 s): pendiente.
+- Resultado de pasos 3–7 y observaciones: pendiente.
+- Decisión: pendiente; si hay un fallo, registrar reproducción y corregir antes del cierre.
+
+Se puede informar el resultado en esta conversación para incorporarlo al acta; no hace falta compartir contraseñas ni datos personales de clientes.
 
 No se editó Google Calendar, no se desplegó en Railway y no se publicaron datos ni commits remotos.
 

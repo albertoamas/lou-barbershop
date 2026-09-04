@@ -479,7 +479,7 @@ El motor pasa matriz exhaustiva de intervalos y puede ser usado por agenda inter
 
 ## 12. Fase 6 — Clientes y agenda interna
 
-**Seguimiento (03/09/2026):** `ACCEPTANCE`. Implementación y pruebas técnicas en [acta de Fase 6](31-acta-fase-6-g6.md). G6 sigue pendiente de validación operativa y decisión sobre AC-06-08: T-003/T-004 dependen de capacidades de Fase 7. Se propone exigirlos en G7; el criterio original de abajo se conserva hasta aprobación. No avanzar a Fase 7 con esta puerta pendiente.
+**Seguimiento:** `ACCEPTANCE`. Implementación y pruebas técnicas en [acta de Fase 6](31-acta-fase-6-g6.md). Con la autorización del usuario para aplicar la opción óptima, AC-06-08 queda limitado a T-001/T-002; T-003/T-004 permanecen exigidos por AC-07-08. G6 sigue pendiente únicamente de aceptación operativa. No avanzar a Fase 7 con esta puerta pendiente.
 
 **Objetivo:** reemplazar operativamente la edición de Google Calendar para reservas internas.  
 **Dependencias:** G5.  
@@ -523,7 +523,7 @@ El motor pasa matriz exhaustiva de intervalos y puede ser usado por agenda inter
 - **AC-06-05:** cancelar/no-show libera disponibilidad y no genera operación.
 - **AC-06-06:** precio/duración históricos no cambian al editar catálogo.
 - **AC-06-07:** agenda usable en teléfono y tablet, con estados accesibles sin depender del color.
-- **AC-06-08:** todos los casos T-001–004 pasan.
+- **AC-06-08:** los casos T-001 y T-002 pasan. T-003 y T-004 se validan en Fase 7 mediante AC-07-08, junto con el resto de escenarios económicos de esa fase.
 
 ### Puerta de salida G6 — R2
 
