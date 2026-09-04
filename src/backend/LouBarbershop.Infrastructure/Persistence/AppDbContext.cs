@@ -29,6 +29,7 @@ public sealed class AppDbContext(
     public DbSet<WorkingSchedule> WorkingSchedules => Set<WorkingSchedule>();
     public DbSet<AvailabilityExceptionRule> AvailabilityExceptions => Set<AvailabilityExceptionRule>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<AppointmentEventRecord> AppointmentEvents => Set<AppointmentEventRecord>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 

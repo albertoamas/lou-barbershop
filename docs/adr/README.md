@@ -8,6 +8,6 @@ Los ADR capturan decisiones costosas de cambiar, sus razones y consecuencias. Un
 | [ADR-010](ADR-010-controller-web-api.md) | ASP.NET Core Web API con Controllers | Accepted |
 | [ADR-011](ADR-011-identity-cookie-same-origin.md) | Identity y cookie same-origin | Accepted |
 | [ADR-012](ADR-012-monorepo-clean-architecture.md) | Monorepo con Clean Architecture | Accepted |
+| [ADR-013](ADR-013-agenda-transaccional-sucursal-unica.md) | Confirmación transaccional de agenda para una sucursal | Accepted |
 
 Los ADR-001–009 permanecen en [07-arquitectura.md](../07-arquitectura.md). Desde ADR-010 se utiliza un archivo por decisión.
-

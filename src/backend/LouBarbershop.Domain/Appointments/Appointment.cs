@@ -44,6 +44,30 @@ public sealed class Appointment
 
     public bool OccupiesTime => Status is AppointmentStatus.Confirmed or AppointmentStatus.CheckedIn or AppointmentStatus.InService;
 
+    public DomainResult<Appointment> Reschedule(Guid barberId, Guid serviceId, TimeRange range, Money price, int duration, DateTimeOffset at)
+    {
+        if (Status != AppointmentStatus.Confirmed)
+            return DomainResult.Failure<Appointment>(DomainErrors.InvalidStateTransition);
+        if (barberId == Guid.Empty || serviceId == Guid.Empty || duration is < 5 or > 480 || range.EndsAt - range.StartsAt != TimeSpan.FromMinutes(duration))
+            return DomainResult.Failure<Appointment>(DomainErrors.InvalidAppointment);
+        BarberId = barberId;
+        ServiceId = serviceId;
+        Range = range;
+        QuotedPrice = price;
+        QuotedDurationMinutes = duration;
+        UpdatedAt = at.ToUniversalTime();
+        return DomainResult.Success(this);
+    }
+
+    public DomainResult<Appointment> TransitionTo(AppointmentStatus next, DateTimeOffset at)
+    {
+        var transition = AppointmentTransitions.Move(Status, next);
+        if (!transition.IsSuccess) return DomainResult.Failure<Appointment>(transition.Error!);
+        Status = transition.Value;
+        UpdatedAt = at.ToUniversalTime();
+        return DomainResult.Success(this);
+    }
+
     public static DomainResult<Appointment> Create(Guid id, Guid customerId, Guid barberId, Guid serviceId, TimeRange range, Money price, int duration, AppointmentSource source, Guid createdBy, DateTimeOffset at)
     {
         if (id == Guid.Empty || customerId == Guid.Empty || barberId == Guid.Empty || serviceId == Guid.Empty || createdBy == Guid.Empty || duration is < 5 or > 480 || range.EndsAt - range.StartsAt != TimeSpan.FromMinutes(duration))

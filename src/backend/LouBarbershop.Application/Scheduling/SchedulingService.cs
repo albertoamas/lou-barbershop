@@ -82,7 +82,7 @@ public sealed class SchedulingService(ISchedulingStore store, IConfigurationStor
         return SchedulingResults.Success(exception, await FindConflictsAsync(barberId, localStartDate, localEndDate, ct));
     }
 
-    public async Task<SchedulingResult<IReadOnlyCollection<AvailabilityOption>>> SearchAvailabilityAsync(Guid serviceId, Guid? barberId, DateOnly dateFrom, DateOnly dateTo, CancellationToken ct)
+    public async Task<SchedulingResult<IReadOnlyCollection<AvailabilityOption>>> SearchAvailabilityAsync(Guid serviceId, Guid? barberId, DateOnly dateFrom, DateOnly dateTo, CancellationToken ct, Guid? exceptAppointmentId = null)
     {
         if (dateTo < dateFrom || dateTo.DayNumber - dateFrom.DayNumber + 1 > MaximumSearchDays)
             return SchedulingResults.Invalid<IReadOnlyCollection<AvailabilityOption>>("availability.invalid_range", "El rango debe tener entre 1 y 31 días.");
@@ -109,7 +109,7 @@ public sealed class SchedulingService(ISchedulingStore store, IConfigurationStor
         var dayStart = ToUtc(dateFrom, TimeOnly.MinValue);
         var dayEnd = ToUtc(dateTo.AddDays(1), TimeOnly.MinValue);
         var busy = await store.ListBusyAppointmentsAsync(barbers.Select(x => x.Id).ToArray(), dayStart, dayEnd, ct);
-        var slots = AvailabilityEngine.Calculate(dateFrom, dateTo, clock.UtcNow, BusinessTimeZone, terms, schedules, exceptions, busy);
+        var slots = AvailabilityEngine.Calculate(dateFrom, dateTo, clock.UtcNow, BusinessTimeZone, terms, schedules, exceptions, busy.Where(x => x.AppointmentId != exceptAppointmentId).ToArray());
         return SchedulingResults.Success<IReadOnlyCollection<AvailabilityOption>>(slots.Select(x => new AvailabilityOption(x.BarberId, names[x.BarberId], x.ServiceId, x.StartsAt, x.EndsAt, x.DurationMinutes, x.Price.Cents)).ToArray());
     }
 

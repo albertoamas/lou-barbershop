@@ -6,6 +6,8 @@ namespace LouBarbershop.Infrastructure.CurrentActor;
 
 public sealed class HttpCurrentActor(IHttpContextAccessor httpContextAccessor) : ICurrentActor
 {
+    public bool IsInRole(string role) => httpContextAccessor.HttpContext?.User.IsInRole(role) == true;
+
     public Guid? UserId
     {
         get

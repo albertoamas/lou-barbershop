@@ -114,6 +114,9 @@ PostgreSQL refuerza las vigencias con restricciones de exclusión, además de la
 | GET | `/appointments/{id}` | Detalle |
 | PATCH | `/appointments/{id}/reschedule` | Reprogramar/reasignar |
 | POST | `/appointments/{id}/check-in` | Marcar llegada |
+| POST | `/appointments/{id}/start` | Iniciar atención, sin operación económica |
+| GET | `/appointments/{id}/events` | Historial antes/después, actor y motivo |
+| GET | `/appointments/{id}/availability` | Alternativas para cambiar cita excluyendo su propio intervalo |
 | POST | `/appointments/{id}/cancel` | Cancelar |
 | POST | `/appointments/{id}/no-show` | Inasistencia |
 | POST | `/public/appointments` | Reserva pública |
@@ -132,6 +135,23 @@ Crear cita:
 ```
 
 No se acepta precio desde el cliente; el servidor obtiene y congela la oferta vigente.
+
+### Contrato implementado en Fase 6
+
+Las rutas internas anteriores están implementadas; `/public/*` continúa pendiente de Fase 11. Los endpoints implementados devuelven objetos/colecciones directamente, no el envoltorio conceptual `data/meta` de la sección 1. El esquema OpenAPI se genera desde Controllers en desarrollo.
+
+- `GET /customers?query=`: máximo 50 coincidencias, búsqueda de hasta 120 caracteres por nombre o teléfono. Solo OWNER/ADMIN; incluye `id`, `displayName`, `phone`, `notes`, `version`.
+- Alta/corrección de cliente: `displayName`, `phone`, `notes` opcional (máximo 1000); PATCH agrega `version`. Devuelve `{ customer, possibleDuplicates }`. Un teléfono local de ocho dígitos se normaliza con `+591`; compartirlo no bloquea el alta.
+- `GET /appointments?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&barberId=uuid`: rango inclusivo de 1 a 31 días en Bolivia. Omitir barbero consulta todos para administración y solo el propio para BARBER. No se permite un filtro ajeno al barbero.
+- La cita devuelve cliente/barbero/servicio y nombres, instantes ISO, `status`, `quotedPriceCents`, `quotedDurationMinutes`, `version`. Para BARBER el precio es `null`; no se entregan teléfono ni notas del cliente.
+- `PATCH /appointments/{id}/reschedule`: `barberId`, `serviceId`, `startsAt`, `version`, `reason` (1–300 caracteres no vacíos). Solo CONFIRMED; cambia fecha, servicio y/o barbero en una sola operación con nuevo snapshot.
+- `GET /appointments/{id}/availability?serviceId=uuid&barberId=uuid&date=YYYY-MM-DD`: solo administración; omitir `barberId` equivale a cualquiera. Excluye únicamente esa cita, previa comprobación de permiso/estado. La confirmación vuelve a validar dentro de transacción.
+- Transiciones: `version` y `reason` obligatorio para cancelación/inasistencia. Inasistencia no se admite antes de la hora prevista. Llegada/inicio pueden realizarlos OWNER/ADMIN o el barbero asignado; solo administración cancela/reprograma/marca inasistencia.
+- Eventos: `id`, `appointmentId`, `actorId`, `occurredAt`, `action`, `reason`, `before`, `after`. Snapshots incluyen estado, barbero, servicio, intervalo, precio y duración. Solo OWNER/ADMIN.
+- Errores: 400 validación, 403 permisos, 404 inexistente, 409 `SLOT_TAKEN`, `VERSION_CONFLICT` o `INVALID_STATE`. Una carrera de `xmin` detectada por persistencia conserva el código común `version.conflict`.
+- Todas las mutaciones exigen cookie y antiforgery. Ninguna funciona offline. La agenda no crea pagos, comisiones ni operaciones; no ofrece completar una atención (Fase 7).
+
+La cabecera `Idempotency-Key` de la especificación general todavía no tiene registro de replay en estas altas de agenda. Ante respuesta incierta se consulta el estado antes de reintentar; no hay reintentos automáticos de mutaciones.
 
 ## 5. Operaciones, pagos y reversos
 

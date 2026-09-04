@@ -37,7 +37,7 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
 
   const logout = async () => {
     await authApi.logout()
-    queryClient.removeQueries({ queryKey: ['auth'] })
+    queryClient.clear()
     navigate('/login', { replace: true })
   }
 
@@ -46,7 +46,8 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
       <div className="session-bar" aria-label="Sesión actual">
         <nav aria-label="Navegación interna">
           <Link to="/">Inicio</Link>
-          <Link to="/scheduling">Agenda</Link>
+          <Link to="/agenda">Agenda</Link>
+          <Link to="/scheduling">Disponibilidad</Link>
           {session.data.roles.includes('OWNER') && <Link to="/configuration">Configuración</Link>}
         </nav>
         <span>

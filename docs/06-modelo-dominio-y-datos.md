@@ -1,5 +1,11 @@
 # Modelo de dominio y datos
 
+## Implementación de historial de agenda — Fase 6
+
+`lou.appointment_events` conserva `id`, `appointment_id` (FK restrictiva), `actor_id`, `occurred_at`, `action`, `reason`, `before_data` y `after_data` (JSONB). La creación tiene snapshot anterior nulo. Reprogramación y transiciones guardan antes/después con estado, intervalo, servicio, barbero, precio en centavos y duración. Índice por cita e instante. El evento se confirma en la misma transacción que la cita y no tiene API de edición/eliminación.
+
+`customers.phone_e164` no es único: se permiten personas con teléfono compartido. Correcciones de cliente/cita emplean `xmin` como versión. Consultas administrativas exponen notas mínimas; la agenda del barbero no incluye notas/teléfono/precio. Este detalle implementado complementa el modelo conceptual siguiente, sin adelantar entidades económicas.
+
 ## 1. Criterios de modelado
 
 - Modelo relacional en PostgreSQL.

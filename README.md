@@ -4,9 +4,10 @@ Monolito modular para la operación de una barbería de una sola sucursal. Une a
 
 ## Estado
 
-- Fase 0: completada y aprobada.
-- Fase 1: fundación técnica en desarrollo.
-- No contiene aún lógica funcional de barbería.
+- Fases 0 y 2–5: aprobadas; Fase 1 conserva la excepción de trabajo local sin staging.
+- Fase 6: clientes y agenda interna implementados, en aceptación operativa ([acta G6](docs/31-acta-fase-6-g6.md)).
+- Disponible en local: identidad/roles, maestros, horarios/disponibilidad, clientes y citas. Cobro, inventario operativo y liquidaciones todavía pertenecen a fases posteriores.
+- Con Docker activo: `docker compose up --build -d`; abrir `http://localhost:8088/agenda` e ingresar con una cuenta interna. No se incluyen credenciales reales en el repositorio.
 
 La fuente de verdad del producto está en [docs/README.md](docs/README.md) y el orden de implementación en [docs/17-plan-maestro-fases.md](docs/17-plan-maestro-fases.md).
 
