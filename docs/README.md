@@ -38,6 +38,7 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 30. [Acta de Fase 5 y puerta G5](30-acta-fase-5-g5.md)
 31. [Fase 6 y aceptación pendiente de G6](31-acta-fase-6-g6.md)
 32. [Guía de transición desde Google Calendar](32-transicion-google-calendar.md)
+33. [Simulación delegada de Fase 6 sobre imágenes de producción](33-simulacion-fase-6.md)
 
 ## Convenciones
 

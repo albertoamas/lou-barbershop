@@ -28,7 +28,8 @@ ENTRYPOINT ["dotnet", "test", "LouBarbershop.slnx", "--configuration", "Release"
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-alpine3.24 AS runtime
 RUN apk upgrade --no-cache \
-    && apk add --no-cache curl krb5-libs \
+    && apk add --no-cache curl krb5-libs tzdata \
+    && test -r /usr/share/zoneinfo/America/La_Paz \
     && install -d -o "$APP_UID" -g "$APP_UID" /var/lib/lou-keys
 WORKDIR /app
 COPY --from=build /app/publish .

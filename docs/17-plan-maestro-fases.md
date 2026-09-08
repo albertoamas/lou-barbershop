@@ -479,7 +479,7 @@ El motor pasa matriz exhaustiva de intervalos y puede ser usado por agenda inter
 
 ## 12. Fase 6 — Clientes y agenda interna
 
-**Seguimiento:** `ACCEPTANCE`. Implementación y pruebas técnicas en [acta de Fase 6](31-acta-fase-6-g6.md). Con la autorización del usuario para aplicar la opción óptima, AC-06-08 queda limitado a T-001/T-002; T-003/T-004 permanecen exigidos por AC-07-08. G6 sigue pendiente únicamente de aceptación operativa. No avanzar a Fase 7 con esta puerta pendiente.
+**Seguimiento:** `DONE`. G6 aprobada por el dueño el 7 de septiembre de 2026 después de revisar la [simulación delegada](33-simulacion-fase-6.md). AC-06-08 queda limitado a T-001/T-002; T-003/T-004 permanecen exigidos por AC-07-08. La medición humana de velocidad continúa visible como mejora de validación, sin bloquear la autorización explícita para Fase 7.
 
 **Objetivo:** reemplazar operativamente la edición de Google Calendar para reservas internas.  
 **Dependencias:** G5.  

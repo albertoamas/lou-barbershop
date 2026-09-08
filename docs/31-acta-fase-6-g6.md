@@ -1,8 +1,8 @@
 # Fase 6 — Clientes y agenda interna
 
 **Fecha:** 3 de septiembre de 2026 (America/La_Paz)  
-**Estado:** `ACCEPTANCE` — implementación y pruebas técnicas realizadas  
-**Puerta G6:** pendiente de aceptación operativa; no autoriza todavía Fase 7  
+**Estado:** `DONE` — implementación, pruebas y simulación aceptadas  
+**Puerta G6:** aprobada por el dueño el 7 de septiembre de 2026; autoriza Fase 7  
 **Entrada:** G5 aprobada; continúa excepción local G1, sin Railway ni publicación remota.
 
 ## Resultado implementado
@@ -68,6 +68,10 @@ Docker Compose: migración aditiva aplicada; db/api/web saludables; /health/read
 La prueba de navegador utiliza una API/base temporal con datos ficticios, sin mocks HTTP y sin modificar datos operativos. Se detectó un 401 esperado al entrar anónimamente. Los 502 iniciales del proxy temporal se corrigieron antes de probar los flujos. El backend de pruebas usa hosts separados para no agotar entre suites la ventana de rate limiting; los límites productivos no se redujeron.
 
 ## Guion de aceptación operativa pendiente
+
+La simulación delegada del 4 de septiembre está registrada en [33-simulacion-fase-6.md](33-simulacion-fase-6.md). Incluye la corrección de un fallo del runtime Alpine y repetición exitosa sobre imágenes de producción. No sustituye la medición humana de AC-06-02 ni declara una aceptación humana que no ocurrió.
+
+El 7 de septiembre el dueño respondió «Perfecto, terminaste esta fase? continua con la siguiente». Se registra como aceptación explícita de G6 y autorización de avance, con la limitación anterior visible y sin inventar participantes o mediciones humanas.
 
 Capturas de datos ficticios: `output/playwright/fase-6/agenda-tablet.png`, `mi-dia-mobile.png` y `offline-mobile.png`. La consola del flujo de barbero no registra errores ni advertencias.
 

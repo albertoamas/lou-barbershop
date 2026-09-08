@@ -1,0 +1,39 @@
+# Isolated, disposable acceptance environment. Never use for operational data.
+# Requires the images produced by `docker compose build` in the repository root.
+name: lou-acceptance
+services:
+  db:
+    image: postgres:18.6-alpine3.24
+    environment:
+      POSTGRES_DB: acceptance
+      POSTGRES_USER: acceptance
+      POSTGRES_PASSWORD: Acceptance-disposable!8426
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acceptance -d acceptance"]
+      interval: 2s
+      retries: 20
+  migrate:
+    image: lou-barbershop-api:latest
+    command: ["--migrate"]
+    environment: &api-environment
+      ASPNETCORE_ENVIRONMENT: Production
+      Http__UseHttpsRedirection: "false"
+      Security__RequireSecureCookies: "false"
+      ConnectionStrings__Database: Host=db;Database=acceptance;Username=acceptance;Password=Acceptance-disposable!8426
+      Logging__LogLevel__Default: Warning
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    image: lou-barbershop-api:latest
+    environment: *api-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  web:
+    image: lou-barbershop-web:latest
+    ports:
+      - "127.0.0.1:8091:8080"
+    depends_on: [api]
