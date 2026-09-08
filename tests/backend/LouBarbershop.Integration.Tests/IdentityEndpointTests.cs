@@ -199,6 +199,7 @@ public sealed class IdentityApiFixture : IAsyncLifetime
             builder.UseSetting("BootstrapOwner:Password", OwnerPassword);
             builder.UseSetting("Http:UseHttpsRedirection", "false");
             builder.UseSetting("RateLimiting:LoginPermitLimit", "20");
+            builder.UseSetting("RateLimiting:GlobalPermitLimit", "2000");
         });
 
         await using var scope = _factory.Services.CreateAsyncScope();

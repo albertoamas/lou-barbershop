@@ -47,6 +47,8 @@ public sealed class MigrationTests
             Assert.Contains("20260902203000_ProtectCommissionRuleHistory", migrations);
             Assert.Contains("20260903011634_AddSchedulingAvailability", migrations);
             Assert.Contains("20260904020203_AddAppointmentEvents", migrations);
+            Assert.Contains("20260908002223_AddServiceOperations", migrations);
+            Assert.Contains("20260908010554_HardenServiceOperations", migrations);
         }
 
         await using var verificationContext = new AppDbContext(options);

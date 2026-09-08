@@ -16,6 +16,8 @@ Se usa control por roles en el servidor y reglas de propiedad. Una misma cuenta 
 | Configurar horarios | Sí | Sí | No |
 | Configurar servicios/precios | Sí | No | No |
 | Configurar productos | Sí | Sí | No |
+| Buscar/crear cliente para atención | Sí | Sí | Sí, sin notas |
+| Corregir cliente o ver notas | Sí | Sí | No |
 | Abrir atención propia | Sí | Sí | Sí |
 | Modificar atención ajena | Sí | Sí | No |
 | Cobrar operación | Sí | Sí | Sí, propia |

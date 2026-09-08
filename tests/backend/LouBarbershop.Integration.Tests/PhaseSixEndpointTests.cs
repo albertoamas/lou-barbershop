@@ -72,8 +72,9 @@ public sealed class PhaseSixEndpointTests(IdentityApiFixture fixture)
         await LoginAsync(barberClient, user.UserName, "Agenda-test!8426");
         var ownDay = await barberClient.GetFromJsonAsync<Appointment[]>($"/api/v1/appointments?dateFrom={date}&dateTo={date}");
         Assert.Null(Assert.Single(ownDay!).QuotedPriceCents);
-        using var customerForbidden = await barberClient.GetAsync("/api/v1/customers");
-        Assert.Equal(HttpStatusCode.Forbidden, customerForbidden.StatusCode);
+        var customerForOperation = await barberClient.GetFromJsonAsync<Customer[]>($"/api/v1/customers?query={suffix}");
+        Assert.Equal(2, customerForOperation!.Length);
+        Assert.All(customerForOperation, x => Assert.Null(x.Notes));
         using var historyForbidden = await barberClient.GetAsync($"/api/v1/appointments/{appointment.Id}/events");
         Assert.Equal(HttpStatusCode.Forbidden, historyForbidden.StatusCode);
         using var forbidden = await SendAsync(barberClient, HttpMethod.Post, $"/api/v1/appointments/{appointment.Id}/cancel", new { version = appointment.Version, reason = "No permitido" });
@@ -144,7 +145,7 @@ public sealed class PhaseSixEndpointTests(IdentityApiFixture fixture)
     private sealed record IdResponse(Guid Id);
     private sealed record User(Guid Id, string UserName);
     private sealed record Service(Guid Id, string Name, uint Version);
-    private sealed record Customer(Guid Id, string Phone, uint Version);
+    private sealed record Customer(Guid Id, string Phone, string? Notes, uint Version);
     private sealed record CustomerChange(Customer Customer, Customer[] PossibleDuplicates);
     private sealed record Appointment(Guid Id, uint Version, string Status, long? QuotedPriceCents, int QuotedDurationMinutes);
     private sealed record Snapshot(long PriceCents);

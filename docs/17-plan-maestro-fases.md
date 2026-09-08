@@ -538,6 +538,8 @@ Administración y un barbero completan un día simulado de agenda sin usar Calen
 **Cobertura:** RF-030–037 sin productos definitivos; CU-09–11; HU-020, HU-021, HU-023, HU-024; RN-ATE y RN-PAG.  
 **Tamaño:** XL.
 
+**Seguimiento:** `DONE`. G7 aprobada por el dueño el 8 de septiembre de 2026 tras la simulación delegada de una jornada de servicios. Evidencia, criterios, corrección exploratoria y límites en [34-acta-fase-7-g7.md](34-acta-fase-7-g7.md). Fase 8 queda habilitada.
+
 ### Incrementos
 
 1. Atención desde cita con servicio precargado.

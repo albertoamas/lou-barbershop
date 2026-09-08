@@ -47,6 +47,7 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
         <nav aria-label="Navegación interna">
           <Link to="/">Inicio</Link>
           <Link to="/agenda">Agenda</Link>
+          <Link to="/operations">Atención y cobro</Link>
           <Link to="/scheduling">Disponibilidad</Link>
           {session.data.roles.includes('OWNER') && <Link to="/configuration">Configuración</Link>}
         </nav>

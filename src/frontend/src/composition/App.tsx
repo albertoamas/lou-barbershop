@@ -9,6 +9,7 @@ import { SessionBoundary } from '../presentation/components/SessionBoundary'
 import { ConfigurationPage } from '../presentation/pages/ConfigurationPage'
 import { SchedulingPage } from '../presentation/pages/SchedulingPage'
 import { AgendaPage } from '../presentation/pages/AgendaPage'
+import { OperationsPage } from '../presentation/pages/OperationsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +24,14 @@ export const App = () => (
       <BrowserRouter>
         <AppShell>
           <Routes>
+            <Route
+              path="/operations"
+              element={
+                <SessionBoundary>
+                  <OperationsPage />
+                </SessionBoundary>
+              }
+            />
             <Route
               path="/agenda"
               element={

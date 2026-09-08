@@ -1,5 +1,15 @@
 # Modelo de dominio y datos
 
+## Implementación económica — Fase 7
+
+`lou.sale_operations`, `sale_items`, `payments`, `commission_entries` y `payment_idempotency` implementan el cierre de servicios. En esta fase cada operación exige cliente y barbero, cada detalle representa un servicio con snapshot de nombre/precio y productos aún no se modelan en `sale_items`; la ampliación conceptual descrita más abajo corresponde a Fase 8.
+
+La operación guarda origen `Appointment`/`WalkIn`, estado `Draft`/`ReadyToPay`/`Paid`, subtotal, descuento, cortesía, total, motivo, fechas, actor y `xmin`. `appointment_id` es opcional y único. Los detalles y pagos dependen de la operación con borrado restrictivo; un pago por método y una comisión por detalle son únicos.
+
+`payment_idempotency` relaciona una única operación con un hash SHA-256 único de la clave de reintento. `commission_entries` congela base, tasa, importe, barbero, detalle, actor, fecha y estado `AVAILABLE`; el dinero permanece exclusivamente en `payments`. PostgreSQL verifica importes no negativos, ecuación del total, pagos positivos, tasa 0–10000 y todas las referencias.
+
+El cierre de una cita agrega `COMPLETED_FROM_PAYMENT` a `appointment_events` en el mismo commit. Las migraciones aditivas son `20260908002223_AddServiceOperations` y `20260908010554_HardenServiceOperations`; ADR-014 documenta atomicidad/idempotencia.
+
 ## Implementación de historial de agenda — Fase 6
 
 `lou.appointment_events` conserva `id`, `appointment_id` (FK restrictiva), `actor_id`, `occurred_at`, `action`, `reason`, `before_data` y `after_data` (JSONB). La creación tiene snapshot anterior nulo. Reprogramación y transiciones guardan antes/después con estado, intervalo, servicio, barbero, precio en centavos y duración. Índice por cita e instante. El evento se confirma en la misma transacción que la cita y no tiene API de edición/eliminación.

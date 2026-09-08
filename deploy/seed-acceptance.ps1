@@ -17,8 +17,10 @@ foreach ($item in @(@{ user = 'acceptance-alex'; name = 'Alex QA' }, @{ user = '
     foreach ($day in 1..7) {
         Send-Acceptance "barbers/$($barber.id)/schedules" @{ weekday = $day; startLocalTime = '09:00'; endLocalTime = '18:00'; validFrom = '2026-09-01' } | Out-Null
     }
+    Send-Acceptance "barbers/$($barber.id)/commission-rules" @{ kind = 'SERVICE'; rateBasisPoints = 5000; validFrom = '2026-09-01' } | Out-Null
 }
 $cut = Send-Acceptance 'services' @{ name = 'Corte QA'; defaultDurationMinutes = 45; defaultPriceCents = 6000 }
 $beard = Send-Acceptance 'services' @{ name = 'Barba QA'; defaultDurationMinutes = 30; defaultPriceCents = 4000 }
+$mixed = Send-Acceptance 'services' @{ name = 'Atención mixta QA'; defaultDurationMinutes = 45; defaultPriceCents = 7000 }
 $customer = Send-Acceptance 'customers' @{ displayName = 'Martín QA'; phone = '71234567'; notes = 'Nota ficticia de administración' }
-@{ adminId = $admin.id; alexId = $barbers[0].id; diegoId = $barbers[1].id; cutId = $cut.id; beardId = $beard.id; customerId = $customer.customer.id } | ConvertTo-Json
+@{ adminId = $admin.id; alexId = $barbers[0].id; diegoId = $barbers[1].id; cutId = $cut.id; beardId = $beard.id; mixedId = $mixed.id; customerId = $customer.customer.id } | ConvertTo-Json

@@ -140,8 +140,8 @@ No se acepta precio desde el cliente; el servidor obtiene y congela la oferta vi
 
 Las rutas internas anteriores están implementadas; `/public/*` continúa pendiente de Fase 11. Los endpoints implementados devuelven objetos/colecciones directamente, no el envoltorio conceptual `data/meta` de la sección 1. El esquema OpenAPI se genera desde Controllers en desarrollo.
 
-- `GET /customers?query=`: máximo 50 coincidencias, búsqueda de hasta 120 caracteres por nombre o teléfono. Solo OWNER/ADMIN; incluye `id`, `displayName`, `phone`, `notes`, `version`.
-- Alta/corrección de cliente: `displayName`, `phone`, `notes` opcional (máximo 1000); PATCH agrega `version`. Devuelve `{ customer, possibleDuplicates }`. Un teléfono local de ocho dígitos se normaliza con `+591`; compartirlo no bloquea el alta.
+- `GET /customers?query=`: máximo 50 coincidencias, búsqueda de hasta 120 caracteres por nombre o teléfono. OWNER/ADMIN reciben `notes`; BARBER puede buscar para abrir una atención propia, pero las notas se redactan.
+- Alta/corrección de cliente: `displayName`, `phone`, `notes` opcional (máximo 1000); PATCH agrega `version`. OWNER/ADMIN crean y corrigen; BARBER puede crear para una atención y el servidor ignora cualquier nota. Devuelve `{ customer, possibleDuplicates }`. Un teléfono local de ocho dígitos se normaliza con `+591`; compartirlo no bloquea el alta.
 - `GET /appointments?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&barberId=uuid`: rango inclusivo de 1 a 31 días en Bolivia. Omitir barbero consulta todos para administración y solo el propio para BARBER. No se permite un filtro ajeno al barbero.
 - La cita devuelve cliente/barbero/servicio y nombres, instantes ISO, `status`, `quotedPriceCents`, `quotedDurationMinutes`, `version`. Para BARBER el precio es `null`; no se entregan teléfono ni notas del cliente.
 - `PATCH /appointments/{id}/reschedule`: `barberId`, `serviceId`, `startsAt`, `version`, `reason` (1–300 caracteres no vacíos). Solo CONFIRMED; cambia fecha, servicio y/o barbero en una sola operación con nuevo snapshot.
@@ -159,12 +159,12 @@ La cabecera `Idempotency-Key` de la especificación general todavía no tiene re
 |---|---|---|
 | POST | `/operations` | Llegada directa/venta independiente |
 | POST | `/appointments/{id}/operation` | Crear desde cita |
-| GET/PATCH | `/operations/{id}` | Consultar/editar borrador |
-| POST | `/operations/{id}/items` | Añadir detalle |
-| PATCH/DELETE | `/operations/{id}/items/{itemId}` | Modificar/quitar borrador |
+| GET | `/operations/{id}` | Consultar atención |
+| PUT | `/operations/{id}/services` | Reemplazar servicios reales del borrador |
 | POST | `/operations/{id}/adjustments` | Descuento/cortesía |
 | POST | `/operations/{id}/ready` | Validar para cobro |
 | POST | `/operations/{id}/pay` | Cierre atómico |
+| GET | `/operations/daily?date=YYYY-MM-DD` | Panel diario propio o administrativo |
 | POST | `/operations/{id}/reverse` | Reverso por dueño |
 
 Pago mixto:
@@ -179,7 +179,23 @@ Pago mixto:
 }
 ```
 
-El servidor responde con totales, movimientos de inventario y comisiones creadas. Repetir la misma solicitud con igual `Idempotency-Key` devuelve el mismo resultado.
+El servidor responde con la operación, sus totales y pagos. La comisión se registra internamente y no se mezcla con el dinero cobrado. Repetir la misma solicitud con igual `Idempotency-Key` devuelve el mismo resultado.
+
+### Contrato implementado en Fase 7
+
+- `POST /operations` recibe únicamente `customerId` y `barberId`. No crea cita ficticia.
+- `POST /appointments/{id}/operation` solo acepta cita `CHECKED_IN` o `IN_SERVICE`, exige barbero propio/administración, evita duplicados y precarga el snapshot reservado.
+- `PUT /operations/{id}/services` recibe `version` y `services: [{ serviceId }]`. Reemplaza el detalle mientras está `DRAFT`; nombre y precio efectivo los resuelve el servidor para fecha/barbero.
+- `POST /operations/{id}/adjustments` recibe `version`, `discountCents`, `courtesy` y `reason`. Solo OWNER/ADMIN; un ajuste no puede producir total negativo.
+- `POST /operations/{id}/ready` recibe `version`; exige al menos un servicio.
+- `POST /operations/{id}/pay` recibe `version` y componentes `CASH`/`QR`, además de `Idempotency-Key` obligatoria (máximo 120 caracteres). Pago positivo y suma exacta; una cortesía total exige arreglo vacío.
+- El cierre guarda operación, pagos, comisión, cita/evento e idempotencia en la misma transacción. `COMMISSION_RULE_MISSING`, `PAYMENT_MISMATCH`, versión obsoleta o fallo de persistencia no dejan efectos parciales.
+- La clave se persiste como hash. Repetirla para la misma operación devuelve el cierre anterior; reutilizarla en otra operación devuelve `IDEMPOTENCY_KEY_REUSED`.
+- `GET /operations/daily` usa el día Bolivia y devuelve contadores, total, efectivo, QR y operaciones. BARBER solo recibe las propias.
+- La respuesta no expone filas de comisión. Inventario/movimientos y reversos siguen pendientes de Fases 8–9; por tanto la frase conceptual anterior sobre movimientos aplica cuando esas fases existan.
+- Todos los cambios requieren sesión, antiforgery y conexión. La PWA conserva la misma clave para reintentar una respuesta incierta y no encola el cobro offline.
+
+OpenAPI se genera desde los Controllers de ASP.NET Core en desarrollo y refleja estas rutas/DTO. La decisión transaccional está en [ADR-014](adr/ADR-014-cierre-atomico-atencion.md).
 
 ## 6. Inventario y gastos
 

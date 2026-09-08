@@ -51,18 +51,18 @@ No se permite `DONE` sin evidencia de los criterios de aceptación.
 | HU-002 | 3–4 | P0 | M | HU-001 | DONE | G4 |
 | HU-003 | 4 | P0 | M | HU-002 | DONE | G4 |
 | HU-004 | 5 | P0 | M | HU-002 | DONE | G5 |
-| HU-010 | 6 | P0 | M | G5 | ACCEPTANCE | G6 |
+| HU-010 | 6 | P0 | M | G5 | DONE | G6 |
 | HU-011 | 5 | P0 | L | HU-003–004 | DONE | G5 |
-| HU-012 | 6 | P0 | L | HU-010–011 | ACCEPTANCE | G6 |
-| HU-013 | 6 | P0 | M | HU-012 | ACCEPTANCE | G6 |
-| HU-014 | 6 | P0 | S | HU-012 | ACCEPTANCE | G6 |
-| HU-015 | 6 | P0 | M | HU-001, HU-012 | ACCEPTANCE | G6 |
+| HU-012 | 6 | P0 | L | HU-010–011 | DONE | G6 |
+| HU-013 | 6 | P0 | M | HU-012 | DONE | G6 |
+| HU-014 | 6 | P0 | S | HU-012 | DONE | G6 |
+| HU-015 | 6 | P0 | M | HU-001, HU-012 | DONE | G6 |
 | HU-016 | 11 | P1 | L | G6, TEC-090 base | PENDING | G11 |
-| HU-020 | 7 | P0 | M | G6 | PENDING | G7 |
-| HU-021 | 7 | P0 | M | HU-020 | PENDING | G7 |
+| HU-020 | 7 | P0 | M | G6 | DONE | G7 |
+| HU-021 | 7 | P0 | M | HU-020 | DONE | G7 |
 | HU-022 | 8 | P0 | M | HU-024, HU-030 | PENDING | G8 |
-| HU-023 | 7 | P0 | M | HU-021 | PENDING | G7 |
-| HU-024 | 7 | P0 | L | HU-021, HU-023 | PENDING | G7 |
+| HU-023 | 7 | P0 | M | HU-021 | DONE | G7 |
+| HU-024 | 7 | P0 | L | HU-021, HU-023 | DONE | G7 |
 | HU-025 | 9 | P1 | L | HU-024, HU-043 | PENDING | G9 |
 | HU-030 | 8 | P0 | L | G7, HU-003 | PENDING | G8 |
 | HU-031 | 8 | P1 | M | HU-030 | PENDING | G8 |

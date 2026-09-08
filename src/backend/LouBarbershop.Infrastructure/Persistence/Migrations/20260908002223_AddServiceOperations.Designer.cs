@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using LouBarbershop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LouBarbershop.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260908002223_AddServiceOperations")]
+    partial class AddServiceOperations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -483,10 +486,7 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ux_payments_operation_method");
 
-                    b.ToTable("payments", "lou", t =>
-                        {
-                            t.HasCheckConstraint("ck_payments_amount", "amount_cents > 0");
-                        });
+                    b.ToTable("payments", "lou");
                 });
 
             modelBuilder.Entity("LouBarbershop.Domain.Sales.SaleItem", b =>
@@ -519,16 +519,11 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BarberId");
-
                     b.HasIndex("OperationId");
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("sale_items", "lou", t =>
-                        {
-                            t.HasCheckConstraint("ck_sale_items_price", "unit_price_cents >= 0");
-                        });
+                    b.ToTable("sale_items", "lou");
                 });
 
             modelBuilder.Entity("LouBarbershop.Domain.Sales.SaleOperation", b =>
@@ -618,12 +613,7 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
                     b.HasIndex("OpenedAt", "Status")
                         .HasDatabaseName("ix_sale_operations_opened_status");
 
-                    b.ToTable("sale_operations", "lou", t =>
-                        {
-                            t.HasCheckConstraint("ck_sale_operations_non_negative", "subtotal_cents >= 0 AND discount_cents >= 0 AND courtesy_cents >= 0 AND total_cents >= 0");
-
-                            t.HasCheckConstraint("ck_sale_operations_total", "total_cents = subtotal_cents - discount_cents - courtesy_cents");
-                        });
+                    b.ToTable("sale_operations", "lou");
                 });
 
             modelBuilder.Entity("LouBarbershop.Domain.Scheduling.AvailabilityExceptionRule", b =>
@@ -1116,16 +1106,10 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BarberId");
-
                     b.HasIndex("SaleItemId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_commission_entries_sale_item");
+                        .IsUnique();
 
-                    b.ToTable("commission_entries", "lou", t =>
-                        {
-                            t.HasCheckConstraint("ck_commission_entries_values", "base_cents >= 0 AND amount_cents >= 0 AND rate_basis_points >= 0 AND rate_basis_points <= 10000");
-                        });
+                    b.ToTable("commission_entries", "lou");
                 });
 
             modelBuilder.Entity("LouBarbershop.Infrastructure.Persistence.IdempotencyRow", b =>
@@ -1151,12 +1135,7 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("KeyHash")
-                        .IsUnique()
-                        .HasDatabaseName("ux_payment_idempotency_key_hash");
-
-                    b.HasIndex("OperationId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_payment_idempotency_operation");
+                        .IsUnique();
 
                     b.ToTable("payment_idempotency", "lou");
                 });
@@ -1332,22 +1311,16 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
                     b.HasOne("LouBarbershop.Domain.Sales.SaleOperation", null)
                         .WithMany("Payments")
                         .HasForeignKey("OperationId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
             modelBuilder.Entity("LouBarbershop.Domain.Sales.SaleItem", b =>
                 {
-                    b.HasOne("LouBarbershop.Domain.Staff.BarberProfile", null)
-                        .WithMany()
-                        .HasForeignKey("BarberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LouBarbershop.Domain.Sales.SaleOperation", null)
                         .WithMany("Items")
                         .HasForeignKey("OperationId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("LouBarbershop.Domain.Catalog.Service", null)
@@ -1418,30 +1391,6 @@ namespace LouBarbershop.Infrastructure.Persistence.Migrations
                     b.HasOne("LouBarbershop.Domain.Appointments.Appointment", null)
                         .WithMany()
                         .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LouBarbershop.Infrastructure.Persistence.CommissionEntryRow", b =>
-                {
-                    b.HasOne("LouBarbershop.Domain.Staff.BarberProfile", null)
-                        .WithMany()
-                        .HasForeignKey("BarberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LouBarbershop.Domain.Sales.SaleItem", null)
-                        .WithOne()
-                        .HasForeignKey("LouBarbershop.Infrastructure.Persistence.CommissionEntryRow", "SaleItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LouBarbershop.Infrastructure.Persistence.IdempotencyRow", b =>
-                {
-                    b.HasOne("LouBarbershop.Domain.Sales.SaleOperation", null)
-                        .WithOne()
-                        .HasForeignKey("LouBarbershop.Infrastructure.Persistence.IdempotencyRow", "OperationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

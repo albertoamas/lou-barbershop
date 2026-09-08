@@ -54,7 +54,11 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 
 ### Evidencia de Fase 6
 
-HU-010/012/013/014/015 y RF-020–027 están implementados en clientes/agenda, con `PhaseSixEndpointTests`, pruebas del núcleo y de interfaz. T-001/T-002 verificados y exigidos por AC-06-08; T-003/T-004 continúan pendientes de atención/cobro y son exigidos por AC-07-08 en Fase 7. La dependencia circular se corrigió con autorización del usuario; decisión y aceptación operativa pendiente: [acta G6](31-acta-fase-6-g6.md). No equivale a aprobación operativa ni migración de Calendar.
+HU-010/012/013/014/015 y RF-020–027 están implementados en clientes/agenda, con `PhaseSixEndpointTests`, pruebas del núcleo y de interfaz. T-001/T-002 se verificaron en G6; T-003/T-004 se completaron después en G7. La dependencia circular fue corregida con autorización del usuario y la puerta quedó aprobada: [acta G6](31-acta-fase-6-g6.md). No se ejecutó la migración desde Calendar.
+
+### Evidencia de Fase 7
+
+HU-020/021/023/024 y RF-030–037 de servicios están implementados. `PhaseSevenOperationTests` cubre reglas puras y `PhaseSevenEndpointTests` verifica precio real, pago mixto, desajuste, replay idempotente, rollback, comisión, cita vinculada y permisos sobre PostgreSQL real. T-003–008/T-015 y G7 se documentan en [acta G7](34-acta-fase-7-g7.md); la transacción se formaliza en [ADR-014](adr/ADR-014-cierre-atomico-atencion.md). Productos siguen en Fase 8 y reversos en Fase 9.
 
 Si una regla cambia:
 

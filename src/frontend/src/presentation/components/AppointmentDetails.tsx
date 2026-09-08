@@ -11,6 +11,7 @@ import { centsToBolivianos } from '../../core/configuration/Configuration'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { agendaTime } from '../../core/agenda/Agenda'
+import { salesApi } from '../../infrastructure/http/salesApi'
 
 const actionLabels: Record<AgendaAction, string> = {
   cancel: 'Cancelar cita',
@@ -84,6 +85,27 @@ export const AppointmentDetails = ({
         </p>
       )}
       <div className="row-actions">
+        {appointment.status === 'IN_SERVICE' && (
+          <button
+            disabled={disabled || busy}
+            onClick={() => {
+              setBusy(true)
+              void salesApi
+                .openAppointment(appointment.id)
+                .then((opened) => window.location.assign(`/operations?operationId=${opened.id}`))
+                .catch((error: unknown) =>
+                  setNotice(
+                    error instanceof ApiError
+                      ? (error.problem.detail ?? error.message)
+                      : 'No se pudo abrir la atención.',
+                  ),
+                )
+                .finally(() => setBusy(false))
+            }}
+          >
+            Abrir atención y cobro
+          </button>
+        )}
         {canManage && appointment.status === 'CONFIRMED' && (
           <button disabled={disabled || busy} onClick={onReschedule}>
             Reprogramar / reasignar

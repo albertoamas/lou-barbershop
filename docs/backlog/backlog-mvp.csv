@@ -13,18 +13,18 @@ HU-001,functional,access,Acceso interno,P0,3,M,DONE,G2,G3,docs/04-historias-de-u
 HU-002,functional,configuration,Gestionar barberos,P0,3-4,M,DONE,HU-001,G4,docs/04-historias-de-usuario.md
 HU-003,functional,catalog,Configurar servicios y ofertas,P0,4,M,DONE,HU-002,G4,docs/04-historias-de-usuario.md
 HU-004,functional,scheduling,Configurar horarios,P0,5,M,DONE,HU-002,G5,docs/04-historias-de-usuario.md
-HU-010,functional,customers,Buscar o crear cliente,P0,6,M,ACCEPTANCE,G5,G6,docs/04-historias-de-usuario.md
+HU-010,functional,customers,Buscar o crear cliente,P0,6,M,DONE,G5,G6,docs/04-historias-de-usuario.md
 HU-011,functional,scheduling,Consultar disponibilidad,P0,5,L,DONE,HU-003;HU-004,G5,docs/04-historias-de-usuario.md
-HU-012,functional,scheduling,Crear cita,P0,6,L,ACCEPTANCE,HU-010;HU-011,G6,docs/04-historias-de-usuario.md
-HU-013,functional,scheduling,Cambiar cita,P0,6,M,ACCEPTANCE,HU-012,G6,docs/04-historias-de-usuario.md
-HU-014,functional,scheduling,Cancelar o marcar inasistencia,P0,6,S,ACCEPTANCE,HU-012,G6,docs/04-historias-de-usuario.md
-HU-015,functional,scheduling,Ver agenda propia,P0,6,M,ACCEPTANCE,HU-001;HU-012,G6,docs/04-historias-de-usuario.md
+HU-012,functional,scheduling,Crear cita,P0,6,L,DONE,HU-010;HU-011,G6,docs/04-historias-de-usuario.md
+HU-013,functional,scheduling,Cambiar cita,P0,6,M,DONE,HU-012,G6,docs/04-historias-de-usuario.md
+HU-014,functional,scheduling,Cancelar o marcar inasistencia,P0,6,S,DONE,HU-012,G6,docs/04-historias-de-usuario.md
+HU-015,functional,scheduling,Ver agenda propia,P0,6,M,DONE,HU-001;HU-012,G6,docs/04-historias-de-usuario.md
 HU-016,functional,public-booking,Reserva publica sin cuenta,P1,11,L,PENDING,G6,G11,docs/04-historias-de-usuario.md
-HU-020,functional,sales,Registrar llegada directa,P0,7,M,PENDING,G6,G7,docs/04-historias-de-usuario.md
-HU-021,functional,sales,Confirmar servicios realizados,P0,7,M,PENDING,HU-020,G7,docs/04-historias-de-usuario.md
+HU-020,functional,sales,Registrar llegada directa,P0,7,M,DONE,G6,G7,docs/04-historias-de-usuario.md
+HU-021,functional,sales,Confirmar servicios realizados,P0,7,M,DONE,HU-020,G7,docs/04-historias-de-usuario.md
 HU-022,functional,inventory,Vender productos,P0,8,M,PENDING,HU-024;HU-030,G8,docs/04-historias-de-usuario.md
-HU-023,functional,sales,Aplicar descuento o cortesia,P0,7,M,PENDING,HU-021,G7,docs/04-historias-de-usuario.md
-HU-024,functional,payments,Cobrar con uno o dos medios,P0,7,L,PENDING,HU-021;HU-023,G7,docs/04-historias-de-usuario.md
+HU-023,functional,sales,Aplicar descuento o cortesia,P0,7,M,DONE,HU-021,G7,docs/04-historias-de-usuario.md
+HU-024,functional,payments,Cobrar con uno o dos medios,P0,7,L,DONE,HU-021;HU-023,G7,docs/04-historias-de-usuario.md
 HU-025,functional,reversals,Revertir operacion,P1,9,L,PENDING,HU-024;HU-043,G9,docs/04-historias-de-usuario.md
 HU-030,functional,inventory,Registrar entrada de producto,P0,8,L,PENDING,G7,G8,docs/04-historias-de-usuario.md
 HU-031,functional,inventory,Ajustar por conteo o perdida,P1,8,M,PENDING,HU-030,G8,docs/04-historias-de-usuario.md

@@ -6,20 +6,22 @@ namespace LouBarbershop.Application.Agenda;
 public sealed class CustomerService(IAgendaStore store, ICurrentActor actor, IClock clock, IIdGenerator ids)
 {
     private bool CanManage => actor.IsInRole("OWNER") || actor.IsInRole("ADMIN");
+    private bool CanOperate => CanManage || actor.IsInRole("BARBER");
 
     public async Task<AgendaResult<IReadOnlyCollection<CustomerView>>> SearchAsync(string? query, CancellationToken ct)
     {
-        if (!CanManage) return new(AgendaStatus.Forbidden);
+        if (!CanOperate) return new(AgendaStatus.Forbidden);
         var normalized = query?.Trim() ?? string.Empty;
         if (normalized.Length > 120) return new(AgendaStatus.Invalid, Code: "query.invalid", Message: "La búsqueda admite hasta 120 caracteres.");
         var phone = NormalizePhone(normalized);
         var customers = await store.SearchCustomersAsync(normalized, phone.IsSuccess ? phone.Value : null, ct);
-        return new(AgendaStatus.Success, customers.Select(Map).ToArray());
+        return new(AgendaStatus.Success, customers.Select(MapForActor).ToArray());
     }
 
     public async Task<AgendaResult<CustomerChange>> SaveAsync(Guid? id, CustomerInput input, uint? version, CancellationToken ct)
     {
-        if (!CanManage) return new(AgendaStatus.Forbidden);
+        if (!CanOperate || (id.HasValue && !CanManage)) return new(AgendaStatus.Forbidden);
+        if (!CanManage) input = input with { Notes = null };
         if (input.Notes?.Length > 1000) return new(AgendaStatus.Invalid, Code: "customer.notes_too_long", Message: "La nota admite hasta 1000 caracteres.");
         var phone = NormalizePhone(input.Phone);
         if (!phone.IsSuccess) return new(AgendaStatus.Invalid, Code: phone.Error!.Code, Message: phone.Error.Message);
@@ -53,4 +55,5 @@ public sealed class CustomerService(IAgendaStore store, ICurrentActor actor, ICl
     }
 
     private static CustomerView Map(Customer value) => new(value.Id, value.DisplayName, value.PhoneNumber.Value, value.Notes, value.Version);
+    private CustomerView MapForActor(Customer value) => CanManage ? Map(value) : Map(value) with { Notes = null };
 }

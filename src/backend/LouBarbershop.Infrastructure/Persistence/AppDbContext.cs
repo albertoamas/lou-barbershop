@@ -4,6 +4,7 @@ using LouBarbershop.Domain.Catalog;
 using LouBarbershop.Domain.Commissions;
 using LouBarbershop.Domain.Customers;
 using LouBarbershop.Domain.Expenses;
+using LouBarbershop.Domain.Sales;
 using LouBarbershop.Domain.Scheduling;
 using LouBarbershop.Domain.Staff;
 using LouBarbershop.Infrastructure.Identity;
@@ -30,6 +31,11 @@ public sealed class AppDbContext(
     public DbSet<AvailabilityExceptionRule> AvailabilityExceptions => Set<AvailabilityExceptionRule>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentEventRecord> AppointmentEvents => Set<AppointmentEventRecord>();
+    public DbSet<SaleOperation> SaleOperations => Set<SaleOperation>();
+    public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<CommissionEntryRow> CommissionEntries => Set<CommissionEntryRow>();
+    public DbSet<IdempotencyRow> PaymentIdempotency => Set<IdempotencyRow>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
@@ -127,7 +133,7 @@ public sealed class AppDbContext(
         {
             typeof(Customer), typeof(StaffProfile), typeof(BarberProfile), typeof(Service),
             typeof(BarberServiceOffering), typeof(Product), typeof(CommissionRule), typeof(ExpenseCategory),
-            typeof(WorkingSchedule), typeof(AvailabilityExceptionRule), typeof(Appointment),
+            typeof(WorkingSchedule), typeof(AvailabilityExceptionRule), typeof(Appointment), typeof(SaleOperation),
         };
         var changedEntries = ChangeTracker.Entries()
             .Where(entry => auditableTypes.Contains(entry.Entity.GetType()) && entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)

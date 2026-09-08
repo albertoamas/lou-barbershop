@@ -817,3 +817,18 @@ h1 {
     transition-duration: 0.01ms !important;
   }
 }
+.operations-page {
+  display: grid;
+  gap: 1rem;
+}
+.operation-workspace fieldset {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+}
+.operation-workspace {
+  display: grid;
+  gap: 1rem;
+}
