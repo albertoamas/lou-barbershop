@@ -187,12 +187,12 @@ El servidor responde con la operación, sus totales y pagos. La comisión se reg
 - `POST /appointments/{id}/operation` solo acepta cita `CHECKED_IN` o `IN_SERVICE`, exige barbero propio/administración, evita duplicados y precarga el snapshot reservado.
 - `PUT /operations/{id}/services` recibe `version` y `services: [{ serviceId }]`. Reemplaza el detalle mientras está `DRAFT`; nombre y precio efectivo los resuelve el servidor para fecha/barbero.
 - `POST /operations/{id}/adjustments` recibe `version`, `discountCents`, `courtesy` y `reason`. Solo OWNER/ADMIN; un ajuste no puede producir total negativo.
-- `POST /operations/{id}/ready` recibe `version`; exige al menos un servicio.
+- `POST /operations/{id}/ready` recibe `version`; exige al menos un servicio o producto.
 - `POST /operations/{id}/pay` recibe `version` y componentes `CASH`/`QR`, además de `Idempotency-Key` obligatoria (máximo 120 caracteres). Pago positivo y suma exacta; una cortesía total exige arreglo vacío.
 - El cierre guarda operación, pagos, comisión, cita/evento e idempotencia en la misma transacción. `COMMISSION_RULE_MISSING`, `PAYMENT_MISMATCH`, versión obsoleta o fallo de persistencia no dejan efectos parciales.
 - La clave se persiste como hash. Repetirla para la misma operación devuelve el cierre anterior; reutilizarla en otra operación devuelve `IDEMPOTENCY_KEY_REUSED`.
 - `GET /operations/daily` usa el día Bolivia y devuelve contadores, total, efectivo, QR y operaciones. BARBER solo recibe las propias.
-- La respuesta no expone filas de comisión. Inventario/movimientos y reversos siguen pendientes de Fases 8–9; por tanto la frase conceptual anterior sobre movimientos aplica cuando esas fases existan.
+- La respuesta no expone filas de comisión. Fase 8 añade productos y movimientos; los reversos coordinados de cobro/comisión siguen pendientes de Fase 9.
 - Todos los cambios requieren sesión, antiforgery y conexión. La PWA conserva la misma clave para reintentar una respuesta incierta y no encola el cobro offline.
 
 OpenAPI se genera desde los Controllers de ASP.NET Core en desarrollo y refleja estas rutas/DTO. La decisión transaccional está en [ADR-014](adr/ADR-014-cierre-atomico-atencion.md).
@@ -210,6 +210,16 @@ OpenAPI se genera desde los Controllers de ASP.NET Core en desarrollo y refleja 
 | GET/POST | `/expense-categories` | Categorías |
 | GET/POST | `/expenses` | Consultar/registrar gasto |
 | POST | `/expenses/{id}/void` | Anular gasto |
+| GET | `/cash-flow?dateFrom=&dateTo=` | Cobros y salidas por medio, separando inventario de gasto |
+
+### Contrato implementado en Fase 8
+
+- `PUT /operations/{id}/products` recibe `version` y `products: [{ productId, quantity }]`; el servidor congela precio y costo vigente.
+- El pago confirma la salida de inventario en la misma transacción. Falta de unidades devuelve `OUT_OF_STOCK` sin pago, comisión ni movimiento parcial.
+- `POST /inventory-receipts` recibe fecha, medio y uno o más detalles positivos; el servidor calcula total, promedio y movimientos.
+- `POST /products/{id}/adjustments` exige tipo, delta y motivo. OWNER puede autorizar una corrección negativa; ADMIN no puede dejar stock negativo.
+- `POST /expenses/{id}/void` exige `version` y motivo; conserva el gasto y lo excluye del flujo vigente.
+- El reverso integral de recepción de la tabla conceptual se mantiene fuera del contrato ejecutable de Fase 8; las correcciones se registran como ajuste explícito.
 
 ## 7. Comisiones y liquidaciones
 

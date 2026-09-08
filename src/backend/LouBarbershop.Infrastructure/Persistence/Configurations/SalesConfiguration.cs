@@ -49,15 +49,24 @@ public sealed class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
 {
     public void Configure(EntityTypeBuilder<SaleItem> builder)
     {
-        builder.ToTable("sale_items", table => table.HasCheckConstraint("ck_sale_items_price", "unit_price_cents >= 0"));
+        builder.ToTable("sale_items", table =>
+        {
+            table.HasCheckConstraint("ck_sale_items_values", "unit_price_cents >= 0 AND unit_cost_cents >= 0 AND quantity > 0");
+            table.HasCheckConstraint("ck_sale_items_reference", "(type = 'Service' AND service_id IS NOT NULL AND product_id IS NULL) OR (type = 'Product' AND service_id IS NULL AND product_id IS NOT NULL)");
+        });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(x => x.OperationId).HasColumnName("operation_id");
+        builder.Property(x => x.Type).HasColumnName("type").HasConversion<string>().HasMaxLength(12);
         builder.Property(x => x.ServiceId).HasColumnName("service_id");
+        builder.Property(x => x.ProductId).HasColumnName("product_id");
         builder.Property(x => x.DescriptionSnapshot).HasColumnName("description_snapshot").HasMaxLength(120);
         builder.Property(x => x.UnitPriceCents).HasColumnName("unit_price_cents");
+        builder.Property(x => x.UnitCostCents).HasColumnName("unit_cost_cents");
+        builder.Property(x => x.Quantity).HasColumnName("quantity");
         builder.Property(x => x.BarberId).HasColumnName("barber_id");
         builder.HasOne<Service>().WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<BarberProfile>().WithMany().HasForeignKey(x => x.BarberId).OnDelete(DeleteBehavior.Restrict);
     }
 }

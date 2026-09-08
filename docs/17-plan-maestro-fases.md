@@ -627,6 +627,8 @@ Una jornada simulada solo con servicios cuadra atenciones, totales y medios de p
 
 Conteo inicial + recepciones − ventas ± ajustes coincide con existencia visible, y el flujo distingue inventario de gasto.
 
+**Seguimiento:** `READY_FOR_G8`. Implementación y verificación técnica completadas el 8 de septiembre de 2026. La evidencia, criterios y límites están en [35-acta-fase-8-g8.md](35-acta-fase-8-g8.md). Fase 9 permanece bloqueada hasta aprobación explícita del dueño.
+
 ---
 
 ## 15. Fase 9 — Comisiones, liquidaciones y reversos

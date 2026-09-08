@@ -37,5 +37,6 @@ public sealed class Product
         Name = normalized; Brand = Normalize(brand, 80); Sku = Normalize(sku, 50)?.ToUpperInvariant(); Description = Normalize(description, 500); SalePrice = price; MinimumStock = minimumStock; Active = active; UpdatedAt = at.ToUniversalTime();
         return DomainResult.Success(this);
     }
+    public void SetAverageCost(Money cost, DateTimeOffset at) { AverageCost = cost; UpdatedAt = at.ToUniversalTime(); }
     private static string? Normalize(string? value, int max) { var text = value?.Trim(); return string.IsNullOrEmpty(text) ? null : text[..Math.Min(text.Length, max)]; }
 }

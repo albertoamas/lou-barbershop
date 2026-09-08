@@ -60,6 +60,10 @@ HU-010/012/013/014/015 y RF-020–027 están implementados en clientes/agenda, c
 
 HU-020/021/023/024 y RF-030–037 de servicios están implementados. `PhaseSevenOperationTests` cubre reglas puras y `PhaseSevenEndpointTests` verifica precio real, pago mixto, desajuste, replay idempotente, rollback, comisión, cita vinculada y permisos sobre PostgreSQL real. T-003–008/T-015 y G7 se documentan en [acta G7](34-acta-fase-7-g7.md); la transacción se formaliza en [ADR-014](adr/ADR-014-cierre-atomico-atencion.md). Productos siguen en Fase 8 y reversos en Fase 9.
 
+### Evidencia de Fase 8
+
+HU-022/030/031/032 y RF-013–014/032/040–046 están implementados. `PhaseEightInventoryTests` cubre total, detalle histórico y anulación; `PhaseEightEndpointTests` verifica recepción, stock/costo, última unidad concurrente, producto inactivo, gasto inválido, anulación auditada y caja separada sobre PostgreSQL real. T-009/T-017 y la evidencia para G8 constan en [acta F8](35-acta-fase-8-g8.md); la decisión se formaliza en [ADR-015](adr/ADR-015-inventario-por-movimientos-y-caja-separada.md).
+
 Si una regla cambia:
 
 1. actualizar decisión/regla;

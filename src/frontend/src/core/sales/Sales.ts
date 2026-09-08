@@ -2,9 +2,13 @@ export type OperationStatus = 'DRAFT' | 'READY_TO_PAY' | 'PAID'
 export type PaymentMethod = 'CASH' | 'QR'
 export interface SaleItem {
   id: string
-  serviceId: string
+  type: 'SERVICE' | 'PRODUCT'
+  serviceId?: string
+  productId?: string
   description: string
   unitPriceCents: number
+  unitCostCents: number
+  quantity: number
 }
 export interface Payment {
   id: string

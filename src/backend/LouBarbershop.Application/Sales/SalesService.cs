@@ -2,7 +2,9 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using LouBarbershop.Application.Abstractions;
+using LouBarbershop.Domain.Commissions;
 using LouBarbershop.Domain.Finance;
+using LouBarbershop.Domain.Inventory;
 using LouBarbershop.Domain.Sales;
 
 namespace LouBarbershop.Application.Sales;
@@ -49,6 +51,24 @@ public sealed class SalesService(ISalesStore store, ICurrentActor actor, IClock 
         await store.SaveChangesAsync(ct); return Success((await store.ReadAsync(id, ct))!);
     }
 
+    public async Task<SalesResult<OperationView>> ReplaceProductsAsync(Guid id, uint version, IReadOnlyCollection<ProductInput> inputs, CancellationToken ct)
+    {
+        var operation = await store.FindAsync(id, ct); if (operation is null) return NotFound();
+        if (!await CanUseBarberAsync(operation.BarberId, ct)) return Forbidden(); if (operation.Version != version) return VersionConflict();
+        if (inputs.Any(x => x.ProductId == Guid.Empty || x.Quantity <= 0) || inputs.GroupBy(x => x.ProductId).Any(x => x.Count() > 1)) return Conflict("INVALID_PRODUCTS", "Los productos y cantidades no son válidos.");
+        var items = new List<SaleItem>();
+        foreach (var input in inputs)
+        {
+            var product = await store.FindProductAsync(input.ProductId, ct);
+            if (product is null || !product.Value.Active) return Conflict("PRODUCT_UNAVAILABLE", "El producto no está activo.");
+            var item = SaleItem.CreateProduct(ids.Create(), operation.Id, input.ProductId, product.Value.Name, product.Value.SalePriceCents, product.Value.AverageCostCents, input.Quantity, operation.BarberId);
+            if (!item.IsSuccess) return Conflict("INVALID_PRODUCTS", item.Error!.Message);
+            items.Add(item.Value);
+        }
+        var result = operation.ReplaceProducts(items, clock.UtcNow); if (!result.IsSuccess) return Conflict("INVALID_STATE", result.Error!.Message);
+        await store.SaveChangesAsync(ct); return Success((await store.ReadAsync(id, ct))!);
+    }
+
     public async Task<SalesResult<OperationView>> AdjustAsync(Guid id, AdjustmentInput input, CancellationToken ct)
     {
         if (!CanManageAll) return Forbidden(); var operation = await store.FindAsync(id, ct); if (operation is null) return NotFound();
@@ -69,25 +89,37 @@ public sealed class SalesService(ISalesStore store, ICurrentActor actor, IClock 
         replay = await store.FindPaidByIdempotencyKeyAsync(hash, ct); if (replay is not null) return replay.Id == id ? Success(replay) : Conflict("IDEMPOTENCY_KEY_REUSED", "La clave ya se utilizó para otra operación.");
         var operation = await store.FindAsync(id, ct); if (operation is null) return NotFound();
         if (!actor.UserId.HasValue || !await CanUseBarberAsync(operation.BarberId, ct)) return Forbidden(); if (operation.Version != version) return VersionConflict();
+        foreach (var item in operation.Items.Where(x => x.Type == SaleItemType.Product))
+        {
+            var available = await store.ProductQuantityAsync(item.ProductId!.Value, ct);
+            if (available < item.Quantity) return Conflict("OUT_OF_STOCK", $"No hay existencias suficientes de {item.DescriptionSnapshot}.");
+        }
         var payments = inputs.Select(x => new Payment(ids.Create(), id, x.Method, x.AmountCents, actor.UserId.Value, clock.UtcNow)).ToArray(); var paid = operation.Pay(payments, clock.UtcNow);
         if (!paid.IsSuccess) return new(SalesStatus.Conflict, Code: paid.Error!.Code, Message: paid.Error.Message);
+        foreach (var item in operation.Items.Where(x => x.Type == SaleItemType.Product))
+        {
+            var movement = InventoryMovement.Create(ids.Create(), item.ProductId!.Value, InventoryMovementType.Sale, -item.Quantity, item.UnitCostCents, null, item.Id, null, actor.UserId.Value, clock.UtcNow);
+            if (!movement.IsSuccess) return Conflict("INVALID_INVENTORY_MOVEMENT", movement.Error!.Message);
+            store.AddInventoryMovement(movement.Value);
+        }
         if (!await store.BarberIsOwnerAsync(operation.BarberId, ct))
         {
-            var rate = await store.FindCommissionRateAsync(operation.BarberId, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.UtcNow, BusinessZone).DateTime), ct);
-            if (!rate.HasValue) return Conflict("COMMISSION_RULE_MISSING", "No existe una tasa de comisión vigente.");
-
             var items = operation.Items.ToArray();
             var remainingBase = operation.TotalCents;
             for (var index = 0; index < items.Length; index++)
             {
                 var item = items[index];
+                var kind = item.Type == SaleItemType.Service ? CommissionKind.Service : CommissionKind.Product;
+                var rate = await store.FindCommissionRateAsync(operation.BarberId, kind, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.UtcNow, BusinessZone).DateTime), ct);
+                if (!rate.HasValue) return Conflict("COMMISSION_RULE_MISSING", $"No existe una tasa de comisión vigente para {kind.ToString().ToLowerInvariant()}.");
+                var lineTotal = checked(item.UnitPriceCents * item.Quantity);
                 var baseCents = operation.CourtesyCents > 0
-                    ? item.UnitPriceCents
+                    ? lineTotal
                     : operation.SubtotalCents == 0
                         ? 0
                         : index == items.Length - 1
                             ? remainingBase
-                            : (long)((BigInteger)item.UnitPriceCents * operation.TotalCents / operation.SubtotalCents);
+                            : (long)((BigInteger)lineTotal * operation.TotalCents / operation.SubtotalCents);
                 if (operation.CourtesyCents == 0) remainingBase -= baseCents;
                 var amount = CommissionCalculator.Calculate(Money.Create(baseCents).Value, CommissionRate.Create(rate.Value).Value).Value.Cents;
                 store.AddCommission(new CommissionEntryRecord(ids.Create(), operation.BarberId, item.Id, baseCents, rate.Value, amount, actor.UserId.Value, clock.UtcNow));

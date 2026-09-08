@@ -24,4 +24,8 @@ public static class DomainErrors
     public static readonly DomainError InvalidAppointment = new("appointment.invalid", "La cita no contiene un intervalo o referencias válidas.");
     public static readonly DomainError InvalidSaleOperation = new("operation.invalid", "La atención no contiene datos válidos.");
     public static readonly DomainError PaymentMismatch = new("PAYMENT_MISMATCH", "Los pagos deben sumar exactamente el total.");
+    public static readonly DomainError InvalidInventoryReceipt = new("inventory.invalid_receipt", "La recepción requiere detalles válidos y un total consistente.");
+    public static readonly DomainError InvalidInventoryMovement = new("inventory.invalid_movement", "El movimiento de inventario no es válido.");
+    public static readonly DomainError OutOfStock = new("OUT_OF_STOCK", "La existencia disponible no alcanza para completar la venta.");
+    public static readonly DomainError InvalidExpense = new("expense.invalid", "El gasto requiere fecha, categoría, concepto, importe y medio.");
 }

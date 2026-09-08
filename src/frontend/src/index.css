@@ -604,8 +604,10 @@ h1 {
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .session-bar nav {
+    flex-wrap: wrap;
     grid-column: 1 / -1;
     margin-right: 0;
+    row-gap: 0.55rem;
   }
   .session-bar > span {
     font-size: 0.86rem;

@@ -13,6 +13,11 @@ export const salesApi = {
       version: value.version,
       services: serviceIds.map((serviceId) => ({ serviceId })),
     }),
+  products: (value: Operation, products: { productId: string; quantity: number }[]) =>
+    secureApiRequest<Operation>(`/api/v1/operations/${value.id}/products`, 'PUT', {
+      version: value.version,
+      products,
+    }),
   adjust: (value: Operation, discountCents: number, courtesy: boolean, reason: string) =>
     secureApiRequest<Operation>(`/api/v1/operations/${value.id}/adjustments`, 'POST', {
       version: value.version,

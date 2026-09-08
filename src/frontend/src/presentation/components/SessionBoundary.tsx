@@ -48,8 +48,13 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
           <Link to="/">Inicio</Link>
           <Link to="/agenda">Agenda</Link>
           <Link to="/operations">Atención y cobro</Link>
+          {(session.data.roles.includes('OWNER') || session.data.roles.includes('ADMIN')) && (
+            <Link to="/inventory">Inventario y gastos</Link>
+          )}
           <Link to="/scheduling">Disponibilidad</Link>
-          {session.data.roles.includes('OWNER') && <Link to="/configuration">Configuración</Link>}
+          {(session.data.roles.includes('OWNER') || session.data.roles.includes('ADMIN')) && (
+            <Link to="/configuration">Configuración</Link>
+          )}
         </nav>
         <span>
           Sesión: <strong>{session.data.userName}</strong>

@@ -40,6 +40,7 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 32. [Guía de transición desde Google Calendar](32-transicion-google-calendar.md)
 33. [Simulación delegada de Fase 6 sobre imágenes de producción](33-simulacion-fase-6.md)
 34. [Fase 7 y puerta G7](34-acta-fase-7-g7.md)
+35. [Fase 8 y evidencia para G8](35-acta-fase-8-g8.md)
 
 ## Convenciones
 

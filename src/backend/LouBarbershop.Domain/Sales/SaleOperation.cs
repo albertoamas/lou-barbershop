@@ -4,6 +4,7 @@ namespace LouBarbershop.Domain.Sales;
 
 public enum SaleOrigin { Appointment, WalkIn }
 public enum PaymentMethod { Cash, Qr }
+public enum SaleItemType { Service, Product }
 
 public sealed class SaleOperation
 {
@@ -41,8 +42,18 @@ public sealed class SaleOperation
     {
         if (Status != SaleOperationStatus.Draft) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidStateTransition);
         var rows = items.ToArray();
-        if (rows.Length == 0 || rows.Any(x => x.Id == Guid.Empty || x.OperationId != Id || x.ServiceId == Guid.Empty || x.BarberId != BarberId || string.IsNullOrWhiteSpace(x.DescriptionSnapshot) || x.UnitPriceCents < 0)) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidSaleOperation);
-        _items.Clear(); _items.AddRange(rows); DiscountCents = 0; CourtesyCents = 0; AdjustmentReason = null; Recalculate(); UpdatedAt = at.ToUniversalTime(); return DomainResult.Success(this);
+        if (rows.Length == 0 || rows.Any(x => !x.IsValidFor(Id, BarberId) || x.Type != SaleItemType.Service)) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidSaleOperation);
+        if (!TrySubtotal(_items.Where(x => x.Type == SaleItemType.Product).Concat(rows), out var subtotal)) return DomainResult.Failure<SaleOperation>(DomainErrors.MoneyOverflow);
+        _items.RemoveAll(x => x.Type == SaleItemType.Service); _items.AddRange(rows); ResetAdjustment(); Recalculate(subtotal); UpdatedAt = at.ToUniversalTime(); return DomainResult.Success(this);
+    }
+
+    public DomainResult<SaleOperation> ReplaceProducts(IEnumerable<SaleItem> items, DateTimeOffset at)
+    {
+        if (Status != SaleOperationStatus.Draft) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidStateTransition);
+        var rows = items.ToArray();
+        if (rows.Any(x => !x.IsValidFor(Id, BarberId) || x.Type != SaleItemType.Product) || rows.GroupBy(x => x.ProductId).Any(x => x.Count() > 1)) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidSaleOperation);
+        if (!TrySubtotal(_items.Where(x => x.Type == SaleItemType.Service).Concat(rows), out var subtotal)) return DomainResult.Failure<SaleOperation>(DomainErrors.MoneyOverflow);
+        _items.RemoveAll(x => x.Type == SaleItemType.Product); _items.AddRange(rows); ResetAdjustment(); Recalculate(subtotal); UpdatedAt = at.ToUniversalTime(); return DomainResult.Success(this);
     }
 
     public DomainResult<SaleOperation> Adjust(long discountCents, bool courtesy, string? reason, DateTimeOffset at)
@@ -51,7 +62,7 @@ public sealed class SaleOperation
             return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidOperationAdjustment);
         var courtesyCents = courtesy ? SubtotalCents - discountCents : 0;
         if (discountCents > SubtotalCents || courtesyCents < 0) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidOperationAdjustment);
-        DiscountCents = discountCents; CourtesyCents = courtesyCents; AdjustmentReason = reason.Trim(); Recalculate(); UpdatedAt = at.ToUniversalTime(); return DomainResult.Success(this);
+        DiscountCents = discountCents; CourtesyCents = courtesyCents; AdjustmentReason = reason.Trim(); Recalculate(SubtotalCents); UpdatedAt = at.ToUniversalTime(); return DomainResult.Success(this);
     }
 
     public DomainResult<SaleOperation> Ready(DateTimeOffset at)
@@ -69,8 +80,17 @@ public sealed class SaleOperation
         _payments.AddRange(rows); Status = SaleOperationStatus.Paid; PaidAt = at.ToUniversalTime(); UpdatedAt = PaidAt.Value; return DomainResult.Success(this);
     }
 
-    private void Recalculate()
-    { SubtotalCents = _items.Sum(x => x.UnitPriceCents); TotalCents = SubtotalCents - DiscountCents - CourtesyCents; }
+    private void ResetAdjustment() { DiscountCents = 0; CourtesyCents = 0; AdjustmentReason = null; }
+
+    private void Recalculate(long subtotal)
+    { SubtotalCents = subtotal; TotalCents = SubtotalCents - DiscountCents - CourtesyCents; }
+
+    private static bool TrySubtotal(IEnumerable<SaleItem> items, out long subtotal)
+    {
+        subtotal = 0;
+        try { foreach (var item in items) subtotal = checked(subtotal + checked(item.UnitPriceCents * item.Quantity)); return true; }
+        catch (OverflowException) { subtotal = 0; return false; }
+    }
 
     private static bool TrySum(IEnumerable<Payment> payments, out long total)
     {
@@ -92,13 +112,28 @@ public sealed class SaleItem
 {
     private SaleItem() { DescriptionSnapshot = string.Empty; }
     public SaleItem(Guid id, Guid operationId, Guid serviceId, string description, long unitPriceCents, Guid barberId)
-    { Id = id; OperationId = operationId; ServiceId = serviceId; DescriptionSnapshot = description; UnitPriceCents = unitPriceCents; BarberId = barberId; }
+    { Id = id; OperationId = operationId; Type = SaleItemType.Service; ServiceId = serviceId; DescriptionSnapshot = description; UnitPriceCents = unitPriceCents; Quantity = 1; BarberId = barberId; }
+    private SaleItem(Guid id, Guid operationId, Guid productId, string description, long unitPriceCents, long unitCostCents, int quantity, Guid barberId)
+    { Id = id; OperationId = operationId; Type = SaleItemType.Product; ProductId = productId; DescriptionSnapshot = description; UnitPriceCents = unitPriceCents; UnitCostCents = unitCostCents; Quantity = quantity; BarberId = barberId; }
     public Guid Id { get; private set; }
     public Guid OperationId { get; private set; }
-    public Guid ServiceId { get; private set; }
+    public SaleItemType Type { get; private set; }
+    public Guid? ServiceId { get; private set; }
+    public Guid? ProductId { get; private set; }
     public string DescriptionSnapshot { get; private set; }
     public long UnitPriceCents { get; private set; }
+    public long UnitCostCents { get; private set; }
+    public int Quantity { get; private set; }
     public Guid BarberId { get; private set; }
+
+    public static DomainResult<SaleItem> CreateProduct(Guid id, Guid operationId, Guid productId, string? description, long unitPriceCents, long unitCostCents, int quantity, Guid barberId)
+    {
+        var value = new SaleItem(id, operationId, productId, description?.Trim() ?? string.Empty, unitPriceCents, unitCostCents, quantity, barberId);
+        return value.IsValidFor(operationId, barberId) ? DomainResult.Success(value) : DomainResult.Failure<SaleItem>(DomainErrors.InvalidSaleOperation);
+    }
+
+    internal bool IsValidFor(Guid operationId, Guid barberId) => Id != Guid.Empty && OperationId == operationId && BarberId == barberId && !string.IsNullOrWhiteSpace(DescriptionSnapshot) && DescriptionSnapshot.Length <= 120 && UnitPriceCents >= 0 && UnitCostCents >= 0 && Quantity > 0 &&
+        (Type == SaleItemType.Service ? ServiceId.HasValue && !ProductId.HasValue && Quantity == 1 && UnitCostCents == 0 : ProductId.HasValue && !ServiceId.HasValue);
 }
 
 public sealed class Payment

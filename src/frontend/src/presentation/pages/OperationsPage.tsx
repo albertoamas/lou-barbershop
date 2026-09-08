@@ -4,6 +4,7 @@ import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { schedulingApi } from '../../infrastructure/http/schedulingApi'
 import { salesApi } from '../../infrastructure/http/salesApi'
 import { authApi } from '../../infrastructure/http/authApi'
+import { inventoryApi } from '../../infrastructure/http/inventoryApi'
 import { centsToBolivianos } from '../../core/configuration/Configuration'
 import {
   operationStatus,
@@ -26,6 +27,7 @@ export const OperationsPage = () => {
   const [barberId, setBarberId] = useState('')
   const [operation, setOperation] = useState<Operation | undefined>(opened)
   const [selectedServices, setSelectedServices] = useState<string[]>([])
+  const [selectedProducts, setSelectedProducts] = useState<Record<string, number>>({})
   const [discount, setDiscount] = useState(0)
   const [courtesy, setCourtesy] = useState(false)
   const [reason, setReason] = useState('')
@@ -58,6 +60,7 @@ export const OperationsPage = () => {
     queryKey: ['scheduling', 'services'],
     queryFn: schedulingApi.listServices,
   })
+  const inventory = useQuery({ queryKey: ['inventory'], queryFn: inventoryApi.inventory })
   const run = async (action: () => Promise<Operation>) => {
     setBusy(true)
     setNotice('')
@@ -73,7 +76,16 @@ export const OperationsPage = () => {
         setCash(paymentDraft.cash)
         setQr(paymentDraft.qr)
       }
-      setSelectedServices(value.items.map((x) => x.serviceId))
+      setSelectedServices(
+        value.items.filter((x) => x.type === 'SERVICE' && x.serviceId).map((x) => x.serviceId!),
+      )
+      setSelectedProducts(
+        Object.fromEntries(
+          value.items
+            .filter((x) => x.type === 'PRODUCT' && x.productId)
+            .map((x) => [x.productId!, x.quantity]),
+        ),
+      )
       await daily.refetch()
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'No se pudo guardar.')
@@ -222,6 +234,44 @@ export const OperationsPage = () => {
               >
                 Confirmar servicios reales
               </button>
+              <fieldset>
+                <legend>Productos vendidos</legend>
+                {inventory.data
+                  ?.filter((x) => x.active)
+                  .map((x) => (
+                    <label key={x.productId}>
+                      {x.name} · disponibles {x.quantity} · {centsToBolivianos(x.salePriceCents)}
+                      <input
+                        aria-label={`Cantidad de ${x.name}`}
+                        type="number"
+                        min="0"
+                        max={Math.max(0, x.quantity)}
+                        value={selectedProducts[x.productId] ?? 0}
+                        onChange={(event) =>
+                          setSelectedProducts((rows) => ({
+                            ...rows,
+                            [x.productId]: Number(event.target.value),
+                          }))
+                        }
+                      />
+                    </label>
+                  ))}
+              </fieldset>
+              <button
+                disabled={!online || busy}
+                onClick={() =>
+                  void run(() =>
+                    salesApi.products(
+                      operation,
+                      Object.entries(selectedProducts)
+                        .filter(([, quantity]) => quantity > 0)
+                        .map(([productId, quantity]) => ({ productId, quantity })),
+                    ),
+                  )
+                }
+              >
+                Confirmar productos vendidos
+              </button>
               {canAdjust && (
                 <div className="compact-form">
                   <label>
@@ -303,7 +353,12 @@ export const OperationsPage = () => {
           {operation.status === 'PAID' && (
             <article aria-label="Resumen interno">
               <h3>Operación cerrada</h3>
-              <p>Servicios: {operation.items.map((x) => x.description).join(', ')}</p>
+              <p>
+                Detalle:{' '}
+                {operation.items
+                  .map((x) => `${x.description}${x.quantity > 1 ? ` × ${x.quantity}` : ''}`)
+                  .join(', ')}
+              </p>
               <p>
                 Subtotal {centsToBolivianos(operation.subtotalCents)} · descuento{' '}
                 {centsToBolivianos(operation.discountCents)} · cortesía{' '}

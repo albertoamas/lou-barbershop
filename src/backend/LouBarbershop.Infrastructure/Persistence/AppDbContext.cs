@@ -4,6 +4,7 @@ using LouBarbershop.Domain.Catalog;
 using LouBarbershop.Domain.Commissions;
 using LouBarbershop.Domain.Customers;
 using LouBarbershop.Domain.Expenses;
+using LouBarbershop.Domain.Inventory;
 using LouBarbershop.Domain.Sales;
 using LouBarbershop.Domain.Scheduling;
 using LouBarbershop.Domain.Staff;
@@ -36,6 +37,10 @@ public sealed class AppDbContext(
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<CommissionEntryRow> CommissionEntries => Set<CommissionEntryRow>();
     public DbSet<IdempotencyRow> PaymentIdempotency => Set<IdempotencyRow>();
+    public DbSet<InventoryReceipt> InventoryReceipts => Set<InventoryReceipt>();
+    public DbSet<InventoryReceiptItem> InventoryReceiptItems => Set<InventoryReceiptItem>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
+    public DbSet<Expense> Expenses => Set<Expense>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
@@ -132,7 +137,7 @@ public sealed class AppDbContext(
         var auditableTypes = new HashSet<Type>
         {
             typeof(Customer), typeof(StaffProfile), typeof(BarberProfile), typeof(Service),
-            typeof(BarberServiceOffering), typeof(Product), typeof(CommissionRule), typeof(ExpenseCategory),
+            typeof(BarberServiceOffering), typeof(Product), typeof(CommissionRule), typeof(ExpenseCategory), typeof(Expense),
             typeof(WorkingSchedule), typeof(AvailabilityExceptionRule), typeof(Appointment), typeof(SaleOperation),
         };
         var changedEntries = ChangeTracker.Entries()
@@ -173,6 +178,7 @@ public sealed class AppDbContext(
         nameof(WorkingSchedule) => "working_schedule",
         nameof(AvailabilityExceptionRule) => "availability_exception",
         nameof(Appointment) => "appointment",
+        nameof(Expense) => "expense",
         _ => type.Name,
     };
 }
