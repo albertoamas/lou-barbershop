@@ -9,6 +9,9 @@ Las siguientes skills se instalaron mediante el instalador oficial desde el repo
 | `security-best-practices` | Revisión segura de backend, frontend, autenticación y configuración |
 | `security-threat-model` | Modelo de amenazas de agenda, datos personales y operaciones económicas |
 | `sentry` | Instrumentación y diagnóstico de errores sin acoplar el núcleo |
+| `figma` | Flujo base para inspeccionar y trabajar con diseños de Figma |
+| `figma-generate-design` | Crear una propuesta visual coherente antes de modificar la interfaz |
+| `figma-implement-design` | Traducir el diseño aprobado a componentes y estilos del frontend |
 
 Ubicación de instalación del usuario: `%USERPROFILE%/.codex/skills/<nombre>`.
 
@@ -18,7 +21,7 @@ Las skills están instaladas y disponibles. Se invocan cuando la tarea coincide 
 
 ## Criterio de selección
 
-Se instalaron solo capacidades oficiales directamente relacionadas con el stack y los riesgos del proyecto. No se instaló una skill frontend/PWA porque el catálogo oficial consultado no ofrecía una específica. El catálogo experimental tampoco estaba disponible en la ruta oficial al momento de la consulta.
+Se instalaron solo capacidades oficiales directamente relacionadas con el stack y los riesgos del proyecto. Para el rediseño visual se eligió el conjunto curado de Figma del catálogo oficial; no se añadió una skill genérica o experimental de procedencia incierta.
 
 ## Regla para futuras skills
 
