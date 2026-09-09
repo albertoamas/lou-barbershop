@@ -51,6 +51,7 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 43. [Runbooks de operación y recuperación](42-runbooks-operacion-y-recuperacion.md)
 44. [Privacidad, retención y respuesta sobre datos](43-privacidad-retencion-y-datos.md)
 45. [Acta de cierre técnico local de Fase 12](44-acta-fase-12-local.md)
+46. [Propuesta de diseño visual de Lou Barbershop](45-propuesta-diseno-visual-lou.md)
 
 ## Convenciones
 

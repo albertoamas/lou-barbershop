@@ -773,6 +773,8 @@ Usuarios de prueba completan reserva y gestión sin explicación; pruebas de abu
 
 > **Seguimiento:** `LOCAL-COMPLETE / G12-DEFERRED`. El incremento ejecutable en local quedó terminado y verificado el 9 de septiembre de 2026. La excepción autorizada mantiene G11 humana, staging, proveedores operativos y la firma del release candidate pendientes hasta el despliegue. Evidencia en [44-acta-fase-12-local.md](44-acta-fase-12-local.md).
 
+> **Corrección visual previa a staging:** antes de desplegar se implementará y aceptará la [propuesta visual de Lou Barbershop](45-propuesta-diseno-visual-lou.md). Es un refinamiento de presentación/navegación para cerrar G11 y AC-12-08; no modifica reglas, contratos ni alcance funcional.
+
 **Objetivo:** convertir releases funcionales en un candidato seguro, observable, recuperable y operable.  
 **Dependencias:** G10 y G11.  
 **Cobertura:** RNF-001–018, seguridad, operación y estrategia de pruebas completa.  
