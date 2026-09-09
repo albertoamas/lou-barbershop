@@ -46,6 +46,7 @@ public sealed class SaleOperationConfiguration : IEntityTypeConfiguration<SaleOp
         builder.HasMany(x => x.Payments).WithOne().HasForeignKey(x => x.OperationId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => x.AppointmentId).IsUnique().HasFilter("appointment_id IS NOT NULL").HasDatabaseName("ux_sale_operations_appointment");
         builder.HasIndex(x => new { x.OpenedAt, x.Status }).HasDatabaseName("ix_sale_operations_opened_status");
+        builder.HasIndex(x => new { x.Status, x.PaidAt }).HasDatabaseName("ix_sale_operations_status_paid_at");
     }
 }
 
@@ -118,6 +119,7 @@ public sealed class CommissionEntryConfiguration : IEntityTypeConfiguration<Comm
         builder.HasOne<CommissionEntry>().WithOne().HasForeignKey<CommissionEntry>(x => x.SourceEntryId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => x.SaleItemId).IsUnique().HasFilter("sale_item_id IS NOT NULL").HasDatabaseName("ux_commission_entries_sale_item");
         builder.HasIndex(x => x.SourceEntryId).IsUnique().HasFilter("source_entry_id IS NOT NULL").HasDatabaseName("ux_commission_entries_source");
+        builder.HasIndex(x => new { x.EarnedAt, x.Status }).HasDatabaseName("ix_commission_entries_earned_status");
     }
 }
 

@@ -76,6 +76,10 @@ HU-050–053 y RF-060–066 están implementados. `PhaseTenReportingTests` verif
 
 HU-016, RF-028 y RNF-014–015 están implementados. `PhaseElevenEndpointTests` verifica catálogo público mínimo, carrera de doble reserva, antiforgery, token aleatorio hasheado, acceso no enumerable, rotación, revocación y rate limit sobre PostgreSQL 18. `PublicBookingPage.test` verifica consulta cacheable y bloqueo de confirmación offline. Manifest, shortcuts, estrategias Workbox y actualización solicitada están descritos en [política PWA](40-politica-pwa-cache-actualizacion.md), evidencia en [acta F11](39-acta-fase-11-g11.md) y decisión en [ADR-018](adr/ADR-018-token-publico-en-fragmento-y-cabecera.md).
 
+### Evidencia de Fase 12
+
+RNF-001–018 tienen control local trazado en [hardening y evidencia](41-hardening-y-evidencia.md). `SecurityBoundaryTests` impide acciones HTTP sin decisión explícita de autorización y acceso de controllers a `DbContext`; las pruebas de integración verifican cabeceras defensivas, `no-store` y request ID de auditoría. T-018, el benchmark de 100.000 operaciones, el escaneo de imágenes, los SBOM y el ensayo de rollback están resumidos en [acta F12](44-acta-fase-12-local.md). Los RNF que requieren dominio, proveedor, tráfico o dispositivo real permanecen abiertos para G12.
+
 Si una regla cambia:
 
 1. actualizar decisión/regla;

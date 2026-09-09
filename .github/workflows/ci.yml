@@ -24,6 +24,14 @@ jobs:
       - run: dotnet format LouBarbershop.slnx --verify-no-changes --no-restore
       - run: dotnet build LouBarbershop.slnx --configuration Release --no-restore
       - run: dotnet test LouBarbershop.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
+      - name: Generate backend CycloneDX SBOM
+        run: |
+          dotnet tool install --tool-path .sbom-tools CycloneDX --version 6.2.0
+          .sbom-tools/dotnet-CycloneDX LouBarbershop.slnx --output artifacts/sbom/backend
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom-backend
+          path: artifacts/sbom/backend
 
   frontend:
     runs-on: ubuntu-latest
@@ -46,6 +54,15 @@ jobs:
       - run: npm run build
       - run: npm run build-storybook
       - run: npm audit --audit-level=high
+      - name: Generate frontend CycloneDX SBOM
+        run: |
+          mkdir -p ../../artifacts/sbom
+          npm sbom --sbom-format cyclonedx > ../../artifacts/sbom/frontend.cdx.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom-frontend
+          path: artifacts/sbom/frontend.cdx.json
+          if-no-files-found: error
 
   containers:
     runs-on: ubuntu-latest
@@ -75,6 +92,17 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
+      - name: Generate container CycloneDX SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: lou-barbershop/${{ matrix.name }}:ci
+          format: cyclonedx
+          output: ${{ matrix.name }}.cdx.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom-container-${{ matrix.name }}
+          path: ${{ matrix.name }}.cdx.json
+          if-no-files-found: error
 
   compose-smoke:
     runs-on: ubuntu-latest
@@ -92,6 +120,8 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:8088/manifest.webmanifest > /dev/null
           curl --fail --silent --show-error http://127.0.0.1:8088/icons/icon-192.png > /dev/null
           curl --fail --silent --show-error http://127.0.0.1:8088/icons/icon-512.png > /dev/null
+          test "$(curl --silent --head http://127.0.0.1:8088/ | tr -d '\r' | grep -ci '^Content-Security-Policy:')" = "1"
+          test "$(curl --silent --head http://127.0.0.1:8088/ | tr -d '\r' | grep -ci '^X-Frame-Options: DENY$')" = "1"
       - name: Verify non-root runtime users
         run: |
           test "$(docker compose exec -T api id -u)" != "0"

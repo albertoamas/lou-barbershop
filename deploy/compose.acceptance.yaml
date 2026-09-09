@@ -15,7 +15,7 @@ services:
       interval: 2s
       retries: 20
   migrate:
-    image: lou-barbershop-api:latest
+    image: ${LOU_API_IMAGE:-lou-barbershop-api:latest}
     command: ["--migrate"]
     environment: &api-environment
       ASPNETCORE_ENVIRONMENT: Production
@@ -26,14 +26,29 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs: [/tmp]
   api:
-    image: lou-barbershop-api:latest
+    image: ${LOU_API_IMAGE:-lou-barbershop-api:latest}
     environment: *api-environment
     depends_on:
       migrate:
         condition: service_completed_successfully
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs: [/tmp]
   web:
-    image: lou-barbershop-web:latest
+    image: ${LOU_WEB_IMAGE:-lou-barbershop-web:latest}
     ports:
       - "127.0.0.1:8091:8080"
     depends_on: [api]
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs:
+      - /config:uid=1000,gid=1000,mode=0700
+      - /data:uid=1000,gid=1000,mode=0700
+      - /tmp

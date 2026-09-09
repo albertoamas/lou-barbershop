@@ -53,5 +53,17 @@ public sealed class HealthEndpointTests : IClassFixture<WebApplicationFactory<Pr
         Assert.False(string.IsNullOrWhiteSpace(problem.RequestId));
     }
 
+    [Fact]
+    public async Task ApiResponsesCarryDefensiveHeadersAndSensitiveResponsesAreNotCacheable()
+    {
+        using var response = await _client.GetAsync("/api/v1/auth/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+        Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
+        Assert.Equal("no-referrer", Assert.Single(response.Headers.GetValues("Referrer-Policy")));
+        Assert.Contains("no-store", response.Headers.CacheControl!.ToString(), StringComparison.Ordinal);
+    }
+
     private sealed record TestProblemDetails(int Status, string? RequestId);
 }

@@ -18,7 +18,8 @@ namespace LouBarbershop.Infrastructure.Persistence;
 public sealed class AppDbContext(
     DbContextOptions<AppDbContext> options,
     ICurrentActor? currentActor = null,
-    IClock? clock = null) : IdentityDbContext<AppUser, AppRole, Guid>(options)
+    IClock? clock = null,
+    IRequestContext? requestContext = null) : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<StaffProfile> StaffProfiles => Set<StaffProfile>();
@@ -160,6 +161,7 @@ public sealed class AppDbContext(
                 EntityId = (Guid)(entry.Property("Id").CurrentValue ?? Guid.Empty),
                 BeforeData = before,
                 AfterData = after,
+                RequestId = requestContext?.RequestId,
                 CreatedAt = (clock?.UtcNow ?? DateTimeOffset.UtcNow).ToUniversalTime(),
             });
         }

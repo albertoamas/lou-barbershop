@@ -152,3 +152,7 @@ Objetivos: agenda y panel < 2 s, disponibilidad < 3 s y reportes comunes < 5 s e
 ## 8. Pruebas de aceptación antes del piloto
 
 Dueño, administración y un barbero completan los seis prototipos/escenarios del documento UX sin ayuda del desarrollador. Se registran tiempo, errores y comentarios. No se libera si existe cualquier ruta capaz de cobrar sin generar inventario/comisión correspondiente o de duplicar una reserva/liquidación.
+
+## 9. Evidencia transversal de Fase 12
+
+El cierre técnico local ejecutó la suite completa, auditorías de dependencias e imágenes, T-018 contra PostgreSQL 18 aislado, benchmark sintético de 100.000 operaciones y un rollback deliberadamente fallido/recuperado. Los comandos, resultados y límites de validez están registrados en [hardening y evidencia](41-hardening-y-evidencia.md) y en el [acta local F12](44-acta-fase-12-local.md). Las pruebas humanas y la medición end-to-end deben repetirse en staging y dispositivos reales antes de G12.

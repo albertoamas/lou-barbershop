@@ -144,3 +144,14 @@ Actor, fecha, acción, entidad, identificador, valores relevantes antes/después
 - Verificar que logs no contengan contraseñas, tokens o teléfonos completos.
 - Crear usuario dueño mediante procedimiento seguro.
 - Documentar revocación de acceso cuando alguien deja de trabajar.
+
+## 10. Hardening técnico de Fase 12
+
+- Caddy es el único borde público; API y PostgreSQL no se publican.
+- API y proxy aplican límites de 1 MiB, cabeceras defensivas y `no-store` en sesión, errores y salud; catálogo/disponibilidad públicos conservan caché controlada.
+- `AllowedHosts` es restrictivo en local y debe sustituirse por el dominio exacto. `X-Forwarded-*` permanece desactivado salvo detrás de un único proxy privado confiable.
+- Cookies productivas usan prefijo `__Host-`; la excepción HTTP sólo existe en Compose local.
+- Sentry y OTLP son adaptadores opcionales. Sentry mantiene PII desactivada y elimina `Cookie`, `X-CSRF-TOKEN` y `X-Management-Token`; las métricas no etiquetan datos personales.
+- Cada acción de controller debe declarar autorización o anonimato explícito; una prueba de arquitectura hace fallar CI si se omite.
+
+El análisis completo, incluyendo límites de confianza y abusos priorizados, está en [Peluqueria-threat-model.md](Peluqueria-threat-model.md).

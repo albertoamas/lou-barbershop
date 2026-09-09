@@ -46,6 +46,11 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 38. [Diccionario de métricas](38-diccionario-metricas.md)
 39. [Fase 11 y evidencia para G11](39-acta-fase-11-g11.md)
 40. [Política PWA de caché y actualización](40-politica-pwa-cache-actualizacion.md)
+41. [Modelo de amenazas del repositorio](Peluqueria-threat-model.md)
+42. [Hardening y evidencia de preparación productiva](41-hardening-y-evidencia.md)
+43. [Runbooks de operación y recuperación](42-runbooks-operacion-y-recuperacion.md)
+44. [Privacidad, retención y respuesta sobre datos](43-privacidad-retencion-y-datos.md)
+45. [Acta de cierre técnico local de Fase 12](44-acta-fase-12-local.md)
 
 ## Convenciones
 

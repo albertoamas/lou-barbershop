@@ -725,7 +725,7 @@ El dueño reconcilia un período de prueba desde operaciones individuales hasta 
 
 ## 17. Fase 11 — Reserva pública y madurez PWA
 
-> **Seguimiento:** `ACCEPTANCE`. Los incrementos obligatorios están implementados y verificados técnicamente. Evidencia en [39-acta-fase-11-g11.md](39-acta-fase-11-g11.md). G11 espera prueba de uso por clientes; Fase 12 permanece bloqueada.
+> **Seguimiento:** `ACCEPTANCE-DEFERRED`. Los incrementos obligatorios están implementados y verificados técnicamente. El dueño aplazó la prueba humana G11 hasta disponer de un despliegue y autorizó el 9 de septiembre de 2026 continuar Fase 12 en local. Evidencia y excepción en [39-acta-fase-11-g11.md](39-acta-fase-11-g11.md).
 
 **Objetivo:** permitir al cliente reservar sin cuenta manteniendo disponibilidad, privacidad y simplicidad.  
 **Dependencias:** G6 estable y G10 para observación; se libera después de operación interna confiable.  
@@ -770,6 +770,8 @@ Usuarios de prueba completan reserva y gestión sin explicación; pruebas de abu
 ---
 
 ## 18. Fase 12 — Hardening y preparación productiva
+
+> **Seguimiento:** `LOCAL-COMPLETE / G12-DEFERRED`. El incremento ejecutable en local quedó terminado y verificado el 9 de septiembre de 2026. La excepción autorizada mantiene G11 humana, staging, proveedores operativos y la firma del release candidate pendientes hasta el despliegue. Evidencia en [44-acta-fase-12-local.md](44-acta-fase-12-local.md).
 
 **Objetivo:** convertir releases funcionales en un candidato seguro, observable, recuperable y operable.  
 **Dependencias:** G10 y G11.  

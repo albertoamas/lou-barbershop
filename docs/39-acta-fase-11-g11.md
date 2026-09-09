@@ -1,8 +1,8 @@
 # Fase 11 — Reserva pública y madurez PWA
 
 **Fecha:** 9 de septiembre de 2026 (America/La_Paz)  
-**Estado:** `ACCEPTANCE` — implementación y validación técnica completas  
-**Puerta G11:** pendiente de prueba sin explicación con clientes de prueba  
+**Estado:** `ACCEPTANCE-DEFERRED` — implementación y validación técnica completas  
+**Puerta G11:** prueba humana aplazada por decisión del dueño hasta disponer de despliegue  
 **Entrada:** G6 estable y G10 aprobada; ejecución local bajo la excepción vigente, sin Railway.
 
 ## Resultado
@@ -35,3 +35,5 @@ El incremento opcional de medición de abandono no fue activado: requería aprob
 ## Puerta G11
 
 Abrir `/book` en teléfono, completar una reserva sin explicación, guardar el enlace, reprogramar y cancelar. Repetir brevemente sin red para comprobar que ninguna mutación se confirma y aceptar una actualización sólo al terminar la tarea. Con esa validación el dueño puede aprobar G11 y habilitar Fase 12.
+
+El 9 de septiembre de 2026 el dueño decidió dejar esta prueba pendiente porque la aplicación aún no está desplegada y autorizó continuar Fase 12 en local. Esta excepción habilita trabajo técnico de hardening, pero no equivale a aprobar G11 ni sustituye la validación posterior en un entorno accesible para clientes.

@@ -12,9 +12,9 @@ COPY deploy/docker/caddy/main.go ./
 RUN apk add --no-cache git \
     && go mod init lou-barbershop-caddy \
     && go get github.com/caddyserver/caddy/v2@${CADDY_VERSION} \
-    && go get google.golang.org/grpc@v1.82.1 \
-        golang.org/x/crypto@v0.55.0 \
-        golang.org/x/net@v0.57.0 \
+    && go get google.golang.org/grpc@v1.83.2 \
+        golang.org/x/crypto@v0.56.0 \
+        golang.org/x/net@v0.58.0 \
     && go mod tidy \
     && CGO_ENABLED=0 go build \
         -trimpath \

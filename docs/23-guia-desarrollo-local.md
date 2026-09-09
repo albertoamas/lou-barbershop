@@ -83,3 +83,15 @@ npm run build
 ```
 
 Los errores de negocio, cuando existan, usarán `ProblemDetails`. Cada respuesta de error incluirá `requestId`, que sirve para correlacionar el incidente sin registrar datos personales.
+
+## Verificaciones de recuperación y volumen
+
+Con el stack principal sano, estas pruebas crean entornos aislados y se limpian al terminar:
+
+```powershell
+.\deploy\verify-backup-restore.ps1
+.\deploy\benchmark-100k.ps1
+.\deploy\verify-application-rollback.ps1
+```
+
+Para conservar manualmente un dump local use `backup.ps1` con una ruta explícita dentro de `backups/`. Ese directorio está ignorado, pero el dump contiene datos confidenciales y nunca debe subirse al repositorio.

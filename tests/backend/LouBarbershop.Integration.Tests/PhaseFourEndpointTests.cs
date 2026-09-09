@@ -60,7 +60,9 @@ public sealed class PhaseFourEndpointTests
 
         await using var scope = _fixture.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.True(await db.AuditLogs.CountAsync(x => x.EntityType == "service") >= 1);
+        var serviceAudits = await db.AuditLogs.Where(x => x.EntityType == "service").ToArrayAsync();
+        Assert.NotEmpty(serviceAudits);
+        Assert.All(serviceAudits, audit => Assert.False(string.IsNullOrWhiteSpace(audit.RequestId)));
         Assert.True(await db.ExpenseCategories.CountAsync() >= 5);
         Assert.NotNull(offering);
     }

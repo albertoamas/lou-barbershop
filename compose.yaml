@@ -16,6 +16,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     restart: unless-stopped
+    stop_grace_period: 30s
     networks: [backend]
 
   migrate:
@@ -32,6 +33,10 @@ services:
       db:
         condition: service_healthy
     restart: "no"
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs: [/tmp]
     networks: [backend]
 
   api:
@@ -54,6 +59,11 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs: [/tmp]
+    stop_grace_period: 30s
     volumes:
       - data_protection_keys:/var/lib/lou-keys
     networks: [backend]
@@ -73,6 +83,14 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs:
+      - /config:uid=1000,gid=1000,mode=0700
+      - /data:uid=1000,gid=1000,mode=0700
+      - /tmp
+    stop_grace_period: 15s
     networks: [backend, edge]
 
 volumes:

@@ -58,6 +58,7 @@ public static class DependencyInjection
         services.AddSingleton<IIdGenerator, GuidIdGenerator>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentActor, HttpCurrentActor>();
+        services.AddScoped<IRequestContext, HttpRequestContext>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
         services.AddScoped<IConfigurationStore, EfConfigurationStore>();
         services.AddScoped<ConfigurationService>();

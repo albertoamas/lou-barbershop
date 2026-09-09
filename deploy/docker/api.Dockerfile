@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0.400 AS build
 WORKDIR /source
 
-COPY global.json Directory.Build.props .editorconfig LouBarbershop.slnx ./
+COPY global.json dotnet-tools.json Directory.Build.props .editorconfig LouBarbershop.slnx ./
 COPY src/backend/LouBarbershop.Domain/*.csproj src/backend/LouBarbershop.Domain/
 COPY src/backend/LouBarbershop.Application/*.csproj src/backend/LouBarbershop.Application/
 COPY src/backend/LouBarbershop.Infrastructure/*.csproj src/backend/LouBarbershop.Infrastructure/
