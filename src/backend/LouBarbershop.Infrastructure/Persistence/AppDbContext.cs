@@ -35,7 +35,10 @@ public sealed class AppDbContext(
     public DbSet<SaleOperation> SaleOperations => Set<SaleOperation>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<Payment> Payments => Set<Payment>();
-    public DbSet<CommissionEntryRow> CommissionEntries => Set<CommissionEntryRow>();
+    public DbSet<CommissionEntry> CommissionEntries => Set<CommissionEntry>();
+    public DbSet<Settlement> Settlements => Set<Settlement>();
+    public DbSet<SettlementItem> SettlementItems => Set<SettlementItem>();
+    public DbSet<SettlementAdjustment> SettlementAdjustments => Set<SettlementAdjustment>();
     public DbSet<IdempotencyRow> PaymentIdempotency => Set<IdempotencyRow>();
     public DbSet<InventoryReceipt> InventoryReceipts => Set<InventoryReceipt>();
     public DbSet<InventoryReceiptItem> InventoryReceiptItems => Set<InventoryReceiptItem>();
@@ -138,7 +141,7 @@ public sealed class AppDbContext(
         {
             typeof(Customer), typeof(StaffProfile), typeof(BarberProfile), typeof(Service),
             typeof(BarberServiceOffering), typeof(Product), typeof(CommissionRule), typeof(ExpenseCategory), typeof(Expense),
-            typeof(WorkingSchedule), typeof(AvailabilityExceptionRule), typeof(Appointment), typeof(SaleOperation),
+            typeof(WorkingSchedule), typeof(AvailabilityExceptionRule), typeof(Appointment), typeof(SaleOperation), typeof(Settlement),
         };
         var changedEntries = ChangeTracker.Entries()
             .Where(entry => auditableTypes.Contains(entry.Entity.GetType()) && entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
@@ -179,6 +182,7 @@ public sealed class AppDbContext(
         nameof(AvailabilityExceptionRule) => "availability_exception",
         nameof(Appointment) => "appointment",
         nameof(Expense) => "expense",
+        nameof(Settlement) => "settlement",
         _ => type.Name,
     };
 }

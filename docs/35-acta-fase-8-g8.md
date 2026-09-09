@@ -1,7 +1,8 @@
 # Fase 8 — Productos, inventario y gastos
 
 **Fecha:** 8 de septiembre de 2026 (America/La_Paz)  
-**Estado:** `READY_FOR_G8` — implementación y verificación técnica completas; aprobación del dueño pendiente  
+**Estado:** `DONE` — implementación, verificación técnica y puerta aprobadas  
+**Puerta G8:** aprobada por el dueño mediante «Vamos con la fase 9»  
 **Entrada:** G7 aprobada; continúa la excepción local, sin Railway ni publicación remota.
 
 ## Resultado
@@ -54,4 +55,4 @@ Evidencia visual: `output/playwright/fase-8/inventario-caja-mobile.png`.
 
 ## Puerta G8
 
-La reconciliación `apertura + recepciones − ventas ± ajustes = existencia` y la separación inventario/gasto están demostradas. G8 queda lista para decisión explícita del dueño; hasta entonces Fase 9 no está habilitada.
+La reconciliación `apertura + recepciones − ventas ± ajustes = existencia` y la separación inventario/gasto están demostradas. G8 está aprobada y habilita Fase 9.

@@ -1,5 +1,6 @@
 using LouBarbershop.Application.Abstractions;
 using LouBarbershop.Application.Agenda;
+using LouBarbershop.Application.Commissions;
 using LouBarbershop.Application.Configuration;
 using LouBarbershop.Application.Inventory;
 using LouBarbershop.Application.Sales;
@@ -66,6 +67,8 @@ public static class DependencyInjection
         services.AddScoped<SalesService>();
         services.AddScoped<IInventoryStore, EfInventoryStore>();
         services.AddScoped<InventoryService>();
+        services.AddScoped<ICommissionStore, EfCommissionStore>();
+        services.AddScoped<CommissionService>();
         services.AddScoped<OwnerBootstrapper>();
         services.AddScoped<InternalUserAdministration>();
 

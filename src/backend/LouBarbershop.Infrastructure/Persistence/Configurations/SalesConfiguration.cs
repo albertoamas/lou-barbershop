@@ -1,5 +1,6 @@
 using LouBarbershop.Domain.Appointments;
 using LouBarbershop.Domain.Catalog;
+using LouBarbershop.Domain.Commissions;
 using LouBarbershop.Domain.Customers;
 using LouBarbershop.Domain.Sales;
 using LouBarbershop.Domain.Staff;
@@ -32,6 +33,9 @@ public sealed class SaleOperationConfiguration : IEntityTypeConfiguration<SaleOp
         builder.Property(x => x.CreatedBy).HasColumnName("created_by");
         builder.Property(x => x.OpenedAt).HasColumnName("opened_at");
         builder.Property(x => x.PaidAt).HasColumnName("paid_at");
+        builder.Property(x => x.ReversedAt).HasColumnName("reversed_at");
+        builder.Property(x => x.ReversedBy).HasColumnName("reversed_by");
+        builder.Property(x => x.ReversalReason).HasColumnName("reversal_reason").HasMaxLength(300);
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         PhaseFourConfiguration.ConfigureAggregate(builder);
 
@@ -87,24 +91,33 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
     }
 }
 
-public sealed class CommissionEntryRowConfiguration : IEntityTypeConfiguration<CommissionEntryRow>
+public sealed class CommissionEntryConfiguration : IEntityTypeConfiguration<CommissionEntry>
 {
-    public void Configure(EntityTypeBuilder<CommissionEntryRow> builder)
+    public void Configure(EntityTypeBuilder<CommissionEntry> builder)
     {
-        builder.ToTable("commission_entries", table => table.HasCheckConstraint("ck_commission_entries_values", "base_cents >= 0 AND amount_cents >= 0 AND rate_basis_points >= 0 AND rate_basis_points <= 10000"));
+        builder.ToTable("commission_entries", table =>
+        {
+            table.HasCheckConstraint("ck_commission_entries_values", "base_cents >= 0 AND rate_basis_points >= 0 AND rate_basis_points <= 10000 AND ((entry_type = 'Earning' AND amount_cents >= 0) OR (entry_type = 'Reversal' AND amount_cents <= 0))");
+            table.HasCheckConstraint("ck_commission_entries_source", "(entry_type = 'Earning' AND sale_item_id IS NOT NULL AND source_entry_id IS NULL) OR (entry_type = 'Reversal' AND sale_item_id IS NULL AND source_entry_id IS NOT NULL AND reason IS NOT NULL)");
+        });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(x => x.BarberId).HasColumnName("barber_id");
         builder.Property(x => x.SaleItemId).HasColumnName("sale_item_id");
+        builder.Property(x => x.Type).HasColumnName("entry_type").HasConversion<string>().HasMaxLength(20);
         builder.Property(x => x.BaseCents).HasColumnName("base_cents");
         builder.Property(x => x.RateBasisPoints).HasColumnName("rate_basis_points");
         builder.Property(x => x.AmountCents).HasColumnName("amount_cents");
-        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(20);
+        builder.Property(x => x.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20);
+        builder.Property(x => x.SourceEntryId).HasColumnName("source_entry_id");
+        builder.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(300);
         builder.Property(x => x.CreatedBy).HasColumnName("created_by");
         builder.Property(x => x.EarnedAt).HasColumnName("earned_at");
         builder.HasOne<BarberProfile>().WithMany().HasForeignKey(x => x.BarberId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<SaleItem>().WithOne().HasForeignKey<CommissionEntryRow>(x => x.SaleItemId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasIndex(x => x.SaleItemId).IsUnique().HasDatabaseName("ux_commission_entries_sale_item");
+        builder.HasOne<SaleItem>().WithOne().HasForeignKey<CommissionEntry>(x => x.SaleItemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<CommissionEntry>().WithOne().HasForeignKey<CommissionEntry>(x => x.SourceEntryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.SaleItemId).IsUnique().HasFilter("sale_item_id IS NOT NULL").HasDatabaseName("ux_commission_entries_sale_item");
+        builder.HasIndex(x => x.SourceEntryId).IsUnique().HasFilter("source_entry_id IS NOT NULL").HasDatabaseName("ux_commission_entries_source");
     }
 }
 

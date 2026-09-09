@@ -12,7 +12,7 @@ public sealed record AdjustmentInput(long DiscountCents, bool Courtesy, string R
 public sealed record PaymentInput(PaymentMethod Method, long AmountCents);
 public sealed record OperationView(Guid Id, Guid? AppointmentId, Guid CustomerId, string CustomerName, Guid BarberId, string BarberName,
     SaleOrigin Origin, SaleOperationStatus Status, long SubtotalCents, long DiscountCents, long CourtesyCents, long TotalCents,
-    string? AdjustmentReason, DateTimeOffset OpenedAt, DateTimeOffset? PaidAt, uint Version, IReadOnlyCollection<ItemView> Items, IReadOnlyCollection<PaymentView> Payments);
+    string? AdjustmentReason, string? ReversalReason, DateTimeOffset OpenedAt, DateTimeOffset? PaidAt, DateTimeOffset? ReversedAt, uint Version, IReadOnlyCollection<ItemView> Items, IReadOnlyCollection<PaymentView> Payments);
 public sealed record ItemView(Guid Id, SaleItemType Type, Guid? ServiceId, Guid? ProductId, string Description, long UnitPriceCents, long UnitCostCents, int Quantity);
 public sealed record PaymentView(Guid Id, PaymentMethod Method, long AmountCents);
 public sealed record DailyOperationsView(DateOnly Date, int DraftCount, int PaidCount, long TotalCents, long CashCents, long QrCents, IReadOnlyCollection<OperationView> Operations);
@@ -36,12 +36,11 @@ public interface ISalesStore
     Task<IReadOnlyCollection<OperationView>> ListAsync(DateTimeOffset startsAt, DateTimeOffset endsAt, Guid? barberId, CancellationToken ct);
     Task<OperationView?> FindPaidByIdempotencyKeyAsync(string keyHash, CancellationToken ct);
     void AddOperation(SaleOperation operation);
-    void AddCommission(CommissionEntryRecord entry);
+    void AddCommission(CommissionEntry entry);
     void AddIdempotency(IdempotencyRecord record);
     void AddInventoryMovement(InventoryMovement movement);
     Task MarkAppointmentCompletedAsync(Guid appointmentId, Guid eventId, Guid actorId, DateTimeOffset at, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
 
-public sealed record CommissionEntryRecord(Guid Id, Guid BarberId, Guid SaleItemId, long BaseCents, int RateBasisPoints, long AmountCents, Guid CreatedBy, DateTimeOffset EarnedAt);
 public sealed record IdempotencyRecord(Guid Id, string KeyHash, Guid OperationId, DateTimeOffset CreatedAt);

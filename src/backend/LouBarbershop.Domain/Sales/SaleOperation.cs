@@ -28,6 +28,9 @@ public sealed class SaleOperation
     public Guid CreatedBy { get; private set; }
     public DateTimeOffset OpenedAt { get; private set; }
     public DateTimeOffset? PaidAt { get; private set; }
+    public DateTimeOffset? ReversedAt { get; private set; }
+    public Guid? ReversedBy { get; private set; }
+    public string? ReversalReason { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
     public uint Version { get; private set; }
     public IReadOnlyCollection<SaleItem> Items => _items;
@@ -78,6 +81,13 @@ public sealed class SaleOperation
         if (!TrySum(rows, out var paidCents) || rows.GroupBy(x => x.Method).Any(x => x.Count() > 1) || rows.Any(x => x.Id == Guid.Empty || x.OperationId != Id || x.RecordedBy == Guid.Empty || x.AmountCents <= 0) || paidCents != TotalCents || (TotalCents == 0 && rows.Length != 0))
             return DomainResult.Failure<SaleOperation>(DomainErrors.PaymentMismatch);
         _payments.AddRange(rows); Status = SaleOperationStatus.Paid; PaidAt = at.ToUniversalTime(); UpdatedAt = PaidAt.Value; return DomainResult.Success(this);
+    }
+
+    public DomainResult<SaleOperation> Reverse(string? reason, Guid actorId, DateTimeOffset at)
+    {
+        var text = reason?.Trim();
+        if (Status != SaleOperationStatus.Paid || actorId == Guid.Empty || string.IsNullOrWhiteSpace(text) || text.Length > 300) return DomainResult.Failure<SaleOperation>(DomainErrors.InvalidStateTransition);
+        Status = SaleOperationStatus.Reversed; ReversalReason = text; ReversedBy = actorId; ReversedAt = at.ToUniversalTime(); UpdatedAt = ReversedAt.Value; return DomainResult.Success(this);
     }
 
     private void ResetAdjustment() { DiscountCents = 0; CourtesyCents = 0; AdjustmentReason = null; }

@@ -48,6 +48,7 @@ export const OperationsPage = () => {
   const daily = useQuery({ queryKey: ['operations', date], queryFn: () => salesApi.daily(date) })
   const session = useQuery({ queryKey: ['auth', 'session'], queryFn: authApi.current })
   const canAdjust = session.data?.roles.some((role) => role === 'OWNER' || role === 'ADMIN')
+  const canReverse = session.data?.roles.includes('OWNER')
   const customers = useQuery({
     queryKey: ['customers', search],
     queryFn: () => agendaApi.customers(search),
@@ -371,6 +372,39 @@ export const OperationsPage = () => {
                       .map((x) => `${x.method}: ${centsToBolivianos(x.amountCents)}`)
                       .join(' + ')
                   : 'Sin pago por cortesía'}
+              </p>
+              {canReverse && (
+                <button
+                  disabled={!online || busy}
+                  onClick={() => {
+                    const reversalReason = window.prompt('Motivo obligatorio del reverso')
+                    if (!reversalReason?.trim()) return
+                    setBusy(true)
+                    setNotice('')
+                    void salesApi
+                      .reverse(operation, reversalReason)
+                      .then(async () => {
+                        setOperation(await salesApi.read(operation.id))
+                        await daily.refetch()
+                      })
+                      .catch((error: unknown) =>
+                        setNotice(error instanceof Error ? error.message : 'No se pudo revertir.'),
+                      )
+                      .finally(() => setBusy(false))
+                  }}
+                >
+                  Revertir operación
+                </button>
+              )}
+            </article>
+          )}
+          {operation.status === 'REVERSED' && (
+            <article aria-label="Operación revertida">
+              <h3>Operación revertida</h3>
+              <p>{operation.reversalReason}</p>
+              <p>
+                Los cobros quedaron fuera de caja interna; la comisión e inventario se corrigieron
+                sin borrar historia.
               </p>
             </article>
           )}

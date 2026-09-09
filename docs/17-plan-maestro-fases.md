@@ -627,11 +627,13 @@ Una jornada simulada solo con servicios cuadra atenciones, totales y medios de p
 
 Conteo inicial + recepciones − ventas ± ajustes coincide con existencia visible, y el flujo distingue inventario de gasto.
 
-**Seguimiento:** `READY_FOR_G8`. Implementación y verificación técnica completadas el 8 de septiembre de 2026. La evidencia, criterios y límites están en [35-acta-fase-8-g8.md](35-acta-fase-8-g8.md). Fase 9 permanece bloqueada hasta aprobación explícita del dueño.
+**Seguimiento:** `DONE`. G8 aprobada por el dueño el 8 de septiembre de 2026 mediante «Vamos con la fase 9». La evidencia, criterios y límites están en [35-acta-fase-8-g8.md](35-acta-fase-8-g8.md). Fase 9 queda habilitada.
 
 ---
 
 ## 15. Fase 9 — Comisiones, liquidaciones y reversos
+
+> **Seguimiento:** `READY_FOR_G9`. Los nueve incrementos están implementados y la evidencia técnica está en [36-acta-fase-9-g9.md](36-acta-fase-9-g9.md). Fase 10 permanece bloqueada hasta la aprobación explícita de G9 por el dueño.
 
 **Objetivo:** separar deuda generada al barbero del cobro y pagarla sin duplicidad.  
 **Dependencias:** G7 para servicios y G8 para productos.  

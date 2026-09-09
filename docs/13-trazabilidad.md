@@ -64,6 +64,10 @@ HU-020/021/023/024 y RF-030–037 de servicios están implementados. `PhaseSeven
 
 HU-022/030/031/032 y RF-013–014/032/040–046 están implementados. `PhaseEightInventoryTests` cubre total, detalle histórico y anulación; `PhaseEightEndpointTests` verifica recepción, stock/costo, última unidad concurrente, producto inactivo, gasto inválido, anulación auditada y caja separada sobre PostgreSQL real. T-009/T-017 y la evidencia para G8 constan en [acta F8](35-acta-fase-8-g8.md); la decisión se formaliza en [ADR-015](adr/ADR-015-inventario-por-movimientos-y-caja-separada.md).
 
+### Evidencia de Fase 9
+
+HU-025/041–043 y RF-037/050–055 están implementados. `PhaseNineCommissionTests` verifica exactitud, estados, total no negativo, ajustes e inmutabilidad; `PhaseNineEndpointTests` cubre cortesía remunerada, dueño sin deuda, tasa histórica, selección concurrente, ajuste, cierre, pago, reverso previo y corrección posterior sobre PostgreSQL real. T-007–013, el detalle de G9 y los límites están en [acta F9](36-acta-fase-9-g9.md); la decisión se formaliza en [ADR-016](adr/ADR-016-ledger-comisiones-y-liquidaciones-inmutables.md).
+
 Si una regla cambia:
 
 1. actualizar decisión/regla;

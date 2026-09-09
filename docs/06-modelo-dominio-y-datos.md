@@ -1,8 +1,18 @@
 # Modelo de dominio y datos
 
+## Implementación de comisiones y liquidaciones — Fase 9
+
+La migración `20260908235544_AddCommissionSettlements` amplía `commission_entries` con tipo, referencia de origen y motivo; crea `settlements`, `settlement_items` y `settlement_adjustments`; y añade datos de reverso a la operación. Las entradas originales y negativas son filas distintas. El índice único de detalle mantiene una sola comisión original y el índice único de `settlement_items.commission_entry_id` impide doble liquidación.
+
+`Settlement` conserva totales en centavos, `xmin`, actores y fechas de creación/cierre/pago. Una restricción exige `payable = commissions + adjustments >= 0`. `SaleReversal` permite un segundo movimiento para el mismo detalle vendido, por lo que inventario se repone sin eliminar la salida original. Los pagos de operaciones revertidas se excluyen del flujo de caja vigente.
+
+## Implementación de inventario — Fase 8
+
+`sale_items` admite servicio o producto, congela precio, costo y cantidad. `inventory_receipts`, sus detalles, `inventory_movements`, `expenses` y categorías implementan existencia derivada, costo promedio y salidas separadas. ADR-015 documenta las decisiones.
+
 ## Implementación económica — Fase 7
 
-`lou.sale_operations`, `sale_items`, `payments`, `commission_entries` y `payment_idempotency` implementan el cierre de servicios. En esta fase cada operación exige cliente y barbero, cada detalle representa un servicio con snapshot de nombre/precio y productos aún no se modelan en `sale_items`; la ampliación conceptual descrita más abajo corresponde a Fase 8.
+`lou.sale_operations`, `sale_items`, `payments`, `commission_entries` y `payment_idempotency` iniciaron el cierre de servicios. En Fase 7 cada operación exige cliente y barbero, y cada detalle de servicio conserva nombre/precio; Fases 8 y 9 amplían este modelo sin reinterpretar esos datos históricos.
 
 La operación guarda origen `Appointment`/`WalkIn`, estado `Draft`/`ReadyToPay`/`Paid`, subtotal, descuento, cortesía, total, motivo, fechas, actor y `xmin`. `appointment_id` es opcional y único. Los detalles y pagos dependen de la operación con borrado restrictivo; un pago por método y una comisión por detalle son únicos.
 

@@ -9,8 +9,8 @@ export const FoundationPage = () => {
       <p className="eyebrow">Lou · Operación local</p>
       <h1>Tu jornada comienza aquí.</h1>
       <p className="lead">
-        Ya puedes consultar horarios, registrar clientes y gestionar citas. Atención, cobros y
-        comisiones se incorporarán en las próximas fases, separados de lo reservado.
+        Ya puedes gestionar la jornada completa: agenda, atención real, cobros, inventario, gastos,
+        comisiones y liquidaciones, cada concepto con su propia trazabilidad.
       </p>
 
       <section className="foundation-grid" aria-label="Principios de la aplicación">
@@ -24,13 +24,15 @@ export const FoundationPage = () => {
           <span>02</span>
           <h2>Atención</h2>
           <p>
-            Pendiente: servicios realizados y cobro. Iniciar una cita aún no registra una venta.
+            Servicios realizados, productos, cortesías y pagos mixtos sin confundirlos con la cita.
           </p>
+          <Link to="/operations">Abrir atención</Link>
         </article>
         <article className="foundation-card">
           <span>03</span>
           <h2>Economía</h2>
-          <p>Pendiente: cobros, comisiones y liquidaciones con trazabilidad independiente.</p>
+          <p>Cobros, caja, comisiones y liquidaciones con trazabilidad independiente.</p>
+          <Link to="/commissions">Abrir comisiones</Link>
         </article>
       </section>
 

@@ -1,4 +1,4 @@
-export type OperationStatus = 'DRAFT' | 'READY_TO_PAY' | 'PAID'
+export type OperationStatus = 'DRAFT' | 'READY_TO_PAY' | 'PAID' | 'REVERSED'
 export type PaymentMethod = 'CASH' | 'QR'
 export interface SaleItem {
   id: string
@@ -29,6 +29,8 @@ export interface Operation {
   courtesyCents: number
   totalCents: number
   adjustmentReason?: string
+  reversalReason?: string
+  reversedAt?: string
   version: number
   items: SaleItem[]
   payments: Payment[]
@@ -50,4 +52,11 @@ export const paymentDraftFor = (
   current: { cash: number; qr: number },
 ) => (currentOperationId === nextOperationId ? current : { cash: 0, qr: 0 })
 export const operationStatus = (value: OperationStatus) =>
-  (({ DRAFT: 'En preparación', READY_TO_PAY: 'Lista para cobrar', PAID: 'Pagada' }) as const)[value]
+  (
+    ({
+      DRAFT: 'En preparación',
+      READY_TO_PAY: 'Lista para cobrar',
+      PAID: 'Pagada',
+      REVERSED: 'Revertida',
+    }) as const
+  )[value]

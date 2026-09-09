@@ -226,8 +226,8 @@ OpenAPI se genera desde los Controllers de ASP.NET Core en desarrollo y refleja 
 | Método | Ruta | Propósito |
 |---|---|---|
 | GET | `/commissions` | Propias o filtradas según rol |
-| GET | `/barbers/{id}/commissions/available` | Disponibles para liquidar |
 | POST | `/settlements` | Crear borrador |
+| GET | `/settlements` | Propias o filtradas según rol |
 | GET | `/settlements/{id}` | Detalle |
 | POST | `/settlements/{id}/adjustments` | Ajuste |
 | POST | `/settlements/{id}/close` | Cerrar |
@@ -243,6 +243,16 @@ Crear borrador:
 ```
 
 El servidor selecciona comisiones disponibles; el cliente no envía importes calculados.
+
+### Contrato implementado en Fase 9
+
+- `GET /commissions?barberId=&status=` devuelve detalle, operación, base, tasa histórica, importe firmado, tipo, estado, fecha y referencia de reverso. BARBER solo puede consultar lo propio; OWNER puede filtrar.
+- `POST /settlements` es exclusivo de OWNER. Selecciona entradas `AVAILABLE` no nulas hasta el final de `periodEnd` en `America/La_Paz`; el bloqueo transaccional y el índice único global impiden incluir una comisión dos veces.
+- `GET /settlements` y `GET /settlements/{id}` entregan el comprobante interno reproducible. BARBER solo ve los propios.
+- Los ajustes reciben `version`, `amountCents` con signo y `reason`; no pueden hacer negativo el total y quedan ligados al actor autenticado.
+- Cerrar recibe `version`; pagar recibe además `paymentDate` y `method`. El pago es completo y una liquidación pagada no acepta cambios.
+- `POST /operations/{id}/reverse` recibe `version` y `reason`, solo OWNER. Excluye el cobro de caja vigente, repone productos mediante movimientos y, si la comisión aún estaba disponible, la anula. Si ya estaba liquidada/pagada, crea una entrada negativa futura sin modificar la original.
+- Ninguna mutación de comisión, liquidación o reverso funciona offline.
 
 ## 8. Paneles, reportes y auditoría
 

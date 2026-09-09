@@ -46,4 +46,9 @@ export const salesApi = {
       body: JSON.stringify({ version: value.version, payments }),
     })
   },
+  reverse: (value: Operation, reason: string) =>
+    secureApiRequest<boolean>(`/api/v1/operations/${value.id}/reverse`, 'POST', {
+      version: value.version,
+      reason,
+    }),
 }

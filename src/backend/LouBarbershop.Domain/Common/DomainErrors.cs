@@ -28,4 +28,7 @@ public static class DomainErrors
     public static readonly DomainError InvalidInventoryMovement = new("inventory.invalid_movement", "El movimiento de inventario no es válido.");
     public static readonly DomainError OutOfStock = new("OUT_OF_STOCK", "La existencia disponible no alcanza para completar la venta.");
     public static readonly DomainError InvalidExpense = new("expense.invalid", "El gasto requiere fecha, categoría, concepto, importe y medio.");
+    public static readonly DomainError InvalidCommissionEntry = new("commission.invalid_entry", "La entrada de comisión no es válida.");
+    public static readonly DomainError InvalidSettlement = new("settlement.invalid", "La liquidación no contiene datos válidos.");
+    public static readonly DomainError NegativeSettlement = new("settlement.negative_total", "El total de la liquidación no puede ser negativo.");
 }
