@@ -1,8 +1,8 @@
 # Fase 10 — Paneles, reportes y auditoría
 
 **Fecha:** 9 de septiembre de 2026 (America/La_Paz)  
-**Estado:** `READY_FOR_G10` — implementación y validación técnica completas  
-**Puerta G10:** pendiente de reconciliación del dueño  
+**Estado:** `DONE`  
+**Puerta G10:** aprobada por el dueño el 9 de septiembre de 2026 mediante «Perfecto vamos con la siguiente fase»  
 **Entrada:** G8 y G9 aprobadas; excepción local vigente, sin Railway ni publicación remota.
 
 ## Resultado
@@ -35,4 +35,4 @@ La ruta `/reports` ofrece panel del día, resultado por período, flujo de caja 
 
 ## Puerta G10
 
-Para aprobar G10, el dueño selecciona un período de prueba en **Reportes** y confirma que las operaciones individuales explican cargos/cobros, el COGS no duplica compras, comisiones y liquidaciones están separadas, y resultado/flujo coinciden con el [diccionario](38-diccionario-metricas.md). Hasta entonces Fase 11 permanece bloqueada.
+G10 fue aprobada y habilitó Fase 11. La reconciliación sigue siendo repetible desde **Reportes** con el [diccionario](38-diccionario-metricas.md); la aprobación no convierte el resultado aproximado en contabilidad fiscal.

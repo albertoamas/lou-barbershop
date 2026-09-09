@@ -97,6 +97,24 @@ a:focus-visible {
   padding: 0.7rem clamp(1rem, 4vw, 3rem);
   text-align: center;
 }
+.update-banner {
+  align-items: center;
+  background: #e7eee7;
+  border-bottom: 1px solid #9db6a3;
+  color: #24462d;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 0.7rem clamp(1rem, 4vw, 3rem);
+}
+.update-banner button {
+  background: var(--ink);
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+}
 .content {
   margin: 0 auto;
   max-width: 1120px;
@@ -817,6 +835,217 @@ h1 {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+.public-page {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0 auto;
+  max-width: 880px;
+  padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem);
+  width: 100%;
+}
+.public-hero {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 0;
+}
+.public-hero h1,
+.public-confirmation h1 {
+  font-size: clamp(2.5rem, 9vw, 5rem);
+}
+.public-hero p,
+.public-confirmation > p {
+  color: #555c57;
+  line-height: 1.6;
+  margin: 0;
+}
+.booking-progress {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.booking-progress li {
+  border-top: 4px solid var(--line);
+  color: #6d716d;
+  font-size: 0.82rem;
+  font-weight: 750;
+  padding-top: 0.55rem;
+}
+.booking-progress li.current,
+.booking-progress li.complete {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.public-card,
+.management-link-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 4vw, 1.6rem);
+}
+.public-card h2,
+.manage-editor h2 {
+  margin: 0;
+}
+.public-form {
+  display: grid;
+  gap: 1rem;
+}
+.public-filter {
+  align-items: end;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+}
+.public-form label {
+  display: grid;
+  font-size: 0.88rem;
+  font-weight: 750;
+  gap: 0.4rem;
+}
+.public-form input,
+.public-form select {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  min-height: 48px;
+  padding: 0.7rem;
+  width: 100%;
+}
+.privacy-check {
+  align-items: start;
+  font-weight: 500 !important;
+  grid-template-columns: 24px 1fr;
+  line-height: 1.45;
+}
+.privacy-check input {
+  height: 22px;
+  min-height: 22px;
+  width: 22px;
+}
+.public-slots {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.public-slots button {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  display: grid;
+  gap: 0.25rem;
+  min-height: 86px;
+  padding: 0.75rem;
+  text-align: left;
+}
+.public-slots button[aria-pressed='true'] {
+  background: #e7eee7;
+  border: 2px solid #52745c;
+}
+.public-slots strong {
+  color: var(--accent-dark);
+  font-size: 1.15rem;
+}
+.public-slots small,
+.stale-note {
+  color: #676b68;
+}
+.stale-note {
+  background: #fff0cf;
+  border: 1px solid #e2c879;
+  border-radius: 9px;
+  padding: 0.75rem;
+}
+.appointment-summary {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  overflow: hidden;
+}
+.appointment-summary div {
+  border-bottom: 1px solid var(--line);
+  padding: 1rem;
+}
+.appointment-summary dt {
+  color: #676b68;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+.appointment-summary dd {
+  font-weight: 750;
+  line-height: 1.4;
+  margin: 0.3rem 0 0;
+}
+.management-link-card {
+  background: #e7eee7;
+  border-color: #9db6a3;
+}
+.management-link-card p {
+  margin: 0;
+}
+.button-link {
+  align-content: center;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  width: fit-content;
+}
+.public-access {
+  color: #676b68;
+  text-align: center;
+}
+.manage-card,
+.manage-editor {
+  display: grid;
+  gap: 1rem;
+}
+.status-chip {
+  background: #e7eee7;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  width: fit-content;
+}
+.status-chip.status-cancelled,
+.status-chip.status-no_show {
+  background: #f5d8ce;
+}
+.manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.danger-button {
+  background: white;
+  border: 1px solid #9c3f31;
+  border-radius: 9px;
+  color: #7a271c;
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+}
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+@media (max-width: 760px) {
+  .public-filter,
+  .appointment-summary {
+    grid-template-columns: 1fr;
+  }
+  .update-banner {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 .operations-page {

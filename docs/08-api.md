@@ -119,9 +119,11 @@ PostgreSQL refuerza las vigencias con restricciones de exclusión, además de la
 | GET | `/appointments/{id}/availability` | Alternativas para cambiar cita excluyendo su propio intervalo |
 | POST | `/appointments/{id}/cancel` | Cancelar |
 | POST | `/appointments/{id}/no-show` | Inasistencia |
+| GET | `/public/catalog` | Servicios y barberos públicos activos |
+| GET | `/public/availability` | Horarios públicos por servicio/barbero/día |
 | POST | `/public/appointments` | Reserva pública |
-| GET/PATCH | `/public/appointments/{token}` | Consultar/cambiar con token |
-| POST | `/public/appointments/{token}/cancel` | Cancelar con token |
+| GET/PATCH | `/public/appointments/manage` | Consultar/cambiar con cabecera privada |
+| POST | `/public/appointments/manage/cancel` | Cancelar con cabecera privada |
 
 Crear cita:
 
@@ -138,7 +140,18 @@ No se acepta precio desde el cliente; el servidor obtiene y congela la oferta vi
 
 ### Contrato implementado en Fase 6
 
-Las rutas internas anteriores están implementadas; `/public/*` continúa pendiente de Fase 11. Los endpoints implementados devuelven objetos/colecciones directamente, no el envoltorio conceptual `data/meta` de la sección 1. El esquema OpenAPI se genera desde Controllers en desarrollo.
+Las rutas internas y públicas anteriores están implementadas. Los endpoints devuelven objetos/colecciones directamente, no el envoltorio conceptual `data/meta` de la sección 1. El esquema OpenAPI se genera desde Controllers en desarrollo.
+
+### Contrato público implementado en Fase 11
+
+- `GET /public/catalog` entrega únicamente nombre, descripción, duración/precio de referencia y barberos activos; no expone usuarios, clientes, teléfonos ni configuración interna.
+- `GET /public/availability` acepta `serviceId`, `barberId=any|uuid`, `dateFrom` y `dateTo`; usa el mismo motor autoritativo de disponibilidad y el límite de 31 días.
+- `POST /public/appointments` acepta `serviceId`, barbero concreto de la alternativa, `startsAt`, `displayName`, `phone` y `privacyAccepted`. Precio, duración y disponibilidad se recalculan dentro de la transacción.
+- La creación devuelve la cita y una sola vez `managementToken`/`managementPath`. La PWA coloca el token en el fragmento `#` del enlace, que el navegador no envía al servidor al pedir la página.
+- Consultar, reprogramar y cancelar usan `X-Management-Token`; el token nunca forma parte de la ruta API ni del query string. Reprogramar rota el token y cancelar lo revoca.
+- El servidor guarda SHA-256 del token aleatorio de 256 bits y caducidad 48 horas después del fin previsto; nombre/teléfono no sirven como autorización.
+- Token ausente, inválido, vencido o revocado produce el mismo 404. No existe listado público de citas/clientes.
+- Todas las rutas públicas tienen rate limit por IP. Las mutaciones conservan antiforgery same-origin y nunca se reintentan ni encolan offline.
 
 - `GET /customers?query=`: máximo 50 coincidencias, búsqueda de hasta 120 caracteres por nombre o teléfono. OWNER/ADMIN reciben `notes`; BARBER puede buscar para abrir una atención propia, pero las notas se redactan.
 - Alta/corrección de cliente: `displayName`, `phone`, `notes` opcional (máximo 1000); PATCH agrega `version`. OWNER/ADMIN crean y corrigen; BARBER puede crear para una atención y el servidor ignora cualquier nota. Devuelve `{ customer, possibleDuplicates }`. Un teléfono local de ocho dígitos se normaliza con `+591`; compartirlo no bloquea el alta.

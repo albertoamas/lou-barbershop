@@ -3,6 +3,7 @@ using LouBarbershop.Application.Agenda;
 using LouBarbershop.Application.Commissions;
 using LouBarbershop.Application.Configuration;
 using LouBarbershop.Application.Inventory;
+using LouBarbershop.Application.PublicBooking;
 using LouBarbershop.Application.Reporting;
 using LouBarbershop.Application.Sales;
 using LouBarbershop.Application.Scheduling;
@@ -10,6 +11,7 @@ using LouBarbershop.Infrastructure.CurrentActor;
 using LouBarbershop.Infrastructure.Identifiers;
 using LouBarbershop.Infrastructure.Identity;
 using LouBarbershop.Infrastructure.Persistence;
+using LouBarbershop.Infrastructure.Security;
 using LouBarbershop.Infrastructure.Time;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +74,8 @@ public static class DependencyInjection
         services.AddScoped<CommissionService>();
         services.AddScoped<IReportingStore, EfReportingStore>();
         services.AddScoped<ReportingService>();
+        services.AddSingleton<IPublicManagementTokenService, PublicManagementTokenService>();
+        services.AddScoped<PublicBookingService>();
         services.AddScoped<OwnerBootstrapper>();
         services.AddScoped<InternalUserAdministration>();
 

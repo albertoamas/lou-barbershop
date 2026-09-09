@@ -52,6 +52,7 @@ public sealed class MigrationTests
             Assert.Contains("20260908180229_AddInventoryAndExpenses", migrations);
             Assert.Contains("20260908235544_AddCommissionSettlements", migrations);
             Assert.Contains("20260909044837_AddReportingAuditIndex", migrations);
+            Assert.Contains("20260909111737_AddPublicBookingManagement", migrations);
         }
 
         await using var verificationContext = new AppDbContext(options);

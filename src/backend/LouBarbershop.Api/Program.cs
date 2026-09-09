@@ -101,6 +101,7 @@ builder.Services.AddRequestTimeouts(options =>
 builder.Services.AddRateLimiter(options =>
 {
     var loginPermitLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLimit", 5);
+    var publicBookingPermitLimit = builder.Configuration.GetValue("RateLimiting:PublicBookingPermitLimit", 30);
     var globalPermitLimit = builder.Configuration.GetValue("RateLimiting:GlobalPermitLimit", 120);
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -120,6 +121,16 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = loginPermitLimit,
                 Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+    options.AddPolicy("public-booking", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = publicBookingPermitLimit,
+                Window = TimeSpan.FromMinutes(5),
                 QueueLimit = 0,
                 AutoReplenishment = true,
             }));

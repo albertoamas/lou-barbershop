@@ -33,6 +33,8 @@ public sealed class EfAgendaStore(AppDbContext db) : IAgendaStore
             .AsNoTracking().OrderBy(x => x.DisplayName).Take(50).ToArrayAsync(ct);
     }
     public Task<Customer?> FindCustomerAsync(Guid id, CancellationToken ct) => db.Customers.SingleOrDefaultAsync(x => x.Id == id, ct);
+    public Task<Customer?> FindCustomerByIdentityAsync(string displayName, PhoneNumber phone, CancellationToken ct) =>
+        db.Customers.FirstOrDefaultAsync(x => x.PhoneNumber == phone && x.DisplayName == displayName, ct);
     public void Add(Customer customer) => db.Customers.Add(customer);
     public async Task<Guid?> FindOwnBarberAsync(Guid userId, CancellationToken ct) => await
         (from barber in db.BarberProfiles.AsNoTracking()
@@ -52,6 +54,8 @@ public sealed class EfAgendaStore(AppDbContext db) : IAgendaStore
     public async Task<IReadOnlyCollection<AppointmentView>> ListAsync(DateTimeOffset startsAt, DateTimeOffset endsAt, Guid? barberId, CancellationToken ct) =>
         await Views(db.Appointments.AsNoTracking().Where(x => x.Range.StartsAt < endsAt && x.Range.EndsAt > startsAt && (!barberId.HasValue || x.BarberId == barberId)).OrderBy(x => x.Range.StartsAt).ThenBy(x => x.BarberId)).ToArrayAsync(ct);
     public Task<Appointment?> FindAsync(Guid id, CancellationToken ct) => db.Appointments.SingleOrDefaultAsync(x => x.Id == id, ct);
+    public Task<Appointment?> FindByManagementTokenHashAsync(string tokenHash, CancellationToken ct) =>
+        db.Appointments.SingleOrDefaultAsync(x => x.ManagementTokenHash == tokenHash, ct);
     public Task<AppointmentView?> ReadAsync(Guid id, CancellationToken ct) => Views(db.Appointments.AsNoTracking().Where(x => x.Id == id)).SingleOrDefaultAsync(ct);
     public void Add(Appointment appointment) => db.Appointments.Add(appointment);
     public void Add(AgendaEvent appointmentEvent) => db.AppointmentEvents.Add(new AppointmentEventRecord

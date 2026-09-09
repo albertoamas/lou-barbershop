@@ -13,6 +13,8 @@ import { OperationsPage } from '../presentation/pages/OperationsPage'
 import { InventoryPage } from '../presentation/pages/InventoryPage'
 import { CommissionsPage } from '../presentation/pages/CommissionsPage'
 import { ReportsPage } from '../presentation/pages/ReportsPage'
+import { PublicBookingPage } from '../presentation/pages/PublicBookingPage'
+import { PublicManageBookingPage } from '../presentation/pages/PublicManageBookingPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +29,8 @@ export const App = () => (
       <BrowserRouter>
         <AppShell>
           <Routes>
+            <Route path="/book" element={<PublicBookingPage />} />
+            <Route path="/book/manage" element={<PublicManageBookingPage />} />
             <Route
               path="/reports"
               element={

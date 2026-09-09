@@ -13,10 +13,12 @@ public interface IAgendaStore
     Task<IAgendaTransaction> BeginAsync(CancellationToken ct);
     Task<IReadOnlyCollection<Customer>> SearchCustomersAsync(string query, PhoneNumber? phone, CancellationToken ct);
     Task<Customer?> FindCustomerAsync(Guid id, CancellationToken ct);
+    Task<Customer?> FindCustomerByIdentityAsync(string displayName, PhoneNumber phone, CancellationToken ct);
     void Add(Customer customer);
     Task<Guid?> FindOwnBarberAsync(Guid userId, CancellationToken ct);
     Task<IReadOnlyCollection<AppointmentView>> ListAsync(DateTimeOffset startsAt, DateTimeOffset endsAt, Guid? barberId, CancellationToken ct);
     Task<Appointment?> FindAsync(Guid id, CancellationToken ct);
+    Task<Appointment?> FindByManagementTokenHashAsync(string tokenHash, CancellationToken ct);
     Task<AppointmentView?> ReadAsync(Guid id, CancellationToken ct);
     void Add(Appointment appointment);
     void Add(AgendaEvent appointmentEvent);

@@ -87,6 +87,9 @@ No se confía en `barberId`, precios, tasas, totales ni permisos enviados por el
 - Se rota después de una acción sensible si es conveniente.
 - Los logs nunca registran el token completo.
 - Limitación de solicitudes y protección contra automatización basada en evidencia de abuso.
+- El enlace web usa fragmento `#token`; la API recibe `X-Management-Token`, evitando token en ruta, query, logs del proxy y `Referer`.
+- La reprogramación rota el token y la cancelación lo revoca. Token inválido, vencido o revocado responde igual para evitar enumeración.
+- Las mutaciones anónimas siguen exigiendo antiforgery same-origin; los endpoints públicos tienen limitación adicional por IP.
 
 ## 6. Protección de datos
 

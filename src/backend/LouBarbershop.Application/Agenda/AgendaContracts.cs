@@ -11,4 +11,4 @@ public sealed record AppointmentInput(Guid CustomerId, Guid BarberId, Guid Servi
 public sealed record RescheduleInput(Guid BarberId, Guid ServiceId, DateTimeOffset StartsAt, uint Version, string Reason);
 public sealed record AppointmentSnapshot(Guid BarberId, Guid ServiceId, DateTimeOffset StartsAt, DateTimeOffset EndsAt, AppointmentStatus Status, long PriceCents, int DurationMinutes);
 public sealed record AppointmentView(Guid Id, Guid CustomerId, string CustomerName, Guid BarberId, string BarberName, Guid ServiceId, string ServiceName, DateTimeOffset StartsAt, DateTimeOffset EndsAt, AppointmentStatus Status, long? QuotedPriceCents, int QuotedDurationMinutes, uint Version);
-public sealed record AgendaEvent(Guid Id, Guid AppointmentId, Guid ActorId, DateTimeOffset OccurredAt, string Action, string? Reason, AppointmentSnapshot? Before, AppointmentSnapshot After);
+public sealed record AgendaEvent(Guid Id, Guid AppointmentId, Guid? ActorId, DateTimeOffset OccurredAt, string Action, string? Reason, AppointmentSnapshot? Before, AppointmentSnapshot After);

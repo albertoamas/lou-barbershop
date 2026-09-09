@@ -10,7 +10,7 @@ public sealed class Appointment
 {
     private Appointment() { }
 
-    private Appointment(Guid id, Guid customerId, Guid barberId, Guid serviceId, TimeRange range, Money price, int duration, AppointmentSource source, Guid createdBy, DateTimeOffset at)
+    private Appointment(Guid id, Guid customerId, Guid barberId, Guid serviceId, TimeRange range, Money price, int duration, AppointmentSource source, Guid? createdBy, DateTimeOffset at)
     {
         Id = id;
         CustomerId = customerId;
@@ -37,7 +37,8 @@ public sealed class Appointment
     public int QuotedDurationMinutes { get; private set; }
     public string? CustomerNote { get; private set; }
     public string? ManagementTokenHash { get; private set; }
-    public Guid CreatedBy { get; private set; }
+    public DateTimeOffset? ManagementTokenExpiresAt { get; private set; }
+    public Guid? CreatedBy { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
     public uint Version { get; private set; }
@@ -68,9 +69,30 @@ public sealed class Appointment
         return DomainResult.Success(this);
     }
 
-    public static DomainResult<Appointment> Create(Guid id, Guid customerId, Guid barberId, Guid serviceId, TimeRange range, Money price, int duration, AppointmentSource source, Guid createdBy, DateTimeOffset at)
+    public DomainResult<Appointment> SetManagementToken(string? tokenHash, DateTimeOffset expiresAt, DateTimeOffset at)
     {
-        if (id == Guid.Empty || customerId == Guid.Empty || barberId == Guid.Empty || serviceId == Guid.Empty || createdBy == Guid.Empty || duration is < 5 or > 480 || range.EndsAt - range.StartsAt != TimeSpan.FromMinutes(duration))
+        var normalizedHash = tokenHash?.Trim();
+        if (Source != AppointmentSource.Public || string.IsNullOrWhiteSpace(normalizedHash) || normalizedHash.Length > 128 || expiresAt <= at)
+            return DomainResult.Failure<Appointment>(DomainErrors.InvalidAppointment);
+        ManagementTokenHash = normalizedHash;
+        ManagementTokenExpiresAt = expiresAt.ToUniversalTime();
+        UpdatedAt = at.ToUniversalTime();
+        return DomainResult.Success(this);
+    }
+
+    public void RevokeManagementToken(DateTimeOffset at)
+    {
+        ManagementTokenHash = null;
+        ManagementTokenExpiresAt = null;
+        UpdatedAt = at.ToUniversalTime();
+    }
+
+    public static DomainResult<Appointment> Create(Guid id, Guid customerId, Guid barberId, Guid serviceId, TimeRange range, Money price, int duration, AppointmentSource source, Guid? createdBy, DateTimeOffset at)
+    {
+        if (id == Guid.Empty || customerId == Guid.Empty || barberId == Guid.Empty || serviceId == Guid.Empty ||
+            (source == AppointmentSource.Internal && (!createdBy.HasValue || createdBy == Guid.Empty)) ||
+            (source == AppointmentSource.Public && createdBy.HasValue) || duration is < 5 or > 480 ||
+            range.EndsAt - range.StartsAt != TimeSpan.FromMinutes(duration))
             return DomainResult.Failure<Appointment>(DomainErrors.InvalidAppointment);
 
         return DomainResult.Success(new Appointment(id, customerId, barberId, serviceId, range, price, duration, source, createdBy, at.ToUniversalTime()));

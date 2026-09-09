@@ -44,6 +44,8 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 36. [Fase 9 y evidencia para G9](36-acta-fase-9-g9.md)
 37. [Fase 10 y evidencia para G10](37-acta-fase-10-g10.md)
 38. [Diccionario de métricas](38-diccionario-metricas.md)
+39. [Fase 11 y evidencia para G11](39-acta-fase-11-g11.md)
+40. [Política PWA de caché y actualización](40-politica-pwa-cache-actualizacion.md)
 
 ## Convenciones
 

@@ -679,7 +679,7 @@ El dueño liquida un período de prueba y el barbero puede reconciliar cada cent
 
 ## 16. Fase 10 — Paneles, reportes y auditoría
 
-> **Seguimiento:** `READY_FOR_G10`. Los nueve incrementos están implementados y verificados técnicamente. Evidencia en [37-acta-fase-10-g10.md](37-acta-fase-10-g10.md); Fase 11 espera la aprobación explícita de G10.
+> **Seguimiento:** `DONE`. G10 aprobada por el dueño el 9 de septiembre de 2026 mediante «Perfecto vamos con la siguiente fase». Evidencia en [37-acta-fase-10-g10.md](37-acta-fase-10-g10.md); Fase 11 queda habilitada.
 
 **Objetivo:** ofrecer información útil y reconciliable sin inventar contabilidad fiscal.  
 **Dependencias:** G8 y G9.  
@@ -724,6 +724,8 @@ El dueño reconcilia un período de prueba desde operaciones individuales hasta 
 ---
 
 ## 17. Fase 11 — Reserva pública y madurez PWA
+
+> **Seguimiento:** `ACCEPTANCE`. Los incrementos obligatorios están implementados y verificados técnicamente. Evidencia en [39-acta-fase-11-g11.md](39-acta-fase-11-g11.md). G11 espera prueba de uso por clientes; Fase 12 permanece bloqueada.
 
 **Objetivo:** permitir al cliente reservar sin cuenta manteniendo disponibilidad, privacidad y simplicidad.  
 **Dependencias:** G6 estable y G10 para observación; se libera después de operación interna confiable.  

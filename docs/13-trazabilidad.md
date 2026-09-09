@@ -11,7 +11,7 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 | Acceso/roles | Matriz permisos | RF-001–005 | CU-01 | HU-001–002 | `IdentityEndpointTests` + T-014 |
 | Catálogo/ofertas | RN-ATE-03, 07 | RF-010–014 | CU-02 | HU-003 | `PhaseFourDomainTests` + `PhaseFourEndpointTests` |
 | Horarios/disponibilidad | RN-AGEN-01–06 | RF-004, 012, 021 | CU-03–04 | HU-004, 011 | `PhaseFiveAvailabilityTests` + `PhaseFiveEndpointTests` + T-001–002 |
-| Clientes/reserva | RN-AGEN-04–10 | RF-020–028 | CU-05–08 | HU-010–016, 020 | T-001–004 |
+| Clientes/reserva | RN-AGEN-04–10 | RF-020–028 | CU-04–08 | HU-010–016, 020 | T-001–004 + `PhaseElevenEndpointTests` |
 | Atención real | RN-ATE-01–10 | RF-030–034 | CU-09–10 | HU-020–023 | T-003–004, 007–008 |
 | Pagos | RN-PAG-01–06 | RF-035–037 | CU-11, 18 | HU-024–025 | T-005–006, 012–015 |
 | Inventario | RN-INV-01–07 | RF-032, 040–043 | CU-11–12, 18 | HU-022, 030–031 | T-009, 012–013 |
@@ -20,7 +20,7 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 | Liquidación | RN-COM-08–12 | RF-052–055 | CU-14 | HU-042–043 | T-011–013 |
 | Reportes | RN-REP-01–03 | RF-060–066 | CU-17 | HU-050–053 | `PhaseTenReportingTests` + `PhaseTenEndpointTests` |
 | Auditoría | D-15, D-19 | RF-065 | transversal | transversal | seguridad e integridad |
-| PWA/offline | ADR-007 | RNF-14–15 | transversal | HU-001, 015–016, 050 | instalación/offline/update |
+| PWA/offline | ADR-007/018 | RNF-14–15 | transversal | HU-001, 015–016, 050 | manifest/SW + `PublicBookingPage.test` + validación R7 |
 | Clean Architecture/SOLID | ADR-008 | RNF-16–17 | transversal | transversal | pruebas de arquitectura |
 | Docker | ADR-009 | RNF-18 | transversal | transversal | build/healthcheck/seguridad |
 
@@ -71,6 +71,10 @@ HU-025/041–043 y RF-037/050–055 están implementados. `PhaseNineCommissionTe
 ### Evidencia de Fase 10
 
 HU-050–053 y RF-060–066 están implementados. `PhaseTenReportingTests` verifica fórmulas independientes, permisos y CSV seguro; `PhaseTenEndpointTests` reconcilia un dataset controlado desde API y PostgreSQL para panel diario, ventas netas, COGS, comisión, gastos, caja CASH/QR, producción del dueño, auditoría y exportación. Fórmulas en [diccionario de métricas](38-diccionario-metricas.md), evidencia en [acta F10](37-acta-fase-10-g10.md) y decisión en [ADR-017](adr/ADR-017-reportes-derivados-y-reconciliables.md).
+
+### Evidencia de Fase 11
+
+HU-016, RF-028 y RNF-014–015 están implementados. `PhaseElevenEndpointTests` verifica catálogo público mínimo, carrera de doble reserva, antiforgery, token aleatorio hasheado, acceso no enumerable, rotación, revocación y rate limit sobre PostgreSQL 18. `PublicBookingPage.test` verifica consulta cacheable y bloqueo de confirmación offline. Manifest, shortcuts, estrategias Workbox y actualización solicitada están descritos en [política PWA](40-politica-pwa-cache-actualizacion.md), evidencia en [acta F11](39-acta-fase-11-g11.md) y decisión en [ADR-018](adr/ADR-018-token-publico-en-fragmento-y-cabecera.md).
 
 Si una regla cambia:
 

@@ -44,11 +44,12 @@ export const secureApiRequest = async <T>(
   path: string,
   method: 'POST' | 'PATCH' | 'PUT',
   body?: unknown,
+  headers?: Record<string, string>,
 ): Promise<T> => {
   const { token } = await apiRequest<AntiforgeryResponse>('/api/v1/auth/antiforgery')
   const request: RequestInit = {
     method,
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, ...headers },
   }
   if (body !== undefined) request.body = JSON.stringify(body)
   return apiRequest<T>(path, request)

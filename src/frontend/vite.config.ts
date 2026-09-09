@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
         id: '/',
@@ -19,6 +19,20 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         lang: 'es-BO',
+        shortcuts: [
+          {
+            name: 'Reservar cita',
+            short_name: 'Reservar',
+            url: '/book',
+            icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'Agenda interna',
+            short_name: 'Mi día',
+            url: '/agenda',
+            icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
+          },
+        ],
         icons: [
           {
             src: '/icons/icon-192.png',
@@ -42,8 +56,37 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/health\//],
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
-        runtimeCaching: [],
+        cleanupOutdatedCaches: true,
+        skipWaiting: false,
+        clientsClaim: false,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' && url.pathname === '/api/v1/public/catalog',
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'lou-public-catalog',
+              expiration: { maxEntries: 1, maxAgeSeconds: 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' && url.pathname === '/api/v1/public/availability',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'lou-public-availability',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 31, maxAgeSeconds: 60 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/v1/public/appointments'),
+            handler: 'NetworkOnly',
+          },
+        ],
       },
     }),
   ],

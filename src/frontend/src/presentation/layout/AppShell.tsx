@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ConnectivityBanner } from '../components/ConnectivityBanner'
 import { useConnectivity } from '../hooks/useConnectivity'
+import { ServiceWorkerUpdateBanner } from '../components/ServiceWorkerUpdateBanner'
 
 interface AppShellProps {
   children: ReactNode
@@ -21,9 +22,10 @@ export const AppShell = ({ children }: AppShellProps) => {
             <small>Una sola sucursal</small>
           </span>
         </div>
-        <span className="phase-pill">Paneles y reportes · Fase 10</span>
+        <span className="phase-pill">Reserva pública · Fase 11</span>
       </header>
       <ConnectivityBanner connectivity={connectivity} />
+      <ServiceWorkerUpdateBanner />
       {children}
       <footer className="footer">America/La_Paz · BOB · PWA segura</footer>
     </div>
