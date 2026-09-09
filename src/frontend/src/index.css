@@ -823,6 +823,149 @@ h1 {
   display: grid;
   gap: 1rem;
 }
+.reports-page {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 1280px;
+}
+.report-filters,
+.report-section-heading {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.report-filters {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.report-filters label,
+.report-section-heading label {
+  display: grid;
+  font-size: 0.85rem;
+  font-weight: 750;
+  gap: 0.35rem;
+}
+.report-filters input,
+.report-section-heading input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0.55rem;
+}
+.report-filters a {
+  align-content: center;
+  text-decoration: none;
+}
+.metric-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  color: var(--ink);
+  display: grid;
+  gap: 0.35rem;
+  min-height: 125px;
+  padding: 1rem;
+  text-decoration: none;
+}
+.metric-card strong {
+  font-size: 1.45rem;
+}
+.metric-card small,
+.metric-card span,
+.report-table small {
+  color: #676b68;
+  display: block;
+}
+.metric-card.highlight {
+  background: #e7eee7;
+  border-color: #9db6a3;
+}
+.compact-metrics .metric-card {
+  min-height: 100px;
+}
+.metric-definition {
+  color: #5c625e;
+  font-size: 0.9rem;
+}
+.report-table {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.report-table table {
+  border-collapse: collapse;
+  min-width: 720px;
+  width: 100%;
+}
+.report-table th,
+.report-table td {
+  border-bottom: 1px solid #e7e1d6;
+  padding: 0.75rem;
+  text-align: left;
+}
+.report-section-heading {
+  justify-content: space-between;
+}
+.audit-list {
+  display: grid;
+  gap: 0.6rem;
+}
+.audit-list details {
+  border-top: 1px solid #e7e1d6;
+  padding: 0.8rem 0;
+}
+.audit-list summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.audit-list pre {
+  background: #f4f0e9;
+  max-height: 240px;
+  overflow: auto;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.pagination {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+@media (max-width: 600px) {
+  .report-filters {
+    align-items: stretch;
+    display: grid;
+  }
+  .report-section-heading {
+    align-items: stretch;
+    display: grid;
+  }
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .metric-card {
+    min-height: 105px;
+  }
+  .metric-card strong {
+    font-size: 1.12rem;
+  }
+}
 .operation-workspace fieldset {
   display: grid;
   gap: 0.7rem;

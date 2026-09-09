@@ -633,7 +633,7 @@ Conteo inicial + recepciones − ventas ± ajustes coincide con existencia visib
 
 ## 15. Fase 9 — Comisiones, liquidaciones y reversos
 
-> **Seguimiento:** `READY_FOR_G9`. Los nueve incrementos están implementados y la evidencia técnica está en [36-acta-fase-9-g9.md](36-acta-fase-9-g9.md). Fase 10 permanece bloqueada hasta la aprobación explícita de G9 por el dueño.
+> **Seguimiento:** `DONE`. G9 aprobada explícitamente por el dueño el 9 de septiembre de 2026 mediante «Listo la fase 9». Evidencia en [36-acta-fase-9-g9.md](36-acta-fase-9-g9.md). Fase 10 queda habilitada.
 
 **Objetivo:** separar deuda generada al barbero del cobro y pagarla sin duplicidad.  
 **Dependencias:** G7 para servicios y G8 para productos.  
@@ -678,6 +678,8 @@ El dueño liquida un período de prueba y el barbero puede reconciliar cada cent
 ---
 
 ## 16. Fase 10 — Paneles, reportes y auditoría
+
+> **Seguimiento:** `READY_FOR_G10`. Los nueve incrementos están implementados y verificados técnicamente. Evidencia en [37-acta-fase-10-g10.md](37-acta-fase-10-g10.md); Fase 11 espera la aprobación explícita de G10.
 
 **Objetivo:** ofrecer información útil y reconciliable sin inventar contabilidad fiscal.  
 **Dependencias:** G8 y G9.  

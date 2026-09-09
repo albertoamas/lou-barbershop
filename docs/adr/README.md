@@ -12,5 +12,6 @@ Los ADR capturan decisiones costosas de cambiar, sus razones y consecuencias. Un
 | [ADR-014](ADR-014-cierre-atomico-atencion.md) | Cierre atómico e idempotente de atención y cobro | Accepted |
 | [ADR-015](ADR-015-inventario-por-movimientos-y-caja-separada.md) | Inventario por movimientos y caja separada | Accepted |
 | [ADR-016](ADR-016-ledger-comisiones-y-liquidaciones-inmutables.md) | Ledger de comisiones y liquidaciones inmutables | Accepted |
+| [ADR-017](ADR-017-reportes-derivados-y-reconciliables.md) | Reportes derivados, separados y reconciliables | Accepted |
 
 Los ADR-001–009 permanecen en [07-arquitectura.md](../07-arquitectura.md). Desde ADR-010 se utiliza un archivo por decisión.

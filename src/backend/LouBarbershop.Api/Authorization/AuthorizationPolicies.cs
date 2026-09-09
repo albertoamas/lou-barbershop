@@ -10,6 +10,7 @@ public static class AuthorizationPolicies
     public const string ManageScheduling = "manage-scheduling";
     public const string ManageInventory = "manage-inventory";
     public const string ManageSettlements = "manage-settlements";
+    public const string ViewReports = "view-reports";
 
     public static IServiceCollection AddLouAuthorization(this IServiceCollection services)
     {
@@ -19,6 +20,7 @@ public static class AuthorizationPolicies
             .AddPolicy(ManageScheduling, policy => policy.RequireRole(RoleNames.Owner, RoleNames.Admin))
             .AddPolicy(ManageInventory, policy => policy.RequireRole(RoleNames.Owner, RoleNames.Admin))
             .AddPolicy(ManageSettlements, policy => policy.RequireRole(RoleNames.Owner))
+            .AddPolicy(ViewReports, policy => policy.RequireRole(RoleNames.Owner))
             .AddPolicy(
                 ManageOperations,
                 policy => policy.RequireRole(RoleNames.Owner, RoleNames.Admin, RoleNames.Barber));

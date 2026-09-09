@@ -183,6 +183,7 @@ public sealed class AppDbContext(
         nameof(Appointment) => "appointment",
         nameof(Expense) => "expense",
         nameof(Settlement) => "settlement",
+        nameof(SaleOperation) => "sale_operation",
         _ => type.Name,
     };
 }

@@ -51,6 +51,7 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
           {(session.data.roles.includes('OWNER') || session.data.roles.includes('BARBER')) && (
             <Link to="/commissions">Comisiones</Link>
           )}
+          {session.data.roles.includes('OWNER') && <Link to="/reports">Reportes</Link>}
           {(session.data.roles.includes('OWNER') || session.data.roles.includes('ADMIN')) && (
             <Link to="/inventory">Inventario y gastos</Link>
           )}

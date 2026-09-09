@@ -258,14 +258,13 @@ El servidor selecciona comisiones disponibles; el cliente no envía importes cal
 
 | Método | Ruta | Propósito |
 |---|---|---|
-| GET | `/dashboard/daily?date=` | Operación del día |
-| GET | `/reports/sales` | Servicios/productos/cobros |
-| GET | `/reports/commissions` | Generadas/pendientes/pagadas |
-| GET | `/reports/expenses` | Gastos |
-| GET | `/reports/operating-result` | Resultado aproximado |
-| GET | `/reports/barber-performance` | Producción/ocupación |
-| GET | `/reports/{name}.csv` | Exportación autorizada |
-| GET | `/audit` | Bitácora, solo dueño |
+| GET | `/reports/daily?date=` | Citas, atenciones y cobros del día |
+| GET | `/reports/period?dateFrom=&dateTo=` | Resultado, caja y detalle reconciliable |
+| GET | `/reports/barber-performance?dateFrom=&dateTo=` | Producción/ocupación |
+| GET | `/reports/export?report=period|barbers&dateFrom=&dateTo=` | CSV UTF-8 autorizado |
+| GET | `/audit?dateFrom=&dateTo=&entityType=&actorId=&page=&pageSize=` | Bitácora paginada, solo dueño |
+
+Todas las rutas son exclusivas de `OWNER`; el servidor limita el período a 367 días y usa bordes de día en `America/La_Paz`. `period` devuelve totales y fuentes de operaciones, gastos y liquidaciones. El CSV neutraliza celdas que comienzan con `=`, `+`, `-`, `@`, tabulador o retorno antes de aplicar escapado RFC 4180.
 
 ## 9. Paginación y filtros
 

@@ -1,8 +1,8 @@
 # Fase 9 — Comisiones, liquidaciones y reversos
 
 **Fecha:** 8 de septiembre de 2026 (America/La_Paz)  
-**Estado:** `READY_FOR_G9` — implementación y verificación técnica completas  
-**Puerta G9:** pendiente de validación del dueño  
+**Estado:** `DONE`  
+**Puerta G9:** aprobada explícitamente por el dueño el 9 de septiembre de 2026 mediante «Listo la fase 9»  
 **Entrada:** G8 aprobada; continúa la excepción local, sin Railway ni publicación remota.
 
 ## Resultado
@@ -54,4 +54,4 @@ Evidencia visual: `output/playwright/phase9-mobile.png`.
 
 ## Puerta G9
 
-La evidencia técnica está completa. Para aprobar G9, el dueño debe crear o usar un barbero contratado de prueba, cerrar al menos una operación, abrir **Comisiones**, crear/cerrar/pagar la liquidación y confirmar que el comprobante coincide al centavo con la operación. Hasta esa validación, Fase 10 permanece bloqueada.
+G9 fue aprobada por el dueño el 9 de septiembre de 2026. Fase 10 queda habilitada bajo la excepción local vigente; la aprobación no autoriza Railway ni publicación remota.

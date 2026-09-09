@@ -12,6 +12,7 @@ import { AgendaPage } from '../presentation/pages/AgendaPage'
 import { OperationsPage } from '../presentation/pages/OperationsPage'
 import { InventoryPage } from '../presentation/pages/InventoryPage'
 import { CommissionsPage } from '../presentation/pages/CommissionsPage'
+import { ReportsPage } from '../presentation/pages/ReportsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +27,14 @@ export const App = () => (
       <BrowserRouter>
         <AppShell>
           <Routes>
+            <Route
+              path="/reports"
+              element={
+                <SessionBoundary>
+                  <ReportsPage />
+                </SessionBoundary>
+              }
+            />
             <Route
               path="/commissions"
               element={

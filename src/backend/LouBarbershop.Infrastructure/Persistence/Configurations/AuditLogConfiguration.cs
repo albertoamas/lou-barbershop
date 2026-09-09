@@ -20,5 +20,7 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(auditLog => auditLog.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.HasIndex(auditLog => new { auditLog.EntityType, auditLog.EntityId, auditLog.CreatedAt })
             .HasDatabaseName("ix_audit_logs_entity_created_at");
+        builder.HasIndex(auditLog => auditLog.CreatedAt)
+            .HasDatabaseName("ix_audit_logs_created_at");
     }
 }

@@ -18,7 +18,7 @@ La asignación completa de requisitos e historias a fases, entregables y puertas
 | Gastos | RN-GAS-01–04 | RF-045–046 | CU-13 | HU-032 | categorías en migración F4 + T-017 |
 | Comisión | RN-COM-01–07 | RF-005, 050–051 | CU-11, 16 | HU-040–041 | `PhaseFourEndpointTests` + T-007–010 |
 | Liquidación | RN-COM-08–12 | RF-052–055 | CU-14 | HU-042–043 | T-011–013 |
-| Reportes | RN-REP-01–03 | RF-060–066 | CU-17 | HU-050–053 | consultas/reconciliación |
+| Reportes | RN-REP-01–03 | RF-060–066 | CU-17 | HU-050–053 | `PhaseTenReportingTests` + `PhaseTenEndpointTests` |
 | Auditoría | D-15, D-19 | RF-065 | transversal | transversal | seguridad e integridad |
 | PWA/offline | ADR-007 | RNF-14–15 | transversal | HU-001, 015–016, 050 | instalación/offline/update |
 | Clean Architecture/SOLID | ADR-008 | RNF-16–17 | transversal | transversal | pruebas de arquitectura |
@@ -67,6 +67,10 @@ HU-022/030/031/032 y RF-013–014/032/040–046 están implementados. `PhaseEigh
 ### Evidencia de Fase 9
 
 HU-025/041–043 y RF-037/050–055 están implementados. `PhaseNineCommissionTests` verifica exactitud, estados, total no negativo, ajustes e inmutabilidad; `PhaseNineEndpointTests` cubre cortesía remunerada, dueño sin deuda, tasa histórica, selección concurrente, ajuste, cierre, pago, reverso previo y corrección posterior sobre PostgreSQL real. T-007–013, el detalle de G9 y los límites están en [acta F9](36-acta-fase-9-g9.md); la decisión se formaliza en [ADR-016](adr/ADR-016-ledger-comisiones-y-liquidaciones-inmutables.md).
+
+### Evidencia de Fase 10
+
+HU-050–053 y RF-060–066 están implementados. `PhaseTenReportingTests` verifica fórmulas independientes, permisos y CSV seguro; `PhaseTenEndpointTests` reconcilia un dataset controlado desde API y PostgreSQL para panel diario, ventas netas, COGS, comisión, gastos, caja CASH/QR, producción del dueño, auditoría y exportación. Fórmulas en [diccionario de métricas](38-diccionario-metricas.md), evidencia en [acta F10](37-acta-fase-10-g10.md) y decisión en [ADR-017](adr/ADR-017-reportes-derivados-y-reconciliables.md).
 
 Si una regla cambia:
 

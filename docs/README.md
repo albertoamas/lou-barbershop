@@ -42,6 +42,8 @@ La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGO
 34. [Fase 7 y puerta G7](34-acta-fase-7-g7.md)
 35. [Fase 8 y evidencia para G8](35-acta-fase-8-g8.md)
 36. [Fase 9 y evidencia para G9](36-acta-fase-9-g9.md)
+37. [Fase 10 y evidencia para G10](37-acta-fase-10-g10.md)
+38. [Diccionario de métricas](38-diccionario-metricas.md)
 
 ## Convenciones
 

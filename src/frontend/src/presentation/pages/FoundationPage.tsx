@@ -10,7 +10,8 @@ export const FoundationPage = () => {
       <h1>Tu jornada comienza aquí.</h1>
       <p className="lead">
         Ya puedes gestionar la jornada completa: agenda, atención real, cobros, inventario, gastos,
-        comisiones y liquidaciones, cada concepto con su propia trazabilidad.
+        comisiones, liquidaciones y reportes reconciliables, cada concepto con su propia
+        trazabilidad.
       </p>
 
       <section className="foundation-grid" aria-label="Principios de la aplicación">
@@ -33,6 +34,7 @@ export const FoundationPage = () => {
           <h2>Economía</h2>
           <p>Cobros, caja, comisiones y liquidaciones con trazabilidad independiente.</p>
           <Link to="/commissions">Abrir comisiones</Link>
+          <Link to="/reports">Abrir reportes</Link>
         </article>
       </section>
 
