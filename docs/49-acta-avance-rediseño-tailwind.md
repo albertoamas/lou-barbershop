@@ -1,20 +1,22 @@
 # Acta de avance — rediseño Tailwind y movimiento
 
 **Fecha:** 10 de septiembre de 2026  
-**Estado:** `PAUSADO EN ACEPTACIÓN VISUAL — CHECKPOINT 01`  
+**Estado:** `CHECKPOINT 01 APROBADO — CHECKPOINT 02 HABILITADO`  
 **Plan:** [48-plan-rediseño-tailwind-y-movimiento.md](48-plan-rediseño-tailwind-y-movimiento.md)
 
 ## Situación actual y próxima decisión
 
-La fundación visual fue aprobada individualmente por el dueño el 10 de septiembre de 2026. Las demás pantallas mantienen implementación provisional hasta que sean presentadas en su checkpoint correspondiente.
+La fundación visual y la landing fueron aprobadas individualmente por el dueño el 10 de septiembre de 2026. Las demás pantallas mantienen implementación provisional hasta que sean presentadas en su checkpoint correspondiente.
 
 Desde este punto el trabajo queda ordenado por los checkpoints 00–14 definidos en el plan. No se implementará el checkpoint 09 (Inventario y gastos) hasta recorrer y aprobar explícitamente los checkpoints anteriores.
 
-### Checkpoint aprobado
+### Checkpoints aprobados
 
 **`00 — Base visual y navegación`** fue marcado `APROBADO` por el dueño el 10 de septiembre de 2026 después de aplicar y presentar las cuatro correcciones solicitadas.
 
-### Checkpoint presentado ahora
+**`01 — Landing`** fue marcado `APROBADO` por el dueño el 10 de septiembre de 2026 después de completar las revisiones de contenido, tarjetas, ubicación, avisos PWA, CSP, precarga y movimiento.
+
+### Último checkpoint presentado
 
 **`01 — Landing`** (`/`)
 
@@ -24,11 +26,11 @@ Revisión solicitada al dueño:
 - mensaje principal, composición del logo y llamadas a reservar o gestionar una cita;
 - catálogo real con duración y precio, incluidos carga y error;
 - secuencia `Elige`, `Reserva`, `Llega`;
-- sección de confianza sin testimonios ni información inventada;
+- sección de ubicación con el Google Maps proporcionado por el dueño;
 - llamada final `Tu próximo corte empieza aquí` y footer público aprobado;
 - comportamiento y jerarquía en móvil y escritorio.
 
-**Decisión pendiente:** `APROBADO` o `CAMBIOS SOLICITADOS`. Una vez aprobado el checkpoint 01, se presenta el `02 — Reserva pública`.
+**Decisión registrada:** `APROBADO`. El checkpoint `02 — Reserva pública` queda habilitado como siguiente revisión, pero todavía no ha sido presentado.
 
 ### Correcciones solicitadas para el checkpoint 01
 
@@ -75,7 +77,7 @@ Además, las pantallas se cargan por ruta mediante `React.lazy`, reduciendo el p
 - hero de altura completa con identidad Lou y dos acciones públicas inequívocas;
 - catálogo servido por la API, limitado a servicios activos y con estados de carga y error;
 - proceso corregido a `Elige`, `Reserva`, `Llega`;
-- bloque de confianza basado únicamente en hechos del producto: una sucursal, sin cuenta, precio visible y enlace privado;
+- ubicación real en un mapa responsive de Google Maps y acceso externo al enlace aprobado;
 - llamada final corregida a `Tu próximo corte empieza aquí`.
 
 ## Matriz resumida de aceptación
@@ -83,8 +85,8 @@ Además, las pantallas se cargan por ruta mediante `React.lazy`, reduciendo el p
 | Checkpoint | Implementación | Aprobación humana |
 |---|---|---|
 | 00 Base visual y navegación | terminada | `APROBADO` |
-| 01 Landing | terminada | `EN_REVISIÓN` |
-| 02 Reserva pública | provisional terminada | bloqueada por 01 |
+| 01 Landing | terminada | `APROBADO` |
+| 02 Reserva pública | provisional terminada | `LISTO_PARA_REVISIÓN` |
 | 03 Mi cita | provisional; falta token vigente | bloqueada por 02 |
 | 04 Login | provisional terminada | bloqueada por 03 |
 | 05 Inicio por rol | provisional; referencias incompletas | bloqueada por 04 |

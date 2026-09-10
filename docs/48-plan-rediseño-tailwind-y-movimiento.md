@@ -274,6 +274,7 @@ Los estados se interpretan así:
 | `EN_REVISIÓN` | es el único checkpoint presentado actualmente al dueño |
 | `CAMBIOS_SOLICITADOS` | el dueño pidió correcciones; no se avanza |
 | `APROBADO` | el dueño aceptó explícitamente el checkpoint |
+| `LISTO_PARA_REVISIÓN` | la dependencia anterior está aprobada, pero este checkpoint aún no fue presentado |
 
 Una pantalla posterior puede tener implementación provisional por trabajo previo, pero permanece bloqueada para aceptación hasta aprobar las anteriores. La coherencia visual se revisa nuevamente si una corrección aprobada cambia componentes compartidos.
 
@@ -282,8 +283,8 @@ Una pantalla posterior puede tener implementación provisional por trabajo previ
 | Orden | Checkpoint | Rutas/elementos | Roles | Implementación | Aprobación del dueño |
 |---:|---|---|---|---|---|
 | 00 | Base visual y navegación | tokens, tipografías, botones, campos, movimiento, navbar, sidebar y barra móvil | todos | `IMPLEMENTADO` | `APROBADO` |
-| 01 | Landing | `/` y footer público | cliente | `IMPLEMENTADO_SIN_APROBAR` | `EN_REVISIÓN` |
-| 02 | Reserva pública | `/reservar`, pasos y confirmación | cliente | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_01` |
+| 01 | Landing | `/` y footer público | cliente | `IMPLEMENTADO` | `APROBADO` |
+| 02 | Reserva pública | `/reservar`, pasos y confirmación | cliente | `IMPLEMENTADO_SIN_APROBAR` | `LISTO_PARA_REVISIÓN` |
 | 03 | Gestión de cita | `/mi-cita#token`, reprogramación y cancelación | cliente | `IMPLEMENTADO_SIN_APROBAR`; falta QA con token vigente | `BLOQUEADO_POR_02` |
 | 04 | Acceso interno | `/app/login`, sesión y recuperación de errores | equipo | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_03` |
 | 05 | Inicio por rol | `/app` para dueño, administrador y barbero | internos | `IMPLEMENTADO_SIN_APROBAR`; faltan referencias dueño/barbero | `BLOQUEADO_POR_04` |
@@ -297,7 +298,7 @@ Una pantalla posterior puede tener implementación provisional por trabajo previ
 | 13 | Estados transversales | offline, actualización PWA, 403, 404, error y sesión expirada | todos | `IMPLEMENTACIÓN_PARCIAL` | `BLOQUEADO_POR_12` |
 | 14 | Pulido final | responsive, teclado, lector, rendimiento y limpieza CSS | todos | `PENDIENTE` | `BLOQUEADO_POR_13` |
 
-**Checkpoint actual:** `01 — Landing`. El dueño aprobó explícitamente el checkpoint 00 el 10 de septiembre de 2026 después de revisar sus correcciones. No se presentará el checkpoint 02 hasta recibir una decisión sobre la landing.
+**Último checkpoint aprobado:** `01 — Landing`. El dueño lo aprobó explícitamente el 10 de septiembre de 2026 después de revisar sus correcciones funcionales, visuales, PWA, CSP y de movimiento. El checkpoint `02 — Reserva pública` queda habilitado y será el próximo en presentarse.
 
 Para aceptar cada checkpoint se presentará como mínimo: rutas y credenciales/forma de acceso, vista móvil y escritorio cuando aplique, roles afectados, estados principales, evidencia automática y una lista corta de elementos que el dueño debe observar.
 
