@@ -8,6 +8,14 @@ import { todayInBusinessTime, type AvailabilitySlot } from '../../core/schedulin
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { publicBookingApi } from '../../infrastructure/http/publicBookingApi'
 import { useConnectivity } from '../hooks/useConnectivity'
+import { Button } from '../components/Button'
+import { buttonStyles } from '../components/buttonStyles'
+import { cn } from '../styles/cn'
+
+const fieldClassName =
+  'min-h-12 w-full rounded-xl border border-lou-steel/60 bg-white px-4 text-base shadow-sm outline-none transition-[border-color,box-shadow] focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'
+const labelClassName = 'grid gap-2 text-sm font-bold text-lou-ink'
+const cardClassName = 'rounded-2xl border border-lou-fog bg-white p-5 shadow-lou-sm sm:p-7'
 
 export const PublicBookingPage = () => {
   const connectivity = useConnectivity()
@@ -80,43 +88,85 @@ export const PublicBookingPage = () => {
   if (confirmation) {
     const appointment = confirmation.appointment
     return (
-      <main className="public-page public-confirmation">
-        <p className="eyebrow">Reserva confirmada</p>
-        <h1>Te esperamos, {appointment.customerName}.</h1>
+      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 lg:py-20">
+        <p className="mb-3 text-xs font-bold tracking-[0.2em] text-emerald-800 uppercase">
+          Reserva confirmada
+        </p>
+        <h1 className="m-0 max-w-3xl font-display text-5xl leading-[0.9] font-bold sm:text-7xl">
+          Te esperamos, {appointment.customerName}.
+        </h1>
         <AppointmentSummary appointment={appointment} />
-        <div className="management-link-card">
-          <strong>Guarda tu enlace privado</strong>
-          <p>Lo necesitarás para consultar, cambiar o cancelar esta cita. No lo compartas.</p>
-          <Link className="primary-button button-link" to={confirmation.managementPath}>
+        <div className="mt-6 rounded-2xl bg-lou-charcoal p-6 text-white shadow-lou-lg sm:p-8">
+          <strong className="font-display text-3xl">Guarda tu enlace privado</strong>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
+            Lo necesitarás para consultar, cambiar o cancelar esta cita. No lo compartas.
+          </p>
+          <Link
+            className={cn(buttonStyles({ variant: 'secondary' }), 'mt-5')}
+            to={confirmation.managementPath}
+            viewTransition
+          >
             Administrar mi cita
           </Link>
         </div>
-        <Link to="/reservar">Reservar otra cita</Link>
+        <Link
+          className="mt-6 inline-block text-sm font-bold hover:underline"
+          to="/reservar"
+          viewTransition
+        >
+          Reservar otra cita →
+        </Link>
       </main>
     )
   }
 
   return (
-    <main className="public-page">
-      <header className="public-hero">
-        <p className="eyebrow">Reserva en línea</p>
-        <h1>Reserva tu cita.</h1>
-        <p>
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:py-16">
+      <header className="max-w-3xl">
+        <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
+          Reserva en línea
+        </p>
+        <h1 className="m-0 max-w-none font-display text-6xl leading-[0.88] font-bold sm:text-8xl">
+          Reserva tu cita.
+        </h1>
+        <p className="mt-5 max-w-2xl text-base leading-7 text-lou-graphite/65">
           Tu próximo corte, sin vueltas. Elige servicio, barbero y horario; no necesitas crear una
           cuenta.
         </p>
       </header>
-      <ol className="booking-progress" aria-label="Progreso de reserva">
-        <li className={slot ? 'complete' : 'current'}>1. Horario</li>
-        <li className={slot ? 'current' : ''}>2. Tus datos</li>
-        <li>3. Confirmación</li>
+      <ol className="my-9 grid grid-cols-3 gap-2" aria-label="Progreso de reserva">
+        <li
+          className={cn(
+            'border-t-2 pt-3 text-xs font-bold',
+            slot ? 'border-emerald-700 text-emerald-800' : 'border-lou-ink text-lou-ink',
+          )}
+        >
+          1. Horario
+        </li>
+        <li
+          className={cn(
+            'border-t-2 pt-3 text-xs font-bold',
+            slot ? 'border-lou-ink text-lou-ink' : 'border-lou-fog text-lou-steel',
+          )}
+        >
+          2. Tus datos
+        </li>
+        <li className="border-t-2 border-lou-fog pt-3 text-xs font-bold text-lou-steel">
+          3. Confirmación
+        </li>
       </ol>
-      <section className="public-card" aria-labelledby="choose-slot">
-        <h2 id="choose-slot">Elige tu horario</h2>
-        <form className="public-form public-filter" onSubmit={find}>
-          <label>
+      <section className={cardClassName} aria-labelledby="choose-slot">
+        <h2 id="choose-slot" className="m-0 font-display text-4xl font-bold">
+          Elige tu horario
+        </h2>
+        <form
+          className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_1fr_0.8fr_auto] lg:items-end"
+          onSubmit={find}
+        >
+          <label className={labelClassName}>
             Servicio
             <select
+              className={fieldClassName}
               required
               value={serviceId}
               onChange={(event) => setServiceId(event.target.value)}
@@ -130,9 +180,13 @@ export const PublicBookingPage = () => {
               ))}
             </select>
           </label>
-          <label>
+          <label className={labelClassName}>
             Barbero
-            <select value={barberId} onChange={(event) => setBarberId(event.target.value)}>
+            <select
+              className={fieldClassName}
+              value={barberId}
+              onChange={(event) => setBarberId(event.target.value)}
+            >
               <option value="any">Cualquier barbero disponible</option>
               {catalog.data?.barbers.map((barber) => (
                 <option key={barber.id} value={barber.id}>
@@ -141,9 +195,10 @@ export const PublicBookingPage = () => {
               ))}
             </select>
           </label>
-          <label>
+          <label className={labelClassName}>
             Día
             <input
+              className={fieldClassName}
               type="date"
               required
               min={todayInBusinessTime()}
@@ -151,9 +206,9 @@ export const PublicBookingPage = () => {
               onChange={(event) => setDate(event.target.value)}
             />
           </label>
-          <button className="secondary-button" disabled={!serviceId || catalog.isPending}>
+          <Button variant="secondary" disabled={!serviceId || catalog.isPending}>
             Buscar horarios
-          </button>
+          </Button>
         </form>
         {catalog.isPending && <p role="status">Cargando servicios…</p>}
         {catalog.isError && (
@@ -174,20 +229,32 @@ export const PublicBookingPage = () => {
           </p>
         )}
         {search && slots.data?.length === 0 && (
-          <p className="empty-state">No hay horarios ese día. Prueba otra fecha o barbero.</p>
+          <p className="mt-5 rounded-xl border border-dashed border-lou-steel bg-lou-paper p-6 text-center text-sm text-lou-graphite/65">
+            No hay horarios ese día. Prueba otra fecha o barbero.
+          </p>
         )}
         {slots.data && slots.data.length > 0 && (
-          <div className="public-slots" role="group" aria-label="Horarios disponibles">
+          <div
+            className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+            role="group"
+            aria-label="Horarios disponibles"
+          >
             {slots.data.map((item) => (
               <button
+                className={cn(
+                  'grid min-h-24 gap-0.5 rounded-xl border border-lou-fog bg-white p-3 text-left shadow-sm transition-[transform,border-color,background-color,color] duration-150 hover:-translate-y-0.5 hover:border-lou-ink',
+                  slot?.barberId === item.barberId &&
+                    slot.startsAt === item.startsAt &&
+                    'border-lou-ink bg-lou-ink text-white',
+                )}
                 type="button"
                 aria-pressed={slot?.barberId === item.barberId && slot.startsAt === item.startsAt}
                 key={`${item.barberId}-${item.startsAt}`}
                 onClick={() => setSlot(item)}
               >
-                <strong>{agendaTime(item.startsAt)}</strong>
-                <span>{item.barberName}</span>
-                <small>
+                <strong className="font-display text-2xl">{agendaTime(item.startsAt)}</strong>
+                <span className="text-xs font-bold">{item.barberName}</span>
+                <small className="text-[0.68rem] opacity-60">
                   {item.durationMinutes} min · {centsToBolivianos(item.priceCents)}
                 </small>
               </button>
@@ -195,22 +262,25 @@ export const PublicBookingPage = () => {
           </div>
         )}
         {connectivity === 'offline' && slots.data && (
-          <p className="stale-note">
+          <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
             Estos horarios estaban guardados y pueden estar desactualizados. Conéctate antes de
             confirmar.
           </p>
         )}
       </section>
       {slot && (
-        <section className="public-card" aria-labelledby="customer-data">
-          <h2 id="customer-data">Tus datos</h2>
-          <p>
+        <section className={cn(cardClassName, 'mt-5')} aria-labelledby="customer-data">
+          <h2 id="customer-data" className="m-0 font-display text-4xl font-bold">
+            Tus datos
+          </h2>
+          <p className="mt-2 text-sm text-lou-graphite/65">
             {agendaTime(slot.startsAt)} con {slot.barberName} · {centsToBolivianos(slot.priceCents)}
           </p>
-          <form className="public-form" onSubmit={confirm}>
-            <label>
+          <form className="mt-6 grid gap-5" onSubmit={confirm}>
+            <label className={labelClassName}>
               Nombre
               <input
+                className={fieldClassName}
                 autoComplete="name"
                 minLength={2}
                 maxLength={120}
@@ -219,9 +289,10 @@ export const PublicBookingPage = () => {
                 onChange={(event) => setDisplayName(event.target.value)}
               />
             </label>
-            <label>
+            <label className={labelClassName}>
               WhatsApp o teléfono
               <input
+                className={fieldClassName}
                 autoComplete="tel"
                 inputMode="tel"
                 required
@@ -229,8 +300,9 @@ export const PublicBookingPage = () => {
                 onChange={(event) => setPhone(event.target.value)}
               />
             </label>
-            <label className="privacy-check">
+            <label className="flex items-start gap-3 rounded-xl bg-lou-paper p-4 text-sm leading-6">
               <input
+                className="mt-1 size-5 accent-lou-ink"
                 type="checkbox"
                 required
                 checked={privacyAccepted}
@@ -238,27 +310,29 @@ export const PublicBookingPage = () => {
               />
               <span>Autorizo usar mi nombre y teléfono únicamente para gestionar esta cita.</span>
             </label>
-            <button
-              className="primary-button"
-              disabled={busy || connectivity !== 'online' || !privacyAccepted}
-            >
+            <Button width="full" disabled={busy || connectivity !== 'online' || !privacyAccepted}>
               {busy
                 ? 'Confirmando…'
                 : connectivity === 'offline'
                   ? 'Conéctate para confirmar'
                   : 'Confirmar reserva'}
-            </button>
+            </Button>
           </form>
           {notice && (
-            <p className="form-error" role="alert">
+            <p
+              className="mt-4 rounded-xl border border-lou-danger/20 bg-red-50 p-4 text-sm font-semibold text-lou-danger"
+              role="alert"
+            >
               {notice}
             </p>
           )}
         </section>
       )}
-      <p className="public-access">
+      <p className="mt-8 text-center text-xs text-lou-graphite/50">
         Para cambiar una cita, abre el enlace privado que recibiste. ·{' '}
-        <Link to="/app/login">Acceso del equipo</Link>
+        <Link className="font-bold hover:underline" to="/app/login" viewTransition>
+          Acceso del equipo
+        </Link>
       </p>
     </main>
   )
@@ -272,18 +346,20 @@ interface SummaryAppointment {
   priceCents: number
 }
 export const AppointmentSummary = ({ appointment }: { appointment: SummaryAppointment }) => (
-  <dl className="appointment-summary">
-    <div>
-      <dt>Servicio</dt>
-      <dd>{appointment.serviceName}</dd>
+  <dl className="mt-8 grid overflow-hidden rounded-2xl border border-lou-fog bg-white shadow-lou-sm sm:grid-cols-2">
+    <div className="border-b border-lou-fog p-5 sm:border-r">
+      <dt className="text-xs font-bold tracking-wider text-lou-graphite/45 uppercase">Servicio</dt>
+      <dd className="mt-1 font-display text-2xl font-bold">{appointment.serviceName}</dd>
     </div>
-    <div>
-      <dt>Barbero</dt>
-      <dd>{appointment.barberName}</dd>
+    <div className="border-b border-lou-fog p-5">
+      <dt className="text-xs font-bold tracking-wider text-lou-graphite/45 uppercase">Barbero</dt>
+      <dd className="mt-1 font-display text-2xl font-bold">{appointment.barberName}</dd>
     </div>
-    <div>
-      <dt>Fecha y hora</dt>
-      <dd>
+    <div className="border-b border-lou-fog p-5 sm:border-r sm:border-b-0">
+      <dt className="text-xs font-bold tracking-wider text-lou-graphite/45 uppercase">
+        Fecha y hora
+      </dt>
+      <dd className="mt-1 text-sm font-semibold">
         {new Intl.DateTimeFormat('es-BO', {
           timeZone: 'America/La_Paz',
           weekday: 'long',
@@ -294,9 +370,11 @@ export const AppointmentSummary = ({ appointment }: { appointment: SummaryAppoin
         }).format(new Date(appointment.startsAt))}
       </dd>
     </div>
-    <div>
-      <dt>Duración y precio</dt>
-      <dd>
+    <div className="p-5">
+      <dt className="text-xs font-bold tracking-wider text-lou-graphite/45 uppercase">
+        Duración y precio
+      </dt>
+      <dd className="mt-1 font-display text-2xl font-bold tabular-nums">
         {appointment.durationMinutes} min · {centsToBolivianos(appointment.priceCents)}
       </dd>
     </div>

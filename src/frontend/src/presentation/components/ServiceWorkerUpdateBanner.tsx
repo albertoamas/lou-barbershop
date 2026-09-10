@@ -9,9 +9,16 @@ export const ServiceWorkerUpdateBanner = () => {
   )
   if (!available) return null
   return (
-    <div className="update-banner" role="status">
+    <div
+      className="flex flex-wrap items-center justify-center gap-3 border-b border-emerald-900/20 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-950"
+      role="status"
+    >
       <span>Hay una versión nueva. Actualiza cuando termines lo que estás haciendo.</span>
-      <button type="button" onClick={() => void serviceWorkerUpdateSource.apply()}>
+      <button
+        className="min-h-11 rounded-lg bg-lou-ink px-4 py-2 font-bold text-white transition-transform duration-150 active:scale-[0.98]"
+        type="button"
+        onClick={() => void serviceWorkerUpdateSource.apply()}
+      >
         Actualizar ahora
       </button>
     </div>

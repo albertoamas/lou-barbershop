@@ -21,8 +21,11 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
 
   if (session.isPending) {
     return (
-      <main className="auth-page" aria-busy="true">
-        Verificando sesión…
+      <main className="grid min-h-[70vh] place-items-center px-4" aria-busy="true">
+        <div className="flex items-center gap-3 text-sm font-semibold text-lou-graphite/70">
+          <span className="size-2 animate-pulse rounded-full bg-lou-ink" />
+          Verificando sesión…
+        </div>
       </main>
     )
   }
@@ -43,13 +46,13 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   }
 
   return (
-    <div className="authenticated-layout">
+    <div className="min-h-screen md:grid md:grid-cols-[5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)]">
       <InternalNavigation
         roles={session.data.roles}
         userName={session.data.userName}
         onLogout={logout}
       />
-      <div className="authenticated-main">{children}</div>
+      <div className="min-w-0 pb-24 md:pb-0">{children}</div>
     </div>
   )
 }
