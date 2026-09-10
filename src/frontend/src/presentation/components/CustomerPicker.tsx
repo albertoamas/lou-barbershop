@@ -3,6 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import type { Customer } from '../../core/agenda/Agenda'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
+import { Button } from './Button'
+import {
+  errorClassName,
+  fieldClassName,
+  labelClassName,
+  noticeClassName,
+} from '../styles/formStyles'
 
 interface Props {
   selected: Customer | undefined
@@ -53,33 +60,56 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
     }
   }
   return (
-    <section className="customer-picker" aria-label="Seleccionar cliente">
-      <h3>1. Cliente</h3>
+    <section className="grid gap-4" aria-label="Seleccionar cliente">
+      <div>
+        <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
+          Paso 1
+        </p>
+        <h3 className="mt-1 font-display text-2xl font-bold">Elige al cliente</h3>
+      </div>
       <form
-        className="customer-search"
+        className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
         onSubmit={(event) => {
           event.preventDefault()
           setSearch(query.trim())
         }}
       >
-        <label>
+        <label className={labelClassName}>
           Buscar por nombre o teléfono
-          <input value={query} maxLength={120} onChange={(event) => setQuery(event.target.value)} />
+          <input
+            className={fieldClassName}
+            value={query}
+            maxLength={120}
+            onChange={(event) => setQuery(event.target.value)}
+          />
         </label>
-        <button type="submit">Buscar cliente</button>
+        <Button type="submit" variant="secondary">
+          Buscar
+        </Button>
       </form>
-      {customers.isPending && <p role="status">Buscando clientes…</p>}
-      {customers.isError && (
-        <p role="alert">
-          No se pudieron cargar clientes.{' '}
-          <button onClick={() => void customers.refetch()}>Reintentar búsqueda</button>
+      {customers.isPending && (
+        <p className="text-sm text-lou-graphite/60" role="status">
+          Buscando clientes…
         </p>
       )}
-      {customers.data?.length === 0 && <p>No hay coincidencias. Puedes crear un cliente.</p>}
+      {customers.isError && (
+        <p className={errorClassName} role="alert">
+          No se pudieron cargar clientes.{' '}
+          <button className="font-bold underline" onClick={() => void customers.refetch()}>
+            Reintentar búsqueda
+          </button>
+        </p>
+      )}
+      {customers.data?.length === 0 && (
+        <p className="rounded-xl border border-dashed border-lou-steel p-4 text-sm text-lou-graphite/60">
+          No hay coincidencias. Puedes crear un cliente.
+        </p>
+      )}
       {Boolean(customers.data?.length) && (
-        <label>
+        <label className={labelClassName}>
           Coincidencias (máximo 50)
           <select
+            className={fieldClassName}
             value={selected?.id ?? ''}
             onChange={(event) => {
               const customer = customers.data?.find((item) => item.id === event.target.value)
@@ -101,34 +131,53 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
         </label>
       )}
       {selected && (
-        <p>
-          Seleccionado: <strong>{selected.displayName}</strong> · {selected.phone}
+        <p className="rounded-xl border border-emerald-800/15 bg-emerald-50 p-3 text-sm text-emerald-950">
+          Cliente seleccionado: <strong>{selected.displayName}</strong> · {selected.phone}
         </p>
       )}
-      <div className="row-actions">
-        <button disabled={disabled} onClick={() => setEditing(null)}>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={disabled}
+          onClick={() => setEditing(null)}
+        >
           Nuevo cliente
-        </button>
+        </Button>
         {selected && (
-          <button disabled={disabled} onClick={() => setEditing(selected)}>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={disabled}
+            onClick={() => setEditing(selected)}
+          >
             Corregir cliente
-          </button>
+          </Button>
         )}
       </div>
       {editing !== undefined && (
         <form
           key={editing?.id ?? 'new'}
-          className="compact-form"
+          className="grid gap-4 rounded-2xl border border-lou-fog bg-lou-paper p-4"
           onSubmit={(event) => void save(event)}
         >
-          <h4>{editing ? 'Corregir ficha' : 'Nuevo cliente'}</h4>
-          <label>
+          <h4 className="font-display text-xl font-bold">
+            {editing ? 'Corregir ficha' : 'Nuevo cliente'}
+          </h4>
+          <label className={labelClassName}>
             Nombre
-            <input name="name" required maxLength={120} defaultValue={editing?.displayName} />
+            <input
+              className={fieldClassName}
+              name="name"
+              required
+              maxLength={120}
+              defaultValue={editing?.displayName}
+            />
           </label>
-          <label>
+          <label className={labelClassName}>
             Teléfono
             <input
+              className={fieldClassName}
               name="phone"
               type="tel"
               required
@@ -137,19 +186,28 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
               defaultValue={editing?.phone}
             />
           </label>
-          <label>
+          <label className={labelClassName}>
             Nota interna (solo administración)
-            <textarea name="notes" maxLength={1000} defaultValue={editing?.notes ?? ''} />
+            <textarea
+              className={`${fieldClassName} min-h-24 py-3`}
+              name="notes"
+              maxLength={1000}
+              defaultValue={editing?.notes ?? ''}
+            />
           </label>
-          <button className="primary-button" disabled={disabled || busy}>
-            {busy ? 'Guardando…' : 'Guardar cliente'}
-          </button>
-          <button type="button" onClick={() => setEditing(undefined)}>
-            Cerrar ficha
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={disabled || busy}>{busy ? 'Guardando…' : 'Guardar cliente'}</Button>
+            <Button type="button" variant="ghost" onClick={() => setEditing(undefined)}>
+              Cerrar ficha
+            </Button>
+          </div>
         </form>
       )}
-      {notice && <p role="status">{notice}</p>}
+      {notice && (
+        <p className={noticeClassName} role="status">
+          {notice}
+        </p>
+      )}
     </section>
   )
 }

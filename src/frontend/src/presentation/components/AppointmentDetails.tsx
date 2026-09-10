@@ -12,6 +12,9 @@ import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { agendaTime } from '../../core/agenda/Agenda'
 import { salesApi } from '../../infrastructure/http/salesApi'
+import type { Operation } from '../../core/sales/Sales'
+import { Button } from './Button'
+import { errorClassName, fieldClassName, labelClassName } from '../styles/formStyles'
 
 const actionLabels: Record<AgendaAction, string> = {
   cancel: 'Cancelar cita',
@@ -28,6 +31,7 @@ interface Props {
   onChanged: () => void
   onReschedule: () => void
   onClose: () => void
+  onOperationOpened?: (operation: Operation) => void
 }
 export const AppointmentDetails = ({
   appointment,
@@ -36,6 +40,7 @@ export const AppointmentDetails = ({
   onChanged,
   onReschedule,
   onClose,
+  onOperationOpened,
 }: Props) => {
   const [action, setAction] = useState<AgendaAction>()
   const [reason, setReason] = useState('')
@@ -64,35 +69,53 @@ export const AppointmentDetails = ({
     }
   }
   return (
-    <section className="appointment-editor master-panel" aria-label="Detalle de cita">
-      <div className="page-heading">
-        <h2>{appointment.customerName}</h2>
-        <button disabled={busy} onClick={onClose}>
+    <section className="grid gap-6" aria-label="Detalle de cita">
+      <div className="flex items-start justify-between gap-4 border-b border-lou-fog pb-5">
+        <div>
+          <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
+            Detalle de cita
+          </p>
+          <h2 className="mt-1 font-display text-3xl leading-none font-bold">
+            {appointment.customerName}
+          </h2>
+        </div>
+        <Button type="button" variant="ghost" disabled={busy} onClick={onClose}>
           Cerrar detalle
-        </button>
+        </Button>
       </div>
-      <p>
-        {appointment.serviceName} · {appointment.barberName}
-      </p>
-      <p>
-        {agendaTime(appointment.startsAt)}–{agendaTime(appointment.endsAt)} ·{' '}
-        {statusLabels[appointment.status]}
-      </p>
+      <div className="grid gap-3 rounded-2xl border border-lou-fog bg-lou-paper p-5 sm:grid-cols-2">
+        <div>
+          <span className="text-[0.65rem] font-bold tracking-wider text-lou-graphite/45 uppercase">
+            Servicio
+          </span>
+          <p className="mt-1 font-bold">{appointment.serviceName}</p>
+          <p className="text-sm text-lou-graphite/60">con {appointment.barberName}</p>
+        </div>
+        <div>
+          <span className="text-[0.65rem] font-bold tracking-wider text-lou-graphite/45 uppercase">
+            Horario y estado
+          </span>
+          <p className="mt-1 font-display text-xl font-bold tabular-nums">
+            {agendaTime(appointment.startsAt)}–{agendaTime(appointment.endsAt)}
+          </p>
+          <p className="text-sm text-lou-graphite/60">{statusLabels[appointment.status]}</p>
+        </div>
+      </div>
       {appointment.quotedPriceCents !== null && (
-        <p>
+        <p className="rounded-xl border border-sky-800/15 bg-sky-50 p-4 text-sm text-sky-950">
           Precio informado: {centsToBolivianos(appointment.quotedPriceCents)} ·{' '}
           {appointment.quotedDurationMinutes} min. Sin cobro registrado por esta cita.
         </p>
       )}
-      <div className="row-actions">
+      <div className="flex flex-wrap gap-2">
         {appointment.status === 'IN_SERVICE' && (
-          <button
+          <Button
             disabled={disabled || busy}
             onClick={() => {
               setBusy(true)
               void salesApi
                 .openAppointment(appointment.id)
-                .then((opened) => window.location.assign(`/operations?operationId=${opened.id}`))
+                .then((opened) => onOperationOpened?.(opened))
                 .catch((error: unknown) =>
                   setNotice(
                     error instanceof ApiError
@@ -104,15 +127,16 @@ export const AppointmentDetails = ({
             }}
           >
             Abrir atención y cobro
-          </button>
+          </Button>
         )}
         {canManage && appointment.status === 'CONFIRMED' && (
-          <button disabled={disabled || busy} onClick={onReschedule}>
+          <Button variant="secondary" disabled={disabled || busy} onClick={onReschedule}>
             Reprogramar / reasignar
-          </button>
+          </Button>
         )}
         {agendaActions(appointment.status, canManage).map((item) => (
-          <button
+          <Button
+            variant={item === 'cancel' || item === 'no-show' ? 'danger' : 'secondary'}
             key={item}
             disabled={disabled || busy}
             onClick={() => {
@@ -121,22 +145,23 @@ export const AppointmentDetails = ({
             }}
           >
             {actionLabels[item]}
-          </button>
+          </Button>
         ))}
       </div>
       {action && (
         <form
-          className="compact-form"
+          className="grid gap-4 rounded-2xl border border-lou-fog bg-lou-paper p-4"
           onSubmit={(event) => {
             event.preventDefault()
             void execute()
           }}
         >
-          <h3>{actionLabels[action]}</h3>
+          <h3 className="font-display text-2xl font-bold">{actionLabels[action]}</h3>
           {needsReason && (
-            <label>
+            <label className={labelClassName}>
               Motivo
               <textarea
+                className={`${fieldClassName} min-h-24 py-3`}
                 required
                 maxLength={300}
                 value={reason}
@@ -144,28 +169,37 @@ export const AppointmentDetails = ({
               />
             </label>
           )}
-          <button
-            className="primary-button"
+          <Button
+            variant={action === 'cancel' || action === 'no-show' ? 'danger' : 'primary'}
             disabled={disabled || busy || (needsReason && !reason.trim())}
           >
             {busy ? 'Guardando…' : 'Confirmar acción'}
-          </button>
+          </Button>
         </form>
       )}
-      {notice && <p role="alert">{notice}</p>}
+      {notice && (
+        <p className={errorClassName} role="alert">
+          {notice}
+        </p>
+      )}
       {canManage && (
-        <section aria-label="Historial de cita">
-          <h3>Historial</h3>
+        <section className="border-t border-lou-fog pt-6" aria-label="Historial de cita">
+          <h3 className="font-display text-2xl font-bold">Historial</h3>
           {history.isPending && <p role="status">Cargando historial…</p>}
           {history.isError && (
-            <p role="alert">
+            <p className={errorClassName} role="alert">
               No se pudo cargar el historial.{' '}
-              <button onClick={() => void history.refetch()}>Reintentar historial</button>
+              <button className="font-bold underline" onClick={() => void history.refetch()}>
+                Reintentar historial
+              </button>
             </p>
           )}
-          <ol className="event-history">
+          <ol className="mt-4 grid gap-3 border-l border-lou-steel/60 pl-5">
             {history.data?.map((event) => (
-              <li key={event.id}>
+              <li
+                className="relative rounded-xl border border-lou-fog bg-white p-4 text-sm shadow-sm before:absolute before:top-5 before:-left-[1.58rem] before:size-2 before:rounded-full before:bg-lou-ink"
+                key={event.id}
+              >
                 <strong>
                   {event.action === 'CREATED'
                     ? 'Creación'
@@ -187,7 +221,7 @@ export const AppointmentDetails = ({
                     Servicio: {event.before.serviceId} → {event.after.serviceId}
                   </p>
                 )}
-                <small>Actor: {event.actorId}</small>
+                <small className="text-lou-graphite/45">Actor: {event.actorId}</small>
               </li>
             ))}
           </ol>

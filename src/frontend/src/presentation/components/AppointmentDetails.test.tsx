@@ -5,9 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Appointment } from '../../core/agenda/Agenda'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { AppointmentDetails } from './AppointmentDetails'
+import { salesApi } from '../../infrastructure/http/salesApi'
 
 vi.mock('../../infrastructure/http/agendaApi', () => ({
   agendaApi: { history: vi.fn().mockResolvedValue([]), transition: vi.fn().mockResolvedValue({}) },
+}))
+vi.mock('../../infrastructure/http/salesApi', () => ({
+  salesApi: { openAppointment: vi.fn() },
 }))
 const appointment: Appointment = {
   id: 'a',
@@ -67,5 +71,29 @@ describe('appointment actions', () => {
       'cancel',
       'Solicitado por cliente',
     )
+  })
+  it('hands the opened operation to the canonical route navigator', async () => {
+    const user = userEvent.setup()
+    const opened = { id: 'operation-1' }
+    const onOperationOpened = vi.fn()
+    vi.mocked(salesApi.openAppointment).mockResolvedValueOnce(opened as never)
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <AppointmentDetails
+          appointment={{ ...appointment, status: 'IN_SERVICE' }}
+          canManage
+          disabled={false}
+          onChanged={vi.fn()}
+          onReschedule={vi.fn()}
+          onClose={vi.fn()}
+          onOperationOpened={onOperationOpened}
+        />
+      </QueryClientProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Abrir atención y cobro' }))
+    expect(salesApi.openAppointment).toHaveBeenCalledWith(appointment.id)
+    expect(onOperationOpened).toHaveBeenCalledWith(opened)
   })
 })

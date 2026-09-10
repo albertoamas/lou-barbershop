@@ -16,9 +16,8 @@ import { AgendaDialog } from '../components/AgendaDialog'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { Button } from '../components/Button'
 import { cn } from '../styles/cn'
-
-const fieldClassName =
-  'min-h-11 rounded-xl border border-lou-steel/60 bg-white px-3 text-sm font-semibold shadow-sm outline-none focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'
+import { useNavigate } from 'react-router-dom'
+import { fieldClassName } from '../styles/formStyles'
 const statusClassName: Record<AppointmentStatus, string> = {
   CONFIRMED: 'border-lou-steel bg-white',
   CHECKED_IN: 'border-amber-500 bg-amber-50',
@@ -29,6 +28,7 @@ const statusClassName: Record<AppointmentStatus, string> = {
 }
 
 export const AgendaPage = () => {
+  const navigate = useNavigate()
   const [date, setDate] = useState(todayInBusinessTime())
   const [weekly, setWeekly] = useState(false)
   const [barberId, setBarberId] = useState('')
@@ -238,6 +238,9 @@ export const AgendaPage = () => {
             disabled={disabled}
             onChanged={changed}
             onClose={() => setSelected(undefined)}
+            onOperationOpened={(opened) =>
+              navigate('/app/atenciones', { state: { opened }, viewTransition: true })
+            }
             onReschedule={() => {
               setEditor(selected)
               setSelected(undefined)

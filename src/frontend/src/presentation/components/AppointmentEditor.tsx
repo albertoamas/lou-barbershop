@@ -7,6 +7,13 @@ import { schedulingApi } from '../../infrastructure/http/schedulingApi'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { CustomerPicker } from './CustomerPicker'
+import { Button } from './Button'
+import {
+  errorClassName,
+  fieldClassName,
+  labelClassName,
+  noticeClassName,
+} from '../styles/formStyles'
 
 interface Props {
   appointment: Appointment | undefined
@@ -80,24 +87,34 @@ export const AppointmentEditor = ({
     }
   }
   return (
-    <section
-      className="appointment-editor master-panel"
-      aria-label={appointment ? 'Reprogramar cita' : 'Nueva cita'}
-    >
-      <div className="page-heading">
-        <h2>{appointment ? `Reprogramar · ${appointment.customerName}` : 'Nueva cita'}</h2>
-        <button disabled={busy} onClick={onClose}>
+    <section className="grid gap-6" aria-label={appointment ? 'Reprogramar cita' : 'Nueva cita'}>
+      <div className="flex items-start justify-between gap-4 border-b border-lou-fog pb-5">
+        <div>
+          <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
+            Agenda interna
+          </p>
+          <h2 className="mt-1 font-display text-3xl leading-none font-bold">
+            {appointment ? `Reprogramar · ${appointment.customerName}` : 'Nueva cita'}
+          </h2>
+        </div>
+        <Button type="button" variant="ghost" disabled={busy} onClick={onClose}>
           Cerrar editor
-        </button>
+        </Button>
       </div>
       {!appointment && (
         <CustomerPicker selected={customer} onSelect={setCustomer} disabled={disabled || busy} />
       )}
-      <h3>{appointment ? 'Nueva condición' : '2. Servicio y horario'}</h3>
-      <form className="compact-form" onSubmit={find}>
-        <label>
+      <div>
+        <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
+          {appointment ? 'Nueva condición' : 'Paso 2'}
+        </p>
+        <h3 className="mt-1 font-display text-2xl font-bold">Servicio y horario</h3>
+      </div>
+      <form className="grid gap-4 sm:grid-cols-2" onSubmit={find}>
+        <label className={labelClassName}>
           Servicio
           <select
+            className={fieldClassName}
             required
             value={serviceId}
             onChange={(event) => {
@@ -115,9 +132,10 @@ export const AppointmentEditor = ({
               ))}
           </select>
         </label>
-        <label>
+        <label className={labelClassName}>
           Barbero
           <select
+            className={fieldClassName}
             value={barberId}
             onChange={(event) => {
               setBarberId(event.target.value)
@@ -132,9 +150,10 @@ export const AppointmentEditor = ({
             ))}
           </select>
         </label>
-        <label>
+        <label className={labelClassName}>
           Fecha de la cita
           <input
+            className={fieldClassName}
             type="date"
             required
             min={todayInBusinessTime()}
@@ -145,11 +164,16 @@ export const AppointmentEditor = ({
             }}
           />
         </label>
-        {(barbers.isPending || services.isPending) && <p role="status">Cargando catálogo…</p>}
+        {(barbers.isPending || services.isPending) && (
+          <p className="text-sm text-lou-graphite/60" role="status">
+            Cargando catálogo…
+          </p>
+        )}
         {(barbers.isError || services.isError) && (
-          <p role="alert">
+          <p className={`${errorClassName} sm:col-span-2`} role="alert">
             No se pudo cargar el catálogo.{' '}
             <button
+              className="font-bold underline"
               type="button"
               onClick={() => {
                 void barbers.refetch()
@@ -160,24 +184,37 @@ export const AppointmentEditor = ({
             </button>
           </p>
         )}
-        <button
+        <Button
+          className="sm:col-span-2"
+          width="full"
           disabled={disabled || busy || !serviceId || barbers.isPending || services.isPending}
         >
           Buscar horarios
-        </button>
+        </Button>
       </form>
-      {search && slots.isFetching && <p role="status">Consultando disponibilidad…</p>}
-      {search && slots.isError && (
-        <p role="alert">
-          No se pudo consultar disponibilidad.{' '}
-          <button onClick={() => void slots.refetch()}>Reintentar horarios</button>
+      {search && slots.isFetching && (
+        <p className="text-sm text-lou-graphite/60" role="status">
+          Consultando disponibilidad…
         </p>
       )}
-      {search && slots.data?.length === 0 && <p>No hay horarios. Prueba otra fecha o barbero.</p>}
+      {search && slots.isError && (
+        <p className={errorClassName} role="alert">
+          No se pudo consultar disponibilidad.{' '}
+          <button className="font-bold underline" onClick={() => void slots.refetch()}>
+            Reintentar horarios
+          </button>
+        </p>
+      )}
+      {search && slots.data?.length === 0 && (
+        <p className="rounded-xl border border-dashed border-lou-steel p-4 text-sm text-lou-graphite/60">
+          No hay horarios. Prueba otra fecha o barbero.
+        </p>
+      )}
       {searchMatches && slots.data && slots.data.length > 0 && (
-        <label>
+        <label className={labelClassName}>
           Horario disponible
           <select
+            className={fieldClassName}
             value={slot ? `${slot.barberId}|${slot.startsAt}` : ''}
             onChange={(event) =>
               setSlot(
@@ -201,9 +238,10 @@ export const AppointmentEditor = ({
         </label>
       )}
       {appointment && (
-        <label>
+        <label className={labelClassName}>
           Motivo de reprogramación
           <textarea
+            className={`${fieldClassName} min-h-24 py-3`}
             required
             maxLength={300}
             value={reason}
@@ -212,13 +250,13 @@ export const AppointmentEditor = ({
         </label>
       )}
       {slot && (
-        <p className="owner-rule">
+        <p className={noticeClassName}>
           Confirmar {agendaTime(slot.startsAt)}–{agendaTime(slot.endsAt)} con {slot.barberName}.
           Precio informado: {centsToBolivianos(slot.priceCents)}. No registra un cobro.
         </p>
       )}
-      <button
-        className="primary-button"
+      <Button
+        width="full"
         disabled={
           disabled ||
           busy ||
@@ -229,8 +267,12 @@ export const AppointmentEditor = ({
         onClick={() => void save()}
       >
         {busy ? 'Confirmando…' : appointment ? 'Guardar reprogramación' : 'Confirmar cita'}
-      </button>
-      {notice && <p role="alert">{notice}</p>}
+      </Button>
+      {notice && (
+        <p className={errorClassName} role="alert">
+          {notice}
+        </p>
+      )}
     </section>
   )
 }
