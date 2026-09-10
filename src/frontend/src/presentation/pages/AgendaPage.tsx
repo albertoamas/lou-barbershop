@@ -194,7 +194,7 @@ export const AgendaPage = () => {
                   <button
                     key={appointment.id}
                     className={cn(
-                      'mb-3 grid w-full gap-1 rounded-xl border-l-4 p-4 text-left shadow-lou-sm transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-lou-lg',
+                      'mb-3 grid w-full gap-1 rounded-xl border-l-4 p-4 text-left shadow-lou-sm transition-[translate,box-shadow] duration-300 ease-lou hover:-translate-y-0.5 hover:shadow-lou-lg',
                       statusClassName[appointment.status],
                     )}
                     onClick={() => {

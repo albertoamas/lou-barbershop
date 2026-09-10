@@ -76,7 +76,7 @@ export const AppShell = ({ children }: AppShellProps) => {
                 Mi cita
               </Link>
               <Link
-                className="inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-bold text-lou-ink shadow-sm transition-[transform,background-color] duration-300 ease-lou hover:-translate-y-px hover:bg-lou-paper active:scale-[0.98]"
+                className="inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-bold text-lou-ink shadow-sm transition-[translate,scale,background-color] duration-300 ease-lou hover:-translate-y-px hover:bg-lou-paper active:scale-[0.98]"
                 to="/reservar"
                 viewTransition
               >

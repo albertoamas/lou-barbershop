@@ -135,7 +135,7 @@ export const LandingPage = () => {
             {catalog.data.services.slice(0, 6).map((service, index) => (
               <m.article
                 key={service.id}
-                className="group flex min-h-64 flex-col overflow-hidden rounded-2xl border border-lou-fog bg-white shadow-lou-sm transition-[transform,box-shadow] duration-300 ease-lou hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgb(8_8_8/10%)]"
+                className="group flex min-h-64 flex-col overflow-hidden rounded-2xl border border-lou-fog bg-white shadow-lou-sm transition-[translate,box-shadow] duration-300 ease-lou hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgb(8_8_8/10%)]"
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

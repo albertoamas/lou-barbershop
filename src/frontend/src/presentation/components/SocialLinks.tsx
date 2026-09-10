@@ -25,7 +25,7 @@ export const SocialLinks = () => (
       network.url ? (
         <a
           key={network.label}
-          className="grid size-11 place-items-center rounded-xl border border-lou-fog bg-lou-paper text-lou-ink transition-[transform,background-color,color] hover:-translate-y-0.5 hover:bg-lou-ink hover:text-white"
+          className="grid size-11 place-items-center rounded-xl border border-lou-fog bg-lou-paper text-lou-ink transition-[translate,background-color,color] duration-300 ease-lou hover:-translate-y-0.5 hover:bg-lou-ink hover:text-white"
           href={network.url}
           target="_blank"
           rel="noreferrer"

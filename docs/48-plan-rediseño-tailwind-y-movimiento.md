@@ -62,6 +62,8 @@ La interfaz combina la precisión de las navajas del logo con el trato cercano d
 | componente | acordeón, pestaña, toast, menú | 160–220 ms |
 | navegación | ruta, paso, drawer, bottom sheet | 200–280 ms |
 
+La elevación de tarjetas y botones constituye una excepción deliberada de `300 ms`: Tailwind 4 debe transicionar las propiedades individuales `translate` y `scale`, no sólo `transform`. Esto evita el salto instantáneo observado en navegadores modernos y mantiene un desplazamiento máximo de 1–2 px.
+
 Las animaciones usarán principalmente `opacity` y `transform`, serán interrumpibles y respetarán `prefers-reduced-motion`. Ningún cobro, reserva o liquidación esperará una animación para persistirse.
 
 ## 4. Sistema compartido de componentes

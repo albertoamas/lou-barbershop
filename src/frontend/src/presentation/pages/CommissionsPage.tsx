@@ -21,7 +21,7 @@ import {
 
 const sectionTitleClassName = 'font-display text-2xl font-bold sm:text-3xl'
 const recordClassName =
-  'grid w-full gap-1 rounded-xl border border-lou-fog bg-white p-4 text-left shadow-sm transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-lou-ink hover:shadow-lou-lg'
+  'grid w-full gap-1 rounded-xl border border-lou-fog bg-white p-4 text-left shadow-sm transition-[translate,box-shadow,border-color] duration-300 ease-lou hover:-translate-y-0.5 hover:border-lou-ink hover:shadow-lou-lg'
 
 export const CommissionsPage = () => {
   const session = useQuery({ queryKey: ['auth', 'session'], queryFn: authApi.current })

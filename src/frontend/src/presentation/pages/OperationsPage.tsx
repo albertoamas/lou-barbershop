@@ -606,7 +606,7 @@ export const OperationsPage = () => {
           )}
           {daily.data?.operations.map((x) => (
             <button
-              className="grid w-full gap-1 rounded-xl border border-lou-fog bg-white p-4 text-left shadow-sm transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-lou-ink hover:shadow-lou-lg sm:grid-cols-[1fr_auto]"
+              className="grid w-full gap-1 rounded-xl border border-lou-fog bg-white p-4 text-left shadow-sm transition-[translate,box-shadow,border-color] duration-300 ease-lou hover:-translate-y-0.5 hover:border-lou-ink hover:shadow-lou-lg sm:grid-cols-[1fr_auto]"
               key={x.id}
               onClick={() => setOperation(x)}
             >

@@ -1743,18 +1743,6 @@ h3 {
 h2 {
   font-size: clamp(1.45rem, 3vw, 2rem);
 }
-button,
-a,
-input,
-select,
-textarea {
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
-}
 button:not(:disabled) {
   cursor: pointer;
 }

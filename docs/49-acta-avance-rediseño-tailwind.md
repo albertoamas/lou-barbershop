@@ -53,6 +53,8 @@ Durante la revisión manual se detectó que el aviso de actualización PWA se ub
 
 La prueba en el contenedor de aceptación reveló dos diferencias respecto del servidor de desarrollo: Caddy bloqueaba el iframe por no declarar `frame-src`, y los `modulepreload` generados por Vite producían advertencias al cruzarse con recursos servidos por el service worker. La CSP permite ahora exclusivamente `https://www.google.com` como origen de marcos y conserva el resto de restricciones; Vite deja de emitir esos preloads y los módulos continúan cargándose mediante los imports del bundle.
 
+Una revisión posterior identificó dos causas de la elevación tosca: Tailwind CSS 4 representa `translate`, `scale` y `rotate` como propiedades CSS individuales, mientras varios componentes sólo declaraban transición para `transform`; además, una regla global heredada y no estratificada sobrescribía las utilidades Tailwind con 180 ms. El cambio de posición ocurría por tanto de forma instantánea. Se retiró la regla global y se corrigieron botones compartidos, CTA del navbar, tarjetas de servicios, agenda, reserva, atención, comisiones, inicio, redes sociales y acción PWA para transicionar las propiedades reales durante 300 ms con `ease-lou`; la elevación queda limitada a 1 px en botones y 2 px en tarjetas.
+
 ### Segunda presentación del checkpoint 00
 
 Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
@@ -163,6 +165,7 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Segunda revisión del checkpoint 01: Playwright confirmó una transición de hover de 300 ms sin cambio del borde gris, iframe cargado desde Google Maps con la coordenada del enlace aprobado, adaptación a 1440 × 900 y 390 × 844, ancho móvil sin overflow y consola con cero errores y cero advertencias.
 - Corrección del aviso PWA: fixture de actualización visible a 390 × 844 confirmó cabecera en `y=0..73`, aviso desde `y=73`, capas `40/30`, navegación `Reservar` interactuable y consola con cero errores y cero advertencias.
 - Corrección CSP/preload validada en el contenedor principal de `localhost:8088`: `frame-src https://www.google.com`, mapa visible y cargado, cero elementos `modulepreload`, cero errores y cero advertencias de consola.
+- Corrección de movimiento medida en Chromium: tarjeta `0 → -1,69 → -2 px` y botón `0 → -0,88 → -1 px` durante 300 ms; ambos declaran `translate` en `transition-property` y la consola termina sin errores ni advertencias.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 

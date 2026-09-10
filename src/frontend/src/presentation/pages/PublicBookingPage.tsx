@@ -243,7 +243,7 @@ export const PublicBookingPage = () => {
             {slots.data.map((item) => (
               <button
                 className={cn(
-                  'grid min-h-24 gap-0.5 rounded-xl border border-lou-fog bg-white p-3 text-left shadow-sm transition-[transform,border-color,background-color,color] duration-150 hover:-translate-y-0.5 hover:border-lou-ink',
+                  'grid min-h-24 gap-0.5 rounded-xl border border-lou-fog bg-white p-3 text-left shadow-sm transition-[translate,border-color,background-color,color] duration-300 ease-lou hover:-translate-y-0.5 hover:border-lou-ink',
                   slot?.barberId === item.barberId &&
                     slot.startsAt === item.startsAt &&
                     'border-lou-ink bg-lou-ink text-white',

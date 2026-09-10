@@ -15,7 +15,7 @@ export const ServiceWorkerUpdateBanner = () => {
     >
       <span>Hay una versión nueva. Actualiza cuando termines lo que estás haciendo.</span>
       <button
-        className="min-h-11 rounded-lg bg-lou-ink px-4 py-2 font-bold text-white transition-transform duration-150 active:scale-[0.98]"
+        className="min-h-11 rounded-lg bg-lou-ink px-4 py-2 font-bold text-white transition-[scale,background-color] duration-300 ease-lou active:scale-[0.98]"
         type="button"
         onClick={() => void serviceWorkerUpdateSource.apply()}
       >

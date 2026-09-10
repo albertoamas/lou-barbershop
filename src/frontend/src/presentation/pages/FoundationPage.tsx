@@ -86,12 +86,12 @@ export const FoundationPage = () => {
         {actions.map((action, index) => (
           <m.article
             key={action.to}
-            className="group flex min-h-72 flex-col rounded-2xl border border-lou-fog bg-white p-6 shadow-lou-sm transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-lou-steel hover:shadow-lou-lg"
+            className="group flex min-h-72 flex-col rounded-2xl border border-lou-fog bg-white p-6 shadow-lou-sm transition-[translate,border-color,box-shadow] duration-300 ease-lou hover:-translate-y-0.5 hover:border-lou-steel hover:shadow-lou-lg"
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <span className="grid size-12 place-items-center rounded-xl bg-lou-ink text-white transition-transform duration-200 group-hover:rotate-[-3deg] group-hover:scale-105">
+            <span className="grid size-12 place-items-center rounded-xl bg-lou-ink text-white transition-[rotate,scale] duration-300 ease-lou group-hover:rotate-[-3deg] group-hover:scale-105">
               <AppIcon name={action.icon} size={24} />
             </span>
             <h2 className="mt-10 font-display text-3xl font-bold">{action.label}</h2>
