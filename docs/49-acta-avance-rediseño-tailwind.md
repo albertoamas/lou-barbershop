@@ -41,6 +41,14 @@ El dueño solicitó el 10 de septiembre de 2026:
 
 Las cuatro correcciones quedaron aplicadas. Los servicios ahora usan una cuadrícula responsive de tarjetas editoriales con identificador, icono de tijeras, descripción, duración y precio en zonas separadas. Las acciones del hero usan iconos SVG de calendario y reloj; no emplean emojis ni caracteres decorativos.
 
+En una segunda revisión del checkpoint 01, el dueño solicitó:
+
+1. igualar la separación entre icono y texto de las dos acciones del hero;
+2. suavizar la elevación de tarjetas y botones, evitando que el borde se vuelva negro durante el hover;
+3. eliminar el bloque `Reserva con claridad / Lo necesario. Nada escondido` y sustituirlo por la ubicación real de Lou Barbershop.
+
+La revisión iguala ambos espacios con el mismo token, aumenta la transición a 300 ms con una elevación de un píxel en los botones y dos píxeles en las tarjetas, conserva el borde gris y reemplaza el bloque anterior por `Estamos ubicados aquí`, un mapa responsive y un enlace al Google Maps proporcionado por el dueño. La coordenada incrustada se obtuvo resolviendo ese mismo enlace público.
+
 ### Segunda presentación del checkpoint 00
 
 Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
@@ -126,6 +134,8 @@ El cambio permanece limitado a presentación y composición. No modifica reglas 
 - [Checkpoint 01 — hero de landing en móvil](assets/design/lou-checkpoint-01-landing-mobile.png)
 - [Checkpoint 01 — servicios rediseñados en móvil](assets/design/lou-checkpoint-01-services-mobile.png)
 - [Checkpoint 01 — proceso de reserva en móvil](assets/design/lou-checkpoint-01-process-mobile.png)
+- [Checkpoint 01 — ubicación en escritorio](assets/design/lou-checkpoint-01-location-desktop.png)
+- [Checkpoint 01 — ubicación en móvil](assets/design/lou-checkpoint-01-location-mobile.png)
 
 Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de editor y atención usan respuestas ficticias aisladas mediante Playwright porque el runtime activo no conservaba los usuarios sembrados; no modifican la base ni contienen datos reales.
 
@@ -146,6 +156,7 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Checkpoint 01: Prettier, ESLint, Oxlint, TypeScript estricto y build Vite/PWA aprobados; 19 archivos y 41 pruebas Vitest aprobadas.
 - Checkpoint 01: Playwright verificó la landing a 1440 × 900 y 390 × 844 con catálogo ficticio aislado; los accesos internos desplazan a la sección correcta, la cabecera pasa de `transparent` a `solid`, el ancho de contenido móvil coincide con el viewport y la consola termina con cero errores y cero advertencias.
 - Revisión del checkpoint 01: las cuatro correcciones solicitadas se verificaron nuevamente a 1440 × 900 y 390 × 844; las tarjetas forman tres columnas en escritorio y una columna en móvil, sin desbordamiento horizontal, errores ni advertencias de consola.
+- Segunda revisión del checkpoint 01: Playwright confirmó una transición de hover de 300 ms sin cambio del borde gris, iframe cargado desde Google Maps con la coordenada del enlace aprobado, adaptación a 1440 × 900 y 390 × 844, ancho móvil sin overflow y consola con cero errores y cero advertencias.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 

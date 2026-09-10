@@ -11,6 +11,7 @@ export type IconName =
   | 'logout'
   | 'arrow-right'
   | 'close'
+  | 'map-pin'
 
 interface AppIconProps {
   name: IconName
@@ -75,6 +76,12 @@ const paths: Record<IconName, React.ReactNode> = {
   ),
   'arrow-right': <path d="M5 12h14M14 7l5 5-5 5" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
+  'map-pin': (
+    <>
+      <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
 }
 
 export const AppIcon = ({ name, size = 22 }: AppIconProps) => (

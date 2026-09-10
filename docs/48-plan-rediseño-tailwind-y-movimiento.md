@@ -107,7 +107,7 @@ El cliente no crea cuenta ni ve el shell interno.
 
 **Cómo funciona:** tres pasos —elige, reserva, llega— con transición ligera al entrar al viewport.
 
-**Confianza:** una sola sucursal, reserva sin cuenta, precio visible y enlace privado para gestionar la cita. No inventar testimonios.
+**Ubicación:** sección `Estamos ubicados aquí` con mapa responsive de Google Maps y acceso externo a la ubicación proporcionada por el dueño. No inventar dirección, coordenadas ni sucursales; la coordenada incrustada debe corresponder al enlace aprobado.
 
 **CTA final:** bloque oscuro `Tu próximo corte empieza aquí`.
 

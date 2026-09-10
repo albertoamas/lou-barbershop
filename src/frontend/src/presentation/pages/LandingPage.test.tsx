@@ -49,10 +49,15 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { name: 'Tres pasos. Sin vueltas.' })).toBeInTheDocument()
     expect(screen.getByText('Reserva', { selector: 'strong' })).toBeInTheDocument()
     expect(screen.getByText('Llega', { selector: 'strong' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'Lo necesario. Nada escondido.' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Precio visible')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Estamos ubicados aquí.' })).toBeInTheDocument()
+    expect(screen.getByTitle('Ubicación de Lou Barbershop en Google Maps')).toHaveAttribute(
+      'src',
+      expect.stringContaining('-21.5355119,-64.7304746'),
+    )
+    expect(screen.getByRole('link', { name: 'Abrir en Google Maps' })).toHaveAttribute(
+      'href',
+      'https://maps.app.goo.gl/WCoCT4uU7mwGRCxA8',
+    )
     expect(
       screen.getByRole('heading', { name: 'Tu próximo corte empieza aquí.' }),
     ).toBeInTheDocument()

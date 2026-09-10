@@ -56,7 +56,7 @@ export const LandingPage = () => {
                 Reserva tu cita
               </Link>
               <Link
-                className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white/70 transition-colors duration-300 hover:bg-white/10 hover:text-white"
                 to="/mi-cita"
                 viewTransition
               >
@@ -135,7 +135,7 @@ export const LandingPage = () => {
             {catalog.data.services.slice(0, 6).map((service, index) => (
               <m.article
                 key={service.id}
-                className="group flex min-h-64 flex-col overflow-hidden rounded-2xl border border-lou-fog bg-white shadow-lou-sm transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-lou-steel hover:shadow-lou-lg"
+                className="group flex min-h-64 flex-col overflow-hidden rounded-2xl border border-lou-fog bg-white shadow-lou-sm transition-[transform,box-shadow] duration-300 ease-lou hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgb(8_8_8/10%)]"
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -211,35 +211,43 @@ export const LandingPage = () => {
       </section>
 
       <section
-        id="confianza"
+        id="ubicacion"
         className="scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10 lg:py-28"
-        aria-labelledby="trust-title"
+        aria-labelledby="location-title"
       >
-        <m.div className="mx-auto grid max-w-360 gap-10 lg:grid-cols-[0.8fr_1.2fr]" {...reveal}>
-          <div>
-            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
-              Reserva con claridad
-            </p>
-            <h2
-              id="trust-title"
-              className="m-0 max-w-lg font-display text-5xl leading-none font-bold sm:text-6xl"
+        <m.div className="mx-auto max-w-360" {...reveal}>
+          <div className="mb-10 flex flex-col justify-between gap-6 border-b border-lou-steel/40 pb-7 sm:flex-row sm:items-end">
+            <div>
+              <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
+                Visítanos
+              </p>
+              <h2
+                id="location-title"
+                className="m-0 max-w-lg font-display text-5xl leading-none font-bold sm:text-6xl"
+              >
+                Estamos ubicados aquí.
+              </h2>
+            </div>
+            <a
+              className={buttonStyles({ variant: 'primary' })}
+              href="https://maps.app.goo.gl/WCoCT4uU7mwGRCxA8"
+              target="_blank"
+              rel="noreferrer"
             >
-              Lo necesario. Nada escondido.
-            </h2>
+              <AppIcon name="map-pin" size={18} />
+              Abrir en Google Maps
+            </a>
           </div>
-          <dl className="grid gap-px overflow-hidden rounded-2xl border border-lou-fog bg-lou-fog sm:grid-cols-2">
-            {[
-              ['Una sola sucursal', 'Eliges dentro de la disponibilidad real de Lou Barbershop.'],
-              ['Sin crear una cuenta', 'Sólo pedimos los datos mínimos para confirmar tu cita.'],
-              ['Precio visible', 'Conoces el precio del servicio antes de confirmar.'],
-              ['Enlace privado', 'Recibes un acceso propio para consultar o gestionar tu cita.'],
-            ].map(([term, description]) => (
-              <div key={term} className="bg-white p-6 sm:p-8">
-                <dt className="font-display text-2xl font-bold">{term}</dt>
-                <dd className="mt-2 text-sm leading-6 text-lou-graphite/65">{description}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="overflow-hidden rounded-2xl border border-lou-fog bg-white p-2 shadow-lou-sm sm:p-3">
+            <iframe
+              className="aspect-[4/3] w-full rounded-xl border-0 sm:aspect-[16/7]"
+              src="https://www.google.com/maps?q=-21.5355119,-64.7304746&z=17&output=embed"
+              title="Ubicación de Lou Barbershop en Google Maps"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
         </m.div>
       </section>
 
