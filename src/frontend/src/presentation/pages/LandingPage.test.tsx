@@ -45,5 +45,15 @@ describe('LandingPage', () => {
     )
     expect(await screen.findByText('Corte clásico')).toBeInTheDocument()
     expect(screen.getByText('Bs 70,00')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tres pasos. Sin vueltas.' })).toBeInTheDocument()
+    expect(screen.getByText('Reserva', { selector: 'strong' })).toBeInTheDocument()
+    expect(screen.getByText('Llega', { selector: 'strong' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Lo necesario. Nada escondido.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Precio visible')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Tu próximo corte empieza aquí.' }),
+    ).toBeInTheDocument()
   })
 })

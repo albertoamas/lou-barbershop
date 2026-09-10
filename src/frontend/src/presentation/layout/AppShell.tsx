@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BrandLockup } from '../components/BrandLockup'
 import { ConnectivityBanner } from '../components/ConnectivityBanner'
@@ -10,9 +10,22 @@ interface AppShellProps {
   children: ReactNode
 }
 
+const subscribeToScroll = (listener: () => void) => {
+  window.addEventListener('scroll', listener, { passive: true })
+  return () => window.removeEventListener('scroll', listener)
+}
+
+const getScrollSnapshot = () => window.scrollY > 24
+
 export const AppShell = ({ children }: AppShellProps) => {
   const connectivity = useConnectivity()
   const location = useLocation()
+  const landingScreen = location.pathname === '/'
+  const landingHeaderScrolled = useSyncExternalStore(
+    subscribeToScroll,
+    getScrollSnapshot,
+    () => false,
+  )
   const internalPath = location.pathname === '/app' || location.pathname.startsWith('/app/')
   const authenticationScreen = ['/app/login', '/app/sesion-expirada', '/app/acceso-denegado'].some(
     (route) => location.pathname === route || location.pathname.startsWith(`${route}/`),
@@ -22,10 +35,39 @@ export const AppShell = ({ children }: AppShellProps) => {
   return (
     <div className="flex min-h-dvh min-w-0 flex-col bg-lou-paper text-lou-ink">
       {publicShell && (
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-lou-ink/95 text-white shadow-lg backdrop-blur-xl">
+        <header
+          className={`top-0 z-40 w-full text-white transition-[background-color,border-color,box-shadow] duration-200 ${
+            landingScreen
+              ? `fixed ${
+                  landingHeaderScrolled
+                    ? 'border-b border-white/10 bg-lou-ink/95 shadow-lg backdrop-blur-xl'
+                    : 'border-b border-transparent bg-transparent'
+                }`
+              : 'sticky border-b border-white/10 bg-lou-ink/95 shadow-lg backdrop-blur-xl'
+          }`}
+          data-landing-header={
+            landingScreen ? (landingHeaderScrolled ? 'solid' : 'transparent') : undefined
+          }
+        >
           <div className="mx-auto flex min-h-18 max-w-360 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
             <BrandLockup />
             <nav className="flex items-center gap-1 sm:gap-3" aria-label="Navegación pública">
+              {landingScreen && (
+                <>
+                  <a
+                    className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white lg:inline-flex"
+                    href="#servicios"
+                  >
+                    Servicios
+                  </a>
+                  <a
+                    className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white lg:inline-flex"
+                    href="#como-funciona"
+                  >
+                    Cómo funciona
+                  </a>
+                </>
+              )}
               <Link
                 className="hidden min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
                 to="/mi-cita"

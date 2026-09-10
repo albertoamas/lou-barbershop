@@ -22,6 +22,7 @@
 @layer base {
   html {
     background: var(--color-lou-paper);
+    scroll-behavior: smooth;
   }
 
   body {
@@ -35,6 +36,12 @@
 
   ::selection {
     @apply bg-lou-ink text-white;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 

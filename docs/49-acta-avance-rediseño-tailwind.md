@@ -1,30 +1,34 @@
 # Acta de avance — rediseño Tailwind y movimiento
 
 **Fecha:** 10 de septiembre de 2026  
-**Estado:** `PAUSADO EN ACEPTACIÓN VISUAL — CHECKPOINT 00`  
+**Estado:** `PAUSADO EN ACEPTACIÓN VISUAL — CHECKPOINT 01`  
 **Plan:** [48-plan-rediseño-tailwind-y-movimiento.md](48-plan-rediseño-tailwind-y-movimiento.md)
 
 ## Situación actual y próxima decisión
 
-La fundación visual y varias pantallas ya tienen implementación provisional, pero **ninguna pantalla está aprobada individualmente por el dueño**. La aprobación del 9 de septiembre confirmó el plan, Tailwind y la dirección “Precisión con carácter”; no confirmó el resultado visual de cada ruta.
+La fundación visual fue aprobada individualmente por el dueño el 10 de septiembre de 2026. Las demás pantallas mantienen implementación provisional hasta que sean presentadas en su checkpoint correspondiente.
 
 Desde este punto el trabajo queda ordenado por los checkpoints 00–14 definidos en el plan. No se implementará el checkpoint 09 (Inventario y gastos) hasta recorrer y aprobar explícitamente los checkpoints anteriores.
 
+### Checkpoint aprobado
+
+**`00 — Base visual y navegación`** fue marcado `APROBADO` por el dueño el 10 de septiembre de 2026 después de aplicar y presentar las cuatro correcciones solicitadas.
+
 ### Checkpoint presentado ahora
 
-**`00 — Base visual y navegación`**
+**`01 — Landing`** (`/`)
 
 Revisión solicitada al dueño:
 
-- identidad monocromática, Barlow Condensed e Inter;
-- jerarquía de títulos, texto, cifras, paneles y formularios;
-- botones primario, secundario, discreto y peligro;
-- navbar/footer públicos;
-- sidebar de escritorio, navegación móvil y menú `Más`;
-- velocidad y estilo de transiciones;
-- legibilidad, contraste y sensación general de Lou Barbershop.
+- navbar transparente sobre el hero y sólida al desplazarse;
+- mensaje principal, composición del logo y llamadas a reservar o gestionar una cita;
+- catálogo real con duración y precio, incluidos carga y error;
+- secuencia `Elige`, `Reserva`, `Llega`;
+- sección de confianza sin testimonios ni información inventada;
+- llamada final `Tu próximo corte empieza aquí` y footer público aprobado;
+- comportamiento y jerarquía en móvil y escritorio.
 
-**Decisión pendiente:** `APROBADO` o `CAMBIOS SOLICITADOS`. Una vez aprobado el checkpoint 00, se presenta el `01 — Landing`.
+**Decisión pendiente:** `APROBADO` o `CAMBIOS SOLICITADOS`. Una vez aprobado el checkpoint 01, se presenta el `02 — Reserva pública`.
 
 ### Segunda presentación del checkpoint 00
 
@@ -37,14 +41,24 @@ Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
 
 Además, las pantallas se cargan por ruta mediante `React.lazy`, reduciendo el paquete inicial y evitando descargar módulos administrativos que todavía no se visitaron.
 
-**Estado de esta iteración:** implementada y presentada nuevamente; pendiente de aprobación visual del dueño.
+**Estado de esta iteración:** aprobada por el dueño.
+
+### Implementación del checkpoint 01
+
+- cabecera fija transparente sobre el hero que adquiere fondo, borde y sombra después de desplazar la página;
+- accesos de escritorio a `Servicios` y `Cómo funciona` con desplazamiento suave y respeto a `prefers-reduced-motion`;
+- hero de altura completa con identidad Lou y dos acciones públicas inequívocas;
+- catálogo servido por la API, limitado a servicios activos y con estados de carga y error;
+- proceso corregido a `Elige`, `Reserva`, `Llega`;
+- bloque de confianza basado únicamente en hechos del producto: una sucursal, sin cuenta, precio visible y enlace privado;
+- llamada final corregida a `Tu próximo corte empieza aquí`.
 
 ## Matriz resumida de aceptación
 
 | Checkpoint | Implementación | Aprobación humana |
 |---|---|---|
-| 00 Base visual y navegación | terminada | `EN_REVISIÓN` |
-| 01 Landing | provisional terminada | bloqueada por 00 |
+| 00 Base visual y navegación | terminada | `APROBADO` |
+| 01 Landing | terminada | `EN_REVISIÓN` |
 | 02 Reserva pública | provisional terminada | bloqueada por 01 |
 | 03 Mi cita | provisional; falta token vigente | bloqueada por 02 |
 | 04 Login | provisional terminada | bloqueada por 03 |
@@ -96,6 +110,10 @@ El cambio permanece limitado a presentación y composición. No modifica reglas 
 - [Atención y cobro escritorio](assets/design/lou-tailwind-operations-desktop.png)
 - [Estado de enlace privado inválido](assets/design/lou-tailwind-manage-invalid-mobile.png)
 - [Footer corregido e iconos sociales](assets/design/lou-checkpoint-00-footer-desktop.png)
+- [Checkpoint 01 — hero de landing en escritorio](assets/design/lou-checkpoint-01-landing-desktop.png)
+- [Checkpoint 01 — servicios en escritorio](assets/design/lou-checkpoint-01-services-desktop.png)
+- [Checkpoint 01 — hero de landing en móvil](assets/design/lou-checkpoint-01-landing-mobile.png)
+- [Checkpoint 01 — proceso de reserva en móvil](assets/design/lou-checkpoint-01-process-mobile.png)
 
 Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de editor y atención usan respuestas ficticias aisladas mediante Playwright porque el runtime activo no conservaba los usuarios sembrados; no modifican la base ni contienen datos reales.
 
@@ -113,6 +131,8 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - consola del editor y de atención/cobro validada sin errores ni advertencias después de cargar los fixtures completos.
 - Playwright: footer verificado en el final de `/reservar`, con cuatro redes y sin espacio residual bajo el footer;
 - Playwright: el mismo nodo DOM del sidebar permaneció montado al navegar `Inicio → Agenda → Atención y cobro`; consola final sin errores ni advertencias con fixtures aislados completos.
+- Checkpoint 01: Prettier, ESLint, Oxlint, TypeScript estricto y build Vite/PWA aprobados; 19 archivos y 41 pruebas Vitest aprobadas.
+- Checkpoint 01: Playwright verificó la landing a 1440 × 900 y 390 × 844 con catálogo ficticio aislado; los accesos internos desplazan a la sección correcta, la cabecera pasa de `transparent` a `solid`, el ancho de contenido móvil coincide con el viewport y la consola termina con cero errores y cero advertencias.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 

@@ -279,8 +279,8 @@ Una pantalla posterior puede tener implementación provisional por trabajo previ
 
 | Orden | Checkpoint | Rutas/elementos | Roles | Implementación | Aprobación del dueño |
 |---:|---|---|---|---|---|
-| 00 | Base visual y navegación | tokens, tipografías, botones, campos, movimiento, navbar, sidebar y barra móvil | todos | `IMPLEMENTADO_SIN_APROBAR` | `EN_REVISIÓN` |
-| 01 | Landing | `/` y footer público | cliente | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_00` |
+| 00 | Base visual y navegación | tokens, tipografías, botones, campos, movimiento, navbar, sidebar y barra móvil | todos | `IMPLEMENTADO` | `APROBADO` |
+| 01 | Landing | `/` y footer público | cliente | `IMPLEMENTADO_SIN_APROBAR` | `EN_REVISIÓN` |
 | 02 | Reserva pública | `/reservar`, pasos y confirmación | cliente | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_01` |
 | 03 | Gestión de cita | `/mi-cita#token`, reprogramación y cancelación | cliente | `IMPLEMENTADO_SIN_APROBAR`; falta QA con token vigente | `BLOQUEADO_POR_02` |
 | 04 | Acceso interno | `/app/login`, sesión y recuperación de errores | equipo | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_03` |
@@ -295,7 +295,7 @@ Una pantalla posterior puede tener implementación provisional por trabajo previ
 | 13 | Estados transversales | offline, actualización PWA, 403, 404, error y sesión expirada | todos | `IMPLEMENTACIÓN_PARCIAL` | `BLOQUEADO_POR_12` |
 | 14 | Pulido final | responsive, teclado, lector, rendimiento y limpieza CSS | todos | `PENDIENTE` | `BLOQUEADO_POR_13` |
 
-**Checkpoint actual:** `00 — Base visual y navegación`. No hay una pantalla marcada `APROBADO` todavía, porque la aprobación inicial fue del plan y no de la implementación individual.
+**Checkpoint actual:** `01 — Landing`. El dueño aprobó explícitamente el checkpoint 00 el 10 de septiembre de 2026 después de revisar sus correcciones. No se presentará el checkpoint 02 hasta recibir una decisión sobre la landing.
 
 Para aceptar cada checkpoint se presentará como mínimo: rutas y credenciales/forma de acceso, vista móvil y escritorio cuando aplique, roles afectados, estados principales, evidencia automática y una lista corta de elementos que el dueño debe observar.
 

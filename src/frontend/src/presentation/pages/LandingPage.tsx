@@ -22,7 +22,7 @@ export const LandingPage = () => {
   return (
     <main className="overflow-hidden bg-lou-paper">
       <section
-        className="relative isolate grid min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-lou-ink px-4 py-16 text-white sm:px-6 lg:px-10"
+        className="relative isolate grid min-h-svh items-center overflow-hidden bg-lou-ink px-4 pt-28 pb-16 text-white sm:px-6 lg:px-10"
         aria-labelledby="landing-title"
       >
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-35 [background:linear-gradient(120deg,transparent_0_56%,rgba(255,255,255,.08)_56%_56.4%,transparent_56.4%_100%)]" />
@@ -96,7 +96,8 @@ export const LandingPage = () => {
       </section>
 
       <m.section
-        className="mx-auto max-w-360 px-4 py-20 sm:px-6 lg:px-10 lg:py-28"
+        id="servicios"
+        className="mx-auto max-w-360 scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10 lg:py-28"
         aria-labelledby="services-title"
         {...reveal}
       >
@@ -176,7 +177,8 @@ export const LandingPage = () => {
       </m.section>
 
       <section
-        className="bg-white px-4 py-20 sm:px-6 lg:px-10 lg:py-28"
+        id="como-funciona"
+        className="scroll-mt-24 bg-white px-4 py-20 sm:px-6 lg:px-10 lg:py-28"
         aria-labelledby="process-title"
       >
         <m.div className="mx-auto max-w-360" {...reveal}>
@@ -192,8 +194,8 @@ export const LandingPage = () => {
           <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-lou-fog bg-lou-fog lg:grid-cols-3">
             {[
               { icon: 'scissors' as const, title: 'Elige', text: 'Servicio y profesional.' },
-              { icon: 'calendar' as const, title: 'Encuentra', text: 'Un horario disponible.' },
-              { icon: 'clock' as const, title: 'Confirma', text: 'Recibe tu enlace privado.' },
+              { icon: 'calendar' as const, title: 'Reserva', text: 'El horario que te conviene.' },
+              { icon: 'clock' as const, title: 'Llega', text: 'A la hora que confirmaste.' },
             ].map((step, index) => (
               <li key={step.title} className="relative bg-lou-paper p-7 sm:p-9">
                 <span className="absolute top-5 right-6 font-display text-5xl font-bold text-black/6">
@@ -210,6 +212,39 @@ export const LandingPage = () => {
         </m.div>
       </section>
 
+      <section
+        id="confianza"
+        className="scroll-mt-24 px-4 py-20 sm:px-6 lg:px-10 lg:py-28"
+        aria-labelledby="trust-title"
+      >
+        <m.div className="mx-auto grid max-w-360 gap-10 lg:grid-cols-[0.8fr_1.2fr]" {...reveal}>
+          <div>
+            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
+              Reserva con claridad
+            </p>
+            <h2
+              id="trust-title"
+              className="m-0 max-w-lg font-display text-5xl leading-none font-bold sm:text-6xl"
+            >
+              Lo necesario. Nada escondido.
+            </h2>
+          </div>
+          <dl className="grid gap-px overflow-hidden rounded-2xl border border-lou-fog bg-lou-fog sm:grid-cols-2">
+            {[
+              ['Una sola sucursal', 'Eliges dentro de la disponibilidad real de Lou Barbershop.'],
+              ['Sin crear una cuenta', 'Sólo pedimos los datos mínimos para confirmar tu cita.'],
+              ['Precio visible', 'Conoces el precio del servicio antes de confirmar.'],
+              ['Enlace privado', 'Recibes un acceso propio para consultar o gestionar tu cita.'],
+            ].map(([term, description]) => (
+              <div key={term} className="bg-white p-6 sm:p-8">
+                <dt className="font-display text-2xl font-bold">{term}</dt>
+                <dd className="mt-2 text-sm leading-6 text-lou-graphite/65">{description}</dd>
+              </div>
+            ))}
+          </dl>
+        </m.div>
+      </section>
+
       <section className="px-4 py-8 sm:px-6 lg:px-10">
         <m.div
           className="mx-auto flex max-w-360 flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl bg-lou-charcoal p-8 text-white shadow-lou-lg sm:p-12 lg:flex-row lg:items-end"
@@ -220,7 +255,7 @@ export const LandingPage = () => {
               Lou Barbershop
             </p>
             <h2 className="m-0 max-w-2xl font-display text-5xl leading-[0.92] font-bold sm:text-7xl">
-              Tu próximo estilo empieza aquí.
+              Tu próximo corte empieza aquí.
             </h2>
           </div>
           <Link className={buttonStyles({ variant: 'secondary' })} to="/reservar" viewTransition>
