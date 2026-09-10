@@ -30,6 +30,8 @@ Se agrega `tzdata` en `deploy/docker/api.Dockerfile`, con verificación de exist
 
 Regresión reproducible: `deploy/test-acceptance-runtime.ps1` inicia sesión ADMIN ficticia y exige una consulta de agenda exitosa sobre el contenedor final. Sin la corrección, esa consulta falla con 500. No basta con que `/health/ready` responda 200.
 
+El script resuelve la zona de negocio mediante `America/La_Paz` en sistemas IANA y `SA Western Standard Time` en Windows, evitando depender del catálogo de zonas horarias del host.
+
 ## Reproducción aislada
 
 Desde la raíz, con Docker iniciado y el puerto 8091 libre:
