@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AppShell } from './AppShell'
 
 vi.mock('../components/ServiceWorkerUpdateBanner', () => ({
-  ServiceWorkerUpdateBanner: () => null,
+  ServiceWorkerUpdateBanner: () => <div role="status">Actualización disponible</div>,
 }))
 
 afterEach(cleanup)
@@ -25,6 +25,11 @@ describe('AppShell', () => {
       '#como-funciona',
     )
     expect(screen.getByRole('banner')).toHaveAttribute('data-landing-header', 'transparent')
+    expect(screen.getByRole('status').parentElement).toHaveAttribute(
+      'data-public-notices',
+      'below-fixed-header',
+    )
+    expect(screen.getByRole('status').parentElement).toHaveClass('top-[4.5625rem]', 'z-30')
   })
 
   it('keeps secondary public screens on the solid header without landing anchors', () => {
@@ -38,5 +43,6 @@ describe('AppShell', () => {
 
     expect(screen.queryByRole('link', { name: 'Servicios' })).not.toBeInTheDocument()
     expect(screen.getByRole('banner')).not.toHaveAttribute('data-landing-header')
+    expect(screen.getByRole('status').parentElement).not.toHaveAttribute('data-public-notices')
   })
 })

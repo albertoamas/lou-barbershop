@@ -86,8 +86,13 @@ export const AppShell = ({ children }: AppShellProps) => {
           </div>
         </header>
       )}
-      <ConnectivityBanner connectivity={connectivity} />
-      <ServiceWorkerUpdateBanner />
+      <div
+        className={landingScreen ? 'fixed inset-x-0 top-[4.5625rem] z-30' : undefined}
+        data-public-notices={landingScreen ? 'below-fixed-header' : undefined}
+      >
+        <ConnectivityBanner connectivity={connectivity} />
+        <ServiceWorkerUpdateBanner />
+      </div>
       <div className="min-w-0 flex-1">{children}</div>
       {publicShell && (
         <footer className="border-t border-lou-fog bg-white">

@@ -49,6 +49,8 @@ En una segunda revisión del checkpoint 01, el dueño solicitó:
 
 La revisión iguala ambos espacios con el mismo token, aumenta la transición a 300 ms con una elevación de un píxel en los botones y dos píxeles en las tarjetas, conserva el borde gris y reemplaza el bloque anterior por `Estamos ubicados aquí`, un mapa responsive y un enlace al Google Maps proporcionado por el dueño. La coordenada incrustada se obtuvo resolviendo ese mismo enlace público.
 
+Durante la revisión manual se detectó que el aviso de actualización PWA se ubicaba detrás de la cabecera fija de la landing e impedía interactuar con la navegación. Los avisos públicos ahora comparten una región apilable posicionada exactamente debajo de los 73 px de cabecera y con una capa inferior al navbar; cuando no existe ningún aviso, esa región no ocupa espacio ni altera el hero.
+
 ### Segunda presentación del checkpoint 00
 
 Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
@@ -157,6 +159,7 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Checkpoint 01: Playwright verificó la landing a 1440 × 900 y 390 × 844 con catálogo ficticio aislado; los accesos internos desplazan a la sección correcta, la cabecera pasa de `transparent` a `solid`, el ancho de contenido móvil coincide con el viewport y la consola termina con cero errores y cero advertencias.
 - Revisión del checkpoint 01: las cuatro correcciones solicitadas se verificaron nuevamente a 1440 × 900 y 390 × 844; las tarjetas forman tres columnas en escritorio y una columna en móvil, sin desbordamiento horizontal, errores ni advertencias de consola.
 - Segunda revisión del checkpoint 01: Playwright confirmó una transición de hover de 300 ms sin cambio del borde gris, iframe cargado desde Google Maps con la coordenada del enlace aprobado, adaptación a 1440 × 900 y 390 × 844, ancho móvil sin overflow y consola con cero errores y cero advertencias.
+- Corrección del aviso PWA: fixture de actualización visible a 390 × 844 confirmó cabecera en `y=0..73`, aviso desde `y=73`, capas `40/30`, navegación `Reservar` interactuable y consola con cero errores y cero advertencias.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 
