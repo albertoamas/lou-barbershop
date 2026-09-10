@@ -21,6 +21,7 @@
 - navegación desde una cita en servicio corregida hacia la ruta canónica `/app/atenciones`, sin recarga completa;
 - atención y cobro migrados de punta a punta: llegada directa, servicios, productos, ajustes, pago y resumen diario;
 - reverso económico con formulario accesible propio, motivo obligatorio y explicación del historial, sin `window.prompt`;
+- comisiones y liquidaciones migradas, con jerarquía distinta para deuda, borrador, cierre, pago y comprobante inmutable;
 - estilos reutilizables para campos, etiquetas, paneles y estados de formulario;
 - estados de conexión, actualización PWA, carga, error y selección ajustados;
 - proxy de desarrollo configurable mediante `VITE_API_PROXY_TARGET` para validar contra un runtime local real.
@@ -49,7 +50,7 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Vitest: 16 archivos y 37 pruebas aprobadas;
 - TypeScript estricto: aprobado;
 - Vite/PWA: build aprobado, 20 entradas precacheadas;
-- paquete principal: 493,36 kB minificado; Motion se separa en un chunk diferido de 37,21 kB;
+- paquete principal: 497,57 kB minificado; Motion se separa en un chunk diferido de 37,21 kB;
 - Playwright: landing 390 × 844 y 1440 × 900, login 1440 × 900, dashboard admin 1440 × 900 y reserva 390 × 844;
 - Playwright: agenda y estado inválido de `Mi cita` verificados a 390 × 844;
 - Playwright: editor de cita a 390 × 844 y atención/cobro a 390 × 844 y 1440 × 900;
@@ -61,7 +62,7 @@ El único `401` observado correspondió a un primer intento manual de QA con una
 
 - completar la referencia del dashboard de dueño;
 - verificar `Mi cita` con un token vigente y el flujo completo de reprogramación/cancelación;
-- migrar comisiones, inventario, disponibilidad, reportes y configuración;
+- migrar inventario, disponibilidad, reportes y configuración;
 - eliminar CSS heredado cuando todos sus consumidores hayan sido migrados;
 - completar auditoría visual, accesibilidad y rendimiento de UX-6.
 
