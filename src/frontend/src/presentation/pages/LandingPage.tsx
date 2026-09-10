@@ -52,22 +52,18 @@ export const LandingPage = () => {
                 to="/reservar"
                 viewTransition
               >
-                Reservar una cita
-                <AppIcon name="arrow-right" size={18} />
+                <AppIcon name="calendar" size={18} />
+                Reserva tu cita
               </Link>
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                 to="/mi-cita"
                 viewTransition
               >
+                <AppIcon name="clock" size={18} />
                 Gestionar mi cita
               </Link>
             </div>
-            <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-5 text-xs font-semibold text-white/45">
-              <li>Sin cuenta</li>
-              <li>Disponibilidad actualizada</li>
-              <li>Enlace privado</li>
-            </ul>
           </m.div>
 
           <m.div
@@ -84,12 +80,6 @@ export const LandingPage = () => {
                 src="/brand/lou-logo.jpg"
                 alt=""
               />
-              <div className="absolute inset-x-5 bottom-5 flex items-end justify-between rounded-b-xl bg-gradient-to-t from-black/90 to-transparent px-5 pt-20 pb-5">
-                <span className="font-display text-3xl font-bold">Lou Barbershop</span>
-                <span className="text-xs tracking-[0.16em] text-white/55 uppercase">
-                  Una sucursal
-                </span>
-              </div>
             </div>
           </m.div>
         </div>
@@ -141,35 +131,43 @@ export const LandingPage = () => {
           </div>
         )}
         {catalog.data && (
-          <div className="grid gap-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {catalog.data.services.slice(0, 6).map((service, index) => (
               <m.article
                 key={service.id}
-                className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl border border-lou-fog bg-white p-4 shadow-lou-sm transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-lou-steel hover:shadow-lou-lg sm:gap-7 sm:p-6"
+                className="group flex min-h-64 flex-col overflow-hidden rounded-2xl border border-lou-fog bg-white shadow-lou-sm transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-lou-steel hover:shadow-lou-lg"
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: Math.min(index * 0.04, 0.2) }}
               >
-                <span className="font-display text-2xl font-bold text-lou-steel">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <h3 className="m-0 font-display text-2xl font-bold sm:text-3xl">
+                <div className="flex items-center justify-between border-b border-lou-fog px-6 py-4">
+                  <span className="font-display text-sm font-bold tracking-[0.16em] text-lou-graphite/45">
+                    SERVICIO {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className="grid size-10 place-items-center rounded-xl bg-lou-ink text-white">
+                    <AppIcon name="scissors" size={20} />
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="m-0 font-display text-3xl leading-none font-bold sm:text-4xl">
                     {service.name}
                   </h3>
                   {service.description && (
-                    <p className="my-1 hidden text-sm text-lou-graphite/65 sm:block">
+                    <p className="mt-3 text-sm leading-6 text-lou-graphite/65">
                       {service.description}
                     </p>
                   )}
-                  <small className="text-xs font-semibold text-lou-graphite/50">
-                    {service.durationMinutes} minutos
-                  </small>
+                  <div className="mt-auto flex items-end justify-between gap-4 border-t border-lou-fog pt-5">
+                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-lou-graphite/55">
+                      <AppIcon name="clock" size={17} />
+                      {service.durationMinutes} min
+                    </span>
+                    <strong className="font-display text-3xl leading-none tabular-nums sm:text-4xl">
+                      {centsToBolivianos(service.priceCents)}
+                    </strong>
+                  </div>
                 </div>
-                <strong className="font-display text-2xl tabular-nums sm:text-3xl">
-                  {centsToBolivianos(service.priceCents)}
-                </strong>
               </m.article>
             ))}
           </div>

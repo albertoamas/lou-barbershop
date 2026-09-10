@@ -35,7 +35,7 @@ describe('LandingPage', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Tu estilo empieza en Lou.' })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /Reservar/ })[0]).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Reserva tu cita' })).toHaveAttribute(
       'href',
       '/reservar',
     )
@@ -45,6 +45,7 @@ describe('LandingPage', () => {
     )
     expect(await screen.findByText('Corte clásico')).toBeInTheDocument()
     expect(screen.getByText('Bs 70,00')).toBeInTheDocument()
+    expect(screen.getByText('SERVICIO 01')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tres pasos. Sin vueltas.' })).toBeInTheDocument()
     expect(screen.getByText('Reserva', { selector: 'strong' })).toBeInTheDocument()
     expect(screen.getByText('Llega', { selector: 'strong' })).toBeInTheDocument()

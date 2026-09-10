@@ -30,6 +30,17 @@ Revisión solicitada al dueño:
 
 **Decisión pendiente:** `APROBADO` o `CAMBIOS SOLICITADOS`. Una vez aprobado el checkpoint 01, se presenta el `02 — Reserva pública`.
 
+### Correcciones solicitadas para el checkpoint 01
+
+El dueño solicitó el 10 de septiembre de 2026:
+
+1. retirar del hero la repetición `Sin cuenta`, `Disponibilidad actualizada` y `Enlace privado`;
+2. retirar de la composición de imagen los textos superpuestos `Lou Barbershop` y `Una sucursal`, porque ya forman parte del logo;
+3. reemplazar las filas de servicios por un diseño de tarjetas nuevo;
+4. eliminar la flecha de la acción principal y acompañar `Reserva tu cita` y `Gestionar mi cita` con iconos gráficos convencionales.
+
+Las cuatro correcciones quedaron aplicadas. Los servicios ahora usan una cuadrícula responsive de tarjetas editoriales con identificador, icono de tijeras, descripción, duración y precio en zonas separadas. Las acciones del hero usan iconos SVG de calendario y reloj; no emplean emojis ni caracteres decorativos.
+
 ### Segunda presentación del checkpoint 00
 
 Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
@@ -113,6 +124,7 @@ El cambio permanece limitado a presentación y composición. No modifica reglas 
 - [Checkpoint 01 — hero de landing en escritorio](assets/design/lou-checkpoint-01-landing-desktop.png)
 - [Checkpoint 01 — servicios en escritorio](assets/design/lou-checkpoint-01-services-desktop.png)
 - [Checkpoint 01 — hero de landing en móvil](assets/design/lou-checkpoint-01-landing-mobile.png)
+- [Checkpoint 01 — servicios rediseñados en móvil](assets/design/lou-checkpoint-01-services-mobile.png)
 - [Checkpoint 01 — proceso de reserva en móvil](assets/design/lou-checkpoint-01-process-mobile.png)
 
 Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de editor y atención usan respuestas ficticias aisladas mediante Playwright porque el runtime activo no conservaba los usuarios sembrados; no modifican la base ni contienen datos reales.
@@ -133,6 +145,7 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Playwright: el mismo nodo DOM del sidebar permaneció montado al navegar `Inicio → Agenda → Atención y cobro`; consola final sin errores ni advertencias con fixtures aislados completos.
 - Checkpoint 01: Prettier, ESLint, Oxlint, TypeScript estricto y build Vite/PWA aprobados; 19 archivos y 41 pruebas Vitest aprobadas.
 - Checkpoint 01: Playwright verificó la landing a 1440 × 900 y 390 × 844 con catálogo ficticio aislado; los accesos internos desplazan a la sección correcta, la cabecera pasa de `transparent` a `solid`, el ancho de contenido móvil coincide con el viewport y la consola termina con cero errores y cero advertencias.
+- Revisión del checkpoint 01: las cuatro correcciones solicitadas se verificaron nuevamente a 1440 × 900 y 390 × 844; las tarjetas forman tres columnas en escritorio y una columna en móvil, sin desbordamiento horizontal, errores ni advertencias de consola.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 
