@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, m } from 'motion/react'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
 import { InternalNavigation } from '../layout/InternalNavigation'
 
 interface SessionBoundaryProps {
-  children: ReactNode
+  children?: ReactNode
 }
 
 export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
@@ -52,7 +53,18 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
         userName={session.data.userName}
         onLogout={logout}
       />
-      <div className="min-w-0 pb-24 md:pb-0">{children}</div>
+      <AnimatePresence mode="wait" initial={false}>
+        <m.div
+          key={location.pathname}
+          className="min-w-0 pb-24 md:pb-0"
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -3 }}
+          transition={{ duration: 0.16 }}
+        >
+          {children ?? <Outlet />}
+        </m.div>
+      </AnimatePresence>
     </div>
   )
 }

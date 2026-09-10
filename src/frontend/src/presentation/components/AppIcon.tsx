@@ -9,6 +9,8 @@ export type IconName =
   | 'clock'
   | 'settings'
   | 'logout'
+  | 'arrow-right'
+  | 'close'
 
 interface AppIconProps {
   name: IconName
@@ -71,6 +73,8 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10" />
     </>
   ),
+  'arrow-right': <path d="M5 12h14M14 7l5 5-5 5" />,
+  close: <path d="m6 6 12 12M18 6 6 18" />,
 }
 
 export const AppIcon = ({ name, size = 22 }: AppIconProps) => (

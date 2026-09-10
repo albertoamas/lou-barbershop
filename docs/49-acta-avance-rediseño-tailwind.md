@@ -26,6 +26,19 @@ Revisión solicitada al dueño:
 
 **Decisión pendiente:** `APROBADO` o `CAMBIOS SOLICITADOS`. Una vez aprobado el checkpoint 00, se presenta el `01 — Landing`.
 
+### Segunda presentación del checkpoint 00
+
+Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
+
+1. el shell público cambió a una columna flexible con `min-height: 100dvh`; el contenido ocupa el espacio restante y el footer termina el documento sin dejar una franja ajena debajo;
+2. el footer muestra iconos reconocibles de Facebook, WhatsApp, Instagram y TikTok obtenidos de Simple Icons; hasta recibir las cuentas oficiales se identifican como pendientes y no enlazan a perfiles inventados;
+3. las rutas internas ahora comparten un único `SessionBoundary` y una navegación persistente; al cambiar entre Agenda y Atención sólo se reemplaza/anima el contenido central;
+4. las flechas y el cierre decorativos de texto fueron sustituidos por iconos SVG convencionales, y los cambios históricos se describen con palabras.
+
+Además, las pantallas se cargan por ruta mediante `React.lazy`, reduciendo el paquete inicial y evitando descargar módulos administrativos que todavía no se visitaron.
+
+**Estado de esta iteración:** implementada y presentada nuevamente; pendiente de aprobación visual del dueño.
+
 ## Matriz resumida de aceptación
 
 | Checkpoint | Implementación | Aprobación humana |
@@ -82,6 +95,7 @@ El cambio permanece limitado a presentación y composición. No modifica reglas 
 - [Atención y cobro móvil](assets/design/lou-tailwind-operations-mobile.png)
 - [Atención y cobro escritorio](assets/design/lou-tailwind-operations-desktop.png)
 - [Estado de enlace privado inválido](assets/design/lou-tailwind-manage-invalid-mobile.png)
+- [Footer corregido e iconos sociales](assets/design/lou-checkpoint-00-footer-desktop.png)
 
 Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de editor y atención usan respuestas ficticias aisladas mediante Playwright porque el runtime activo no conservaba los usuarios sembrados; no modifican la base ni contienen datos reales.
 
@@ -89,14 +103,16 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 
 - Prettier: conforme;
 - ESLint y Oxlint: sin hallazgos;
-- Vitest: 16 archivos y 37 pruebas aprobadas;
+- Vitest: 18 archivos y 39 pruebas aprobadas;
 - TypeScript estricto: aprobado;
-- Vite/PWA: build aprobado, 20 entradas precacheadas;
-- paquete principal: 497,57 kB minificado; Motion se separa en un chunk diferido de 37,21 kB;
+- Vite/PWA: build aprobado, 47 entradas precacheadas por la división de pantallas;
+- paquete inicial: 354,01 kB minificado; cada pantalla se entrega en un chunk diferido y Motion queda separado en 37,25 kB;
 - Playwright: landing 390 × 844 y 1440 × 900, login 1440 × 900, dashboard admin 1440 × 900 y reserva 390 × 844;
 - Playwright: agenda y estado inválido de `Mi cita` verificados a 390 × 844;
 - Playwright: editor de cita a 390 × 844 y atención/cobro a 390 × 844 y 1440 × 900;
 - consola del editor y de atención/cobro validada sin errores ni advertencias después de cargar los fixtures completos.
+- Playwright: footer verificado en el final de `/reservar`, con cuatro redes y sin espacio residual bajo el footer;
+- Playwright: el mismo nodo DOM del sidebar permaneció montado al navegar `Inicio → Agenda → Atención y cobro`; consola final sin errores ni advertencias con fixtures aislados completos.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 

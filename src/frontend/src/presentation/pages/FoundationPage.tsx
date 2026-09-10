@@ -99,9 +99,8 @@ export const FoundationPage = () => {
             <Link
               className="mt-auto inline-flex min-h-11 items-center gap-2 pt-6 text-sm font-bold underline-offset-4 hover:underline"
               to={action.to}
-              viewTransition
             >
-              {action.linkLabel} <span aria-hidden="true">→</span>
+              {action.linkLabel} <AppIcon name="arrow-right" size={18} />
             </Link>
           </m.article>
         ))}
@@ -119,11 +118,7 @@ export const FoundationPage = () => {
               : 'Sin conexión. Los cambios quedan bloqueados hasta recuperarla.'}
           </p>
         </div>
-        <Link
-          className={buttonStyles({ variant: 'secondary' })}
-          to="/app/disponibilidad"
-          viewTransition
-        >
+        <Link className={buttonStyles({ variant: 'secondary' })} to="/app/disponibilidad">
           Consultar disponibilidad
         </Link>
       </section>

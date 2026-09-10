@@ -213,12 +213,14 @@ export const AppointmentDetails = ({
                 <p>Después: {describe(event.after)}</p>
                 {event.before?.barberId !== event.after.barberId && event.before && (
                   <p>
-                    Barbero: {event.before.barberId} → {event.after.barberId}
+                    Barbero anterior: {event.before.barberId}. Barbero nuevo: {event.after.barberId}
+                    .
                   </p>
                 )}
                 {event.before?.serviceId !== event.after.serviceId && event.before && (
                   <p>
-                    Servicio: {event.before.serviceId} → {event.after.serviceId}
+                    Servicio anterior: {event.before.serviceId}. Servicio nuevo:{' '}
+                    {event.after.serviceId}.
                   </p>
                 )}
                 <small className="text-lou-graphite/45">Actor: {event.actorId}</small>

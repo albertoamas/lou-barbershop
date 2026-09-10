@@ -37,7 +37,6 @@ const DesktopLink = ({ item }: { item: NavigationItem }) => (
     className={desktopLinkClass}
     to={item.to}
     end={item.end === true}
-    viewTransition
   >
     {({ isActive }) => (
       <>
@@ -59,7 +58,6 @@ const MobileLink = ({ item, onNavigate }: { item: NavigationItem; onNavigate?: (
     className={mobileLinkClass}
     to={item.to}
     end={item.end === true}
-    viewTransition
     onClick={() => onNavigate?.()}
   >
     {({ isActive }) => (
@@ -124,8 +122,8 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
         className="sticky top-0 hidden h-screen flex-col border-r border-white/10 bg-lou-ink px-3 py-5 text-white md:flex lg:px-4"
         aria-label="Navegación principal"
       >
-        <BrandLockup compact className="mx-auto lg:hidden" to="/app" />
-        <BrandLockup className="hidden px-2 lg:inline-flex" to="/app" />
+        <BrandLockup compact className="mx-auto lg:hidden" to="/app" useViewTransition={false} />
+        <BrandLockup className="hidden px-2 lg:inline-flex" to="/app" useViewTransition={false} />
         <nav className="mt-8 grid gap-1.5">
           {primaryItems.map((item) => (
             <DesktopLink key={item.to} item={item} />
@@ -206,7 +204,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
                   aria-label="Cerrar menú"
                   onClick={() => setMoreOpen(false)}
                 >
-                  ×
+                  <AppIcon name="close" />
                 </button>
               </div>
               <nav className="grid gap-1 py-3">
@@ -220,7 +218,6 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
                       )
                     }
                     to={item.to}
-                    viewTransition
                     onClick={() => setMoreOpen(false)}
                   >
                     <AppIcon name={item.icon} />

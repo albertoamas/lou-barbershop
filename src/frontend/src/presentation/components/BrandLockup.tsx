@@ -6,6 +6,7 @@ interface BrandLockupProps {
   compact?: boolean
   linked?: boolean
   to?: string
+  useViewTransition?: boolean
 }
 
 export const BrandLockup = ({
@@ -13,6 +14,7 @@ export const BrandLockup = ({
   compact = false,
   linked = true,
   to = '/',
+  useViewTransition = true,
 }: BrandLockupProps) => {
   const content = (
     <>
@@ -39,7 +41,7 @@ export const BrandLockup = ({
         className,
       )}
       to={to}
-      viewTransition
+      viewTransition={useViewTransition}
       aria-label="Lou Barbershop, inicio"
     >
       {content}

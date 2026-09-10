@@ -53,7 +53,7 @@ export const LandingPage = () => {
                 viewTransition
               >
                 Reservar una cita
-                <span aria-hidden="true">→</span>
+                <AppIcon name="arrow-right" size={18} />
               </Link>
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold text-white/70 transition-colors hover:bg-white/10 hover:text-white"
@@ -117,7 +117,7 @@ export const LandingPage = () => {
             to="/reservar"
             viewTransition
           >
-            Ver horarios disponibles →
+            Ver horarios disponibles <AppIcon name="arrow-right" size={18} />
           </Link>
         </div>
 

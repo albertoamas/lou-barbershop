@@ -238,9 +238,7 @@ export const AgendaPage = () => {
             disabled={disabled}
             onChanged={changed}
             onClose={() => setSelected(undefined)}
-            onOperationOpened={(opened) =>
-              navigate('/app/atenciones', { state: { opened }, viewTransition: true })
-            }
+            onOperationOpened={(opened) => navigate('/app/atenciones', { state: { opened } })}
             onReschedule={() => {
               setEditor(selected)
               setSelected(undefined)

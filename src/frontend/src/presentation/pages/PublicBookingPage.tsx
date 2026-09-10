@@ -11,6 +11,7 @@ import { useConnectivity } from '../hooks/useConnectivity'
 import { Button } from '../components/Button'
 import { buttonStyles } from '../components/buttonStyles'
 import { cn } from '../styles/cn'
+import { AppIcon } from '../components/AppIcon'
 
 const fieldClassName =
   'min-h-12 w-full rounded-xl border border-lou-steel/60 bg-white px-4 text-base shadow-sm outline-none transition-[border-color,box-shadow] focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'
@@ -114,7 +115,7 @@ export const PublicBookingPage = () => {
           to="/reservar"
           viewTransition
         >
-          Reservar otra cita →
+          Reservar otra cita <AppIcon name="arrow-right" size={18} />
         </Link>
       </main>
     )

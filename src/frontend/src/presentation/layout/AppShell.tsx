@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { AnimatePresence, m } from 'motion/react'
 import { BrandLockup } from '../components/BrandLockup'
 import { ConnectivityBanner } from '../components/ConnectivityBanner'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { ServiceWorkerUpdateBanner } from '../components/ServiceWorkerUpdateBanner'
+import { SocialLinks } from '../components/SocialLinks'
 
 interface AppShellProps {
   children: ReactNode
@@ -20,7 +20,7 @@ export const AppShell = ({ children }: AppShellProps) => {
   const publicShell = !internalPath || authenticationScreen
 
   return (
-    <div className="grid min-h-screen min-w-0 grid-cols-1 grid-rows-[auto_auto_auto_1fr_auto] bg-lou-paper text-lou-ink">
+    <div className="flex min-h-dvh min-w-0 flex-col bg-lou-paper text-lou-ink">
       {publicShell && (
         <header className="sticky top-0 z-40 border-b border-white/10 bg-lou-ink/95 text-white shadow-lg backdrop-blur-xl">
           <div className="mx-auto flex min-h-18 max-w-360 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
@@ -46,18 +46,7 @@ export const AppShell = ({ children }: AppShellProps) => {
       )}
       <ConnectivityBanner connectivity={connectivity} />
       <ServiceWorkerUpdateBanner />
-      <AnimatePresence mode="wait" initial={false}>
-        <m.div
-          key={location.pathname}
-          className="min-w-0"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.18 }}
-        >
-          {children}
-        </m.div>
-      </AnimatePresence>
+      <div className="min-w-0 flex-1">{children}</div>
       {publicShell && (
         <footer className="border-t border-lou-fog bg-white">
           <div className="mx-auto grid max-w-360 gap-8 px-4 py-10 sm:grid-cols-[1fr_auto] sm:px-6 lg:px-10">
@@ -66,6 +55,7 @@ export const AppShell = ({ children }: AppShellProps) => {
               <p className="mt-4 max-w-md text-sm leading-6 text-lou-graphite/70">
                 Reserva tu cita sin crear una cuenta y gestiona los cambios desde tu enlace privado.
               </p>
+              <SocialLinks />
             </div>
             <nav className="grid content-start gap-2 text-sm" aria-label="Enlaces del pie">
               <Link className="font-semibold hover:underline" to="/reservar" viewTransition>
