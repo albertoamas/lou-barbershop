@@ -12,6 +12,14 @@ import { ApiError } from '../../infrastructure/http/apiClient'
 import { publicBookingApi } from '../../infrastructure/http/publicBookingApi'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { AppointmentSummary } from './PublicBookingPage'
+import { Button } from '../components/Button'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { buttonStyles } from '../components/buttonStyles'
+import { cn } from '../styles/cn'
+
+const fieldClassName =
+  'min-h-12 w-full rounded-xl border border-lou-steel/60 bg-white px-4 text-base shadow-sm outline-none transition-[border-color,box-shadow] focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'
+const labelClassName = 'grid gap-2 text-sm font-bold'
 
 export const PublicManageBookingPage = () => {
   const initialToken = managementTokenFromHash(window.location.hash)
@@ -24,6 +32,7 @@ export const PublicManageBookingPage = () => {
   const [slot, setSlot] = useState<AvailabilitySlot>()
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
+  const [confirmingCancel, setConfirmingCancel] = useState(false)
   const connectivity = useConnectivity()
   const client = useQueryClient()
   const appointment = useQuery({
@@ -87,12 +96,7 @@ export const PublicManageBookingPage = () => {
     }
   }
   const cancel = async () => {
-    if (
-      !appointment.data ||
-      connectivity !== 'online' ||
-      !window.confirm(`¿Cancelar la cita de ${appointment.data.customerName}?`)
-    )
-      return
+    if (!appointment.data || connectivity !== 'online') return
     setBusy(true)
     setNotice('')
     try {
@@ -114,20 +118,23 @@ export const PublicManageBookingPage = () => {
   if (!initialToken && !appointment.data) return <InvalidLink message={notice} />
   if (appointment.isError) return <InvalidLink />
   return (
-    <main className="public-page">
-      <p className="eyebrow">Tu reserva</p>
-      <h1>Consulta o cambia tu cita.</h1>
+    <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 lg:py-20">
+      <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
+        Tu reserva
+      </p>
+      <h1 className="m-0 max-w-3xl font-display text-5xl leading-[0.9] font-bold sm:text-7xl">
+        Consulta o cambia tu cita.
+      </h1>
       {appointment.isPending && <p role="status">Cargando tu reserva…</p>}
       {appointment.data && (
-        <section className="public-card manage-card">
-          <p className={`status-chip status-${appointment.data.status.toLowerCase()}`}>
+        <section className="mt-8 rounded-2xl border border-lou-fog bg-white p-5 shadow-lou-sm sm:p-8">
+          <p className="inline-flex rounded-full bg-lou-ink px-3 py-1.5 text-xs font-bold text-white">
             {appointmentStatusLabel[appointment.data.status]}
           </p>
           <AppointmentSummary appointment={appointment.data} />
           {appointment.data.status === 'CONFIRMED' && !editing && (
-            <div className="manage-actions">
-              <button
-                className="primary-button"
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <Button
                 disabled={connectivity !== 'online' || busy}
                 onClick={() => {
                   setEditing(true)
@@ -136,23 +143,27 @@ export const PublicManageBookingPage = () => {
                 }}
               >
                 Cambiar horario
-              </button>
-              <button
-                className="danger-button"
+              </Button>
+              <Button
+                variant="danger"
                 disabled={connectivity !== 'online' || busy}
-                onClick={() => void cancel()}
+                onClick={() => setConfirmingCancel(true)}
               >
                 Cancelar cita
-              </button>
+              </Button>
             </div>
           )}
           {editing && (
-            <div className="manage-editor">
-              <h2>Nuevo horario</h2>
-              <form className="public-form public-filter" onSubmit={find}>
-                <label>
+            <div className="mt-7 border-t border-lou-fog pt-7">
+              <h2 className="m-0 font-display text-4xl font-bold">Nuevo horario</h2>
+              <form
+                className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_0.8fr_auto] lg:items-end"
+                onSubmit={find}
+              >
+                <label className={labelClassName}>
                   Servicio
                   <select
+                    className={fieldClassName}
                     required
                     value={serviceId}
                     onChange={(event) => setServiceId(event.target.value)}
@@ -164,9 +175,13 @@ export const PublicManageBookingPage = () => {
                     ))}
                   </select>
                 </label>
-                <label>
+                <label className={labelClassName}>
                   Barbero
-                  <select value={barberId} onChange={(event) => setBarberId(event.target.value)}>
+                  <select
+                    className={fieldClassName}
+                    value={barberId}
+                    onChange={(event) => setBarberId(event.target.value)}
+                  >
                     <option value="any">Cualquiera</option>
                     {catalog.data?.barbers.map((barber) => (
                       <option key={barber.id} value={barber.id}>
@@ -175,22 +190,33 @@ export const PublicManageBookingPage = () => {
                     ))}
                   </select>
                 </label>
-                <label>
+                <label className={labelClassName}>
                   Día
                   <input
+                    className={fieldClassName}
                     type="date"
                     min={todayInBusinessTime()}
                     value={date}
                     onChange={(event) => setDate(event.target.value)}
                   />
                 </label>
-                <button className="secondary-button">Buscar horarios</button>
+                <Button variant="secondary">Buscar horarios</Button>
               </form>
               {slots.isFetching && <p role="status">Buscando horarios…</p>}
               {slots.data?.length === 0 && <p>No hay horarios ese día. Prueba otra fecha.</p>}
-              <div className="public-slots" role="group" aria-label="Nuevos horarios disponibles">
+              <div
+                className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3"
+                role="group"
+                aria-label="Nuevos horarios disponibles"
+              >
                 {slots.data?.map((item) => (
                   <button
+                    className={cn(
+                      'grid min-h-20 rounded-xl border border-lou-fog p-3 text-left transition-colors',
+                      slot?.barberId === item.barberId &&
+                        slot.startsAt === item.startsAt &&
+                        'border-lou-ink bg-lou-ink text-white',
+                    )}
                     type="button"
                     aria-pressed={
                       slot?.barberId === item.barberId && slot.startsAt === item.startsAt
@@ -198,56 +224,74 @@ export const PublicManageBookingPage = () => {
                     key={`${item.barberId}-${item.startsAt}`}
                     onClick={() => setSlot(item)}
                   >
-                    <strong>{agendaTime(item.startsAt)}</strong>
-                    <span>{item.barberName}</span>
+                    <strong className="font-display text-2xl">{agendaTime(item.startsAt)}</strong>
+                    <span className="text-xs font-bold opacity-65">{item.barberName}</span>
                   </button>
                 ))}
               </div>
-              <div className="manage-actions">
-                <button
-                  className="primary-button"
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <Button
                   disabled={!slot || connectivity !== 'online' || busy}
                   onClick={() => void reschedule()}
                 >
                   {busy ? 'Guardando…' : 'Confirmar nuevo horario'}
-                </button>
-                <button
-                  className="secondary-button"
-                  disabled={busy}
-                  onClick={() => setEditing(false)}
-                >
+                </Button>
+                <Button variant="secondary" disabled={busy} onClick={() => setEditing(false)}>
                   Conservar cita actual
-                </button>
+                </Button>
               </div>
             </div>
           )}
         </section>
       )}
       {connectivity === 'offline' && (
-        <p className="stale-note" role="status">
+        <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900" role="status">
           Sin conexión no podemos consultar ni cambiar el enlace privado.
         </p>
       )}
       {notice && (
-        <p className="form-success" role="status">
+        <p
+          className="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-900"
+          role="status"
+        >
           {notice}
         </p>
       )}
-      <p className="public-access">
-        <Link to="/reservar">Hacer otra reserva</Link>
+      <p className="mt-8 text-center text-sm">
+        <Link className="font-bold hover:underline" to="/reservar" viewTransition>
+          Hacer otra reserva
+        </Link>
       </p>
+      {confirmingCancel && appointment.data && (
+        <ConfirmDialog
+          busy={busy}
+          title={`¿Cancelar la cita de ${appointment.data.customerName}?`}
+          confirmLabel="Sí, cancelar cita"
+          onCancel={() => setConfirmingCancel(false)}
+          onConfirm={() => {
+            void cancel().finally(() => setConfirmingCancel(false))
+          }}
+        >
+          El horario volverá a quedar disponible. Esta acción quedará registrada y no se puede
+          deshacer desde el enlace público.
+        </ConfirmDialog>
+      )}
     </main>
   )
 }
 
 const InvalidLink = ({ message }: { message?: string }) => (
-  <main className="public-page public-confirmation">
-    <p className="eyebrow">Enlace privado</p>
-    <h1>No pudimos abrir esa cita.</h1>
-    <p role="alert">
+  <main className="mx-auto grid min-h-[60vh] w-full max-w-3xl content-center px-4 py-12 sm:px-6">
+    <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-danger uppercase">
+      Enlace privado
+    </p>
+    <h1 className="m-0 max-w-none font-display text-5xl leading-[0.9] font-bold sm:text-7xl">
+      No pudimos abrir esa cita.
+    </h1>
+    <p className="mt-5 max-w-xl leading-7 text-lou-graphite/65" role="alert">
       {message || 'El enlace no es válido, ya venció o la cita dejó de estar disponible.'}
     </p>
-    <Link className="primary-button button-link" to="/reservar">
+    <Link className={cn(buttonStyles(), 'mt-7 w-fit')} to="/reservar" viewTransition>
       Reservar una nueva cita
     </Link>
   </main>
