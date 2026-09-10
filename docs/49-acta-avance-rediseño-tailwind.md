@@ -51,6 +51,8 @@ La revisión iguala ambos espacios con el mismo token, aumenta la transición a 
 
 Durante la revisión manual se detectó que el aviso de actualización PWA se ubicaba detrás de la cabecera fija de la landing e impedía interactuar con la navegación. Los avisos públicos ahora comparten una región apilable posicionada exactamente debajo de los 73 px de cabecera y con una capa inferior al navbar; cuando no existe ningún aviso, esa región no ocupa espacio ni altera el hero.
 
+La prueba en el contenedor de aceptación reveló dos diferencias respecto del servidor de desarrollo: Caddy bloqueaba el iframe por no declarar `frame-src`, y los `modulepreload` generados por Vite producían advertencias al cruzarse con recursos servidos por el service worker. La CSP permite ahora exclusivamente `https://www.google.com` como origen de marcos y conserva el resto de restricciones; Vite deja de emitir esos preloads y los módulos continúan cargándose mediante los imports del bundle.
+
 ### Segunda presentación del checkpoint 00
 
 Cambios solicitados por el dueño el 10 de septiembre de 2026 y aplicados:
@@ -160,6 +162,7 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Revisión del checkpoint 01: las cuatro correcciones solicitadas se verificaron nuevamente a 1440 × 900 y 390 × 844; las tarjetas forman tres columnas en escritorio y una columna en móvil, sin desbordamiento horizontal, errores ni advertencias de consola.
 - Segunda revisión del checkpoint 01: Playwright confirmó una transición de hover de 300 ms sin cambio del borde gris, iframe cargado desde Google Maps con la coordenada del enlace aprobado, adaptación a 1440 × 900 y 390 × 844, ancho móvil sin overflow y consola con cero errores y cero advertencias.
 - Corrección del aviso PWA: fixture de actualización visible a 390 × 844 confirmó cabecera en `y=0..73`, aviso desde `y=73`, capas `40/30`, navegación `Reservar` interactuable y consola con cero errores y cero advertencias.
+- Corrección CSP/preload validada en el contenedor principal de `localhost:8088`: `frame-src https://www.google.com`, mapa visible y cargado, cero elementos `modulepreload`, cero errores y cero advertencias de consola.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 
