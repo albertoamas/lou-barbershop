@@ -1,6 +1,6 @@
 # Plan de rediseño visual, Tailwind y movimiento
 
-**Estado:** `APROBADO / EN PROGRESO`  
+**Estado:** `EN PROGRESO / ACEPTACIÓN VISUAL POR PANTALLA`  
 **Alcance:** experiencia pública e interna de Lou Barbershop  
 **Impacto funcional:** ninguno; no modifica reglas, contratos API, permisos ni persistencia  
 **Objetivo:** convertir la aplicación funcional actual en una experiencia consistente, fluida, reconocible como Lou y fácil de operar desde teléfono, tablet y escritorio.
@@ -252,6 +252,53 @@ Los números usan conteo animado sólo en la carga inicial y nunca cuando el mov
 
 Este trabajo es una mejora transversal dentro del backlog de estabilización; no reabre las puertas funcionales ya aceptadas.
 
+### 8.1 Regla de avance y aprobación humana
+
+La aprobación general del plan autoriza la tecnología, la línea visual y el orden de trabajo, pero **no equivale a aprobar cada pantalla**. Desde el 10 de septiembre de 2026 se aplicará esta secuencia obligatoria:
+
+1. implementar o ajustar un único checkpoint visual;
+2. validar código, comportamiento, responsive y accesibilidad básica;
+3. presentar al dueño las rutas, roles y capturas del checkpoint;
+4. recibir una decisión explícita: `APROBADO` o `CAMBIOS SOLICITADOS`;
+5. corregir y volver a presentar si corresponde;
+6. avanzar al siguiente checkpoint únicamente cuando el actual esté `APROBADO`.
+
+Los estados se interpretan así:
+
+| Estado | Significado |
+|---|---|
+| `PENDIENTE` | todavía no se implementó el rediseño |
+| `IMPLEMENTADO_SIN_APROBAR` | existe código y evidencia técnica, pero falta opinión del dueño |
+| `EN_REVISIÓN` | es el único checkpoint presentado actualmente al dueño |
+| `CAMBIOS_SOLICITADOS` | el dueño pidió correcciones; no se avanza |
+| `APROBADO` | el dueño aceptó explícitamente el checkpoint |
+
+Una pantalla posterior puede tener implementación provisional por trabajo previo, pero permanece bloqueada para aceptación hasta aprobar las anteriores. La coherencia visual se revisa nuevamente si una corrección aprobada cambia componentes compartidos.
+
+### 8.2 Orden de revisión pantalla por pantalla
+
+| Orden | Checkpoint | Rutas/elementos | Roles | Implementación | Aprobación del dueño |
+|---:|---|---|---|---|---|
+| 00 | Base visual y navegación | tokens, tipografías, botones, campos, movimiento, navbar, sidebar y barra móvil | todos | `IMPLEMENTADO_SIN_APROBAR` | `EN_REVISIÓN` |
+| 01 | Landing | `/` y footer público | cliente | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_00` |
+| 02 | Reserva pública | `/reservar`, pasos y confirmación | cliente | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_01` |
+| 03 | Gestión de cita | `/mi-cita#token`, reprogramación y cancelación | cliente | `IMPLEMENTADO_SIN_APROBAR`; falta QA con token vigente | `BLOQUEADO_POR_02` |
+| 04 | Acceso interno | `/app/login`, sesión y recuperación de errores | equipo | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_03` |
+| 05 | Inicio por rol | `/app` para dueño, administrador y barbero | internos | `IMPLEMENTADO_SIN_APROBAR`; faltan referencias dueño/barbero | `BLOQUEADO_POR_04` |
+| 06 | Agenda y citas | `/app/agenda`, creación, detalle, historial y reprogramación | internos | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_05` |
+| 07 | Atención y cobro | `/app/atenciones` y reverso del dueño | internos | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_06` |
+| 08 | Comisiones | `/app/comisiones` y liquidaciones | dueño/barbero | `IMPLEMENTADO_SIN_APROBAR` | `BLOQUEADO_POR_07` |
+| 09 | Inventario y gastos | `/app/inventario` | dueño/admin | `PENDIENTE` | `BLOQUEADO_POR_08` |
+| 10 | Disponibilidad | `/app/disponibilidad` | internos según permisos | `PENDIENTE` | `BLOQUEADO_POR_09` |
+| 11 | Reportes | `/app/reportes` | dueño | `PENDIENTE` | `BLOQUEADO_POR_10` |
+| 12 | Configuración | `/app/configuracion` | dueño | `PENDIENTE` | `BLOQUEADO_POR_11` |
+| 13 | Estados transversales | offline, actualización PWA, 403, 404, error y sesión expirada | todos | `IMPLEMENTACIÓN_PARCIAL` | `BLOQUEADO_POR_12` |
+| 14 | Pulido final | responsive, teclado, lector, rendimiento y limpieza CSS | todos | `PENDIENTE` | `BLOQUEADO_POR_13` |
+
+**Checkpoint actual:** `00 — Base visual y navegación`. No hay una pantalla marcada `APROBADO` todavía, porque la aprobación inicial fue del plan y no de la implementación individual.
+
+Para aceptar cada checkpoint se presentará como mínimo: rutas y credenciales/forma de acceso, vista móvil y escritorio cuando aplique, roles afectados, estados principales, evidencia automática y una lista corta de elementos que el dueño debe observar.
+
 ### UX-0 — Baseline y contrato visual
 
 **Entregables:** inventario de pantallas/estados, capturas actuales, tokens Tailwind, mapa de componentes y presupuesto de movimiento.
@@ -333,3 +380,5 @@ Antes de UX-1 deben aprobarse:
 5. las tres referencias visuales iniciales requeridas en UX-0.
 
 **Aprobación:** confirmada por el dueño el 9 de septiembre de 2026. Tailwind CSS se usará como sistema general de estilos de presentación, no únicamente para transiciones.
+
+Esta aprobación corresponde al **plan general**. Las aprobaciones visuales de los checkpoints 00–14 se registran por separado en el acta de avance y requieren confirmación explícita del dueño.

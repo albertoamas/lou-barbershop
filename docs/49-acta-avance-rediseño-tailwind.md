@@ -1,8 +1,50 @@
 # Acta de avance — rediseño Tailwind y movimiento
 
 **Fecha:** 10 de septiembre de 2026  
-**Estado:** `UX-0/UX-1 EN PROGRESO`  
+**Estado:** `PAUSADO EN ACEPTACIÓN VISUAL — CHECKPOINT 00`  
 **Plan:** [48-plan-rediseño-tailwind-y-movimiento.md](48-plan-rediseño-tailwind-y-movimiento.md)
+
+## Situación actual y próxima decisión
+
+La fundación visual y varias pantallas ya tienen implementación provisional, pero **ninguna pantalla está aprobada individualmente por el dueño**. La aprobación del 9 de septiembre confirmó el plan, Tailwind y la dirección “Precisión con carácter”; no confirmó el resultado visual de cada ruta.
+
+Desde este punto el trabajo queda ordenado por los checkpoints 00–14 definidos en el plan. No se implementará el checkpoint 09 (Inventario y gastos) hasta recorrer y aprobar explícitamente los checkpoints anteriores.
+
+### Checkpoint presentado ahora
+
+**`00 — Base visual y navegación`**
+
+Revisión solicitada al dueño:
+
+- identidad monocromática, Barlow Condensed e Inter;
+- jerarquía de títulos, texto, cifras, paneles y formularios;
+- botones primario, secundario, discreto y peligro;
+- navbar/footer públicos;
+- sidebar de escritorio, navegación móvil y menú `Más`;
+- velocidad y estilo de transiciones;
+- legibilidad, contraste y sensación general de Lou Barbershop.
+
+**Decisión pendiente:** `APROBADO` o `CAMBIOS SOLICITADOS`. Una vez aprobado el checkpoint 00, se presenta el `01 — Landing`.
+
+## Matriz resumida de aceptación
+
+| Checkpoint | Implementación | Aprobación humana |
+|---|---|---|
+| 00 Base visual y navegación | terminada | `EN_REVISIÓN` |
+| 01 Landing | provisional terminada | bloqueada por 00 |
+| 02 Reserva pública | provisional terminada | bloqueada por 01 |
+| 03 Mi cita | provisional; falta token vigente | bloqueada por 02 |
+| 04 Login | provisional terminada | bloqueada por 03 |
+| 05 Inicio por rol | provisional; referencias incompletas | bloqueada por 04 |
+| 06 Agenda y citas | provisional terminada | bloqueada por 05 |
+| 07 Atención y cobro | provisional terminada | bloqueada por 06 |
+| 08 Comisiones | provisional terminada | bloqueada por 07 |
+| 09 Inventario y gastos | pendiente | bloqueada por 08 |
+| 10 Disponibilidad | pendiente | bloqueada por 09 |
+| 11 Reportes | pendiente | bloqueada por 10 |
+| 12 Configuración | pendiente | bloqueada por 11 |
+| 13 Estados transversales | parcial | bloqueada por 12 |
+| 14 Pulido final | pendiente | bloqueada por 13 |
 
 ## Resultado de la primera entrega
 
