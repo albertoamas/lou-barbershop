@@ -12,16 +12,18 @@ interface AppShellProps {
 export const AppShell = ({ children }: AppShellProps) => {
   const connectivity = useConnectivity()
   const location = useLocation()
-  const publicShell = ['/book', '/login', '/session-expired', '/access-denied'].some(
+  const internalPath = location.pathname === '/app' || location.pathname.startsWith('/app/')
+  const authenticationScreen = ['/app/login', '/app/sesion-expirada', '/app/acceso-denegado'].some(
     (route) => location.pathname === route || location.pathname.startsWith(`${route}/`),
   )
+  const publicShell = !internalPath || authenticationScreen
 
   return (
     <div className="app-shell">
       {publicShell && (
         <header className="topbar">
           <BrandLockup />
-          <Link className="topbar-action" to="/book">
+          <Link className="topbar-action" to="/reservar">
             Reservar cita
           </Link>
         </header>

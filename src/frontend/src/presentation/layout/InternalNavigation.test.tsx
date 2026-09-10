@@ -9,7 +9,7 @@ afterEach(cleanup)
 const renderNavigation = (roles: string[]) => {
   const onLogout = vi.fn().mockResolvedValue(undefined)
   render(
-    <MemoryRouter initialEntries={['/agenda']}>
+    <MemoryRouter initialEntries={['/app/agenda']}>
       <InternalNavigation roles={roles} userName="lou.owner" onLogout={onLogout} />
     </MemoryRouter>,
   )
@@ -37,6 +37,14 @@ describe('InternalNavigation', () => {
     expect(screen.queryByRole('link', { name: /Reportes/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Inventario y gastos/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Configuración/i })).not.toBeInTheDocument()
+  })
+
+  it('shows operational administration without exposing owner configuration', () => {
+    renderNavigation(['ADMIN'])
+
+    expect(screen.getByRole('link', { name: /Inventario y gastos/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Configuración/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Reportes/i })).not.toBeInTheDocument()
   })
 
   it('opens the mobile menu and closes the session', async () => {

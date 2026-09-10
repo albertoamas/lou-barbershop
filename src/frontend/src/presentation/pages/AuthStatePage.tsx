@@ -6,7 +6,7 @@ export const AuthStatePage = ({ title, message }: { title: string; message: stri
       <p className="eyebrow">Lou Barbershop</p>
       <h1>{title}</h1>
       <p className="lead">{message}</p>
-      <Link to="/login">Volver al acceso</Link>
+      <Link to="/app/login">Volver al acceso</Link>
     </section>
   </main>
 )

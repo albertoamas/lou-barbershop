@@ -21,29 +21,29 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
   const secondaryLinks = (
     <>
       {earnsCommission && (
-        <NavLink className={navClassName} to="/commissions">
+        <NavLink className={navClassName} to="/app/comisiones">
           <AppIcon name="wallet" />
           Comisiones
         </NavLink>
       )}
       {isOwner && (
-        <NavLink className={navClassName} to="/reports">
+        <NavLink className={navClassName} to="/app/reportes">
           <AppIcon name="chart" />
           Reportes
         </NavLink>
       )}
       {canManage && (
-        <NavLink className={navClassName} to="/inventory">
+        <NavLink className={navClassName} to="/app/inventario">
           <AppIcon name="box" />
           Inventario y gastos
         </NavLink>
       )}
-      <NavLink className={navClassName} to="/scheduling">
+      <NavLink className={navClassName} to="/app/disponibilidad">
         <AppIcon name="clock" />
         Disponibilidad
       </NavLink>
-      {canManage && (
-        <NavLink className={navClassName} to="/configuration">
+      {isOwner && (
+        <NavLink className={navClassName} to="/app/configuracion">
           <AppIcon name="settings" />
           Configuración
         </NavLink>
@@ -54,17 +54,17 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
   return (
     <>
       <aside className="app-sidebar" aria-label="Navegación principal">
-        <BrandLockup />
+        <BrandLockup to="/app" />
         <nav>
-          <NavLink className={navClassName} to="/">
+          <NavLink className={navClassName} to="/app" end>
             <AppIcon name="home" />
             Inicio
           </NavLink>
-          <NavLink className={navClassName} to="/agenda">
+          <NavLink className={navClassName} to="/app/agenda">
             <AppIcon name="calendar" />
             Agenda
           </NavLink>
-          <NavLink className={navClassName} to="/operations">
+          <NavLink className={navClassName} to="/app/atenciones">
             <AppIcon name="scissors" />
             Atender y cobrar
           </NavLink>
@@ -81,15 +81,15 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
       </aside>
 
       <nav className="mobile-tabbar" aria-label="Navegación principal móvil">
-        <NavLink className={navClassName} to="/">
+        <NavLink className={navClassName} to="/app" end>
           <AppIcon name="home" />
           <span>Inicio</span>
         </NavLink>
-        <NavLink className={navClassName} to="/agenda">
+        <NavLink className={navClassName} to="/app/agenda">
           <AppIcon name="calendar" />
           <span>Agenda</span>
         </NavLink>
-        <NavLink className={navClassName} to="/operations">
+        <NavLink className={navClassName} to="/app/atenciones">
           <AppIcon name="scissors" />
           <span>Atender</span>
         </NavLink>

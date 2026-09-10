@@ -97,7 +97,7 @@ flowchart LR
 ## Top abuse paths
 
 1. Un BARBER cambia un GUID → solicita una operación ajena → si falta propiedad ve PII o cobra por otro. Impacto: privacidad e integridad económica.
-2. Un tercero obtiene `/book/manage#token` del dispositivo → envía el token en `X-Management-Token` → consulta o cambia la cita antes de caducar. Impacto: privacidad y disponibilidad puntual.
+2. Un tercero obtiene `/mi-cita#token` del dispositivo → envía el token en `X-Management-Token` → consulta o cambia la cita antes de caducar. Impacto: privacidad y disponibilidad puntual.
 3. Un bot distribuye solicitudes por muchas IP → supera límites por partición → consume CPU/DB y agota horarios. Impacto: caída de reserva pública.
 4. Un navegador malicioso fuerza una mutación con cookie → intenta omitir/forjar antiforgery → si el borde se configura mal altera agenda o economía. Impacto: integridad.
 5. Un usuario repite un pago tras pérdida de red → intenta duplicar cobro/inventario/comisión → idempotencia/transacción deben devolver el cierre original. Impacto: pérdida económica.

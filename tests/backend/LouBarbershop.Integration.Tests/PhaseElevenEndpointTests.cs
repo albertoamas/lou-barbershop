@@ -65,7 +65,7 @@ public sealed class PhaseElevenEndpointTests(IdentityApiFixture fixture)
         }
 
         Assert.Equal(43, confirmation.ManagementToken.Length);
-        Assert.Equal($"/book/manage#{confirmation.ManagementToken}", confirmation.ManagementPath);
+        Assert.Equal($"/mi-cita#{confirmation.ManagementToken}", confirmation.ManagementPath);
         Assert.DoesNotContain("71234567", System.Text.Json.JsonSerializer.Serialize(confirmation), StringComparison.Ordinal);
         await using (var scope = fixture.Services.CreateAsyncScope())
         {

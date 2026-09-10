@@ -22,7 +22,7 @@ export const LoginPage = () => {
       await authApi.login(userName, password)
       await queryClient.invalidateQueries({ queryKey: ['auth', 'session'] })
       const requestedPath = (location.state as { from?: string } | null)?.from
-      navigate(requestedPath ?? '/', { replace: true })
+      navigate(requestedPath ?? '/app', { replace: true })
     } catch (error) {
       setMessage(
         error instanceof ApiError && error.problem.status === 429

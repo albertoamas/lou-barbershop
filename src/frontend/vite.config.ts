@@ -23,13 +23,13 @@ export default defineConfig({
           {
             name: 'Reservar cita',
             short_name: 'Reservar',
-            url: '/book',
+            url: '/reservar',
             icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
           },
           {
             name: 'Agenda interna',
             short_name: 'Mi día',
-            url: '/agenda',
+            url: '/app/agenda',
             icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
           },
         ],

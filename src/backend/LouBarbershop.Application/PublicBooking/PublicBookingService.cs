@@ -71,7 +71,7 @@ public sealed class PublicBookingService(
         await store.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         var view = await MapAsync(appointment.Value, displayName, ct);
-        return new(PublicBookingStatus.Success, new(view, management.PlainText, "/book/manage#" + management.PlainText));
+        return new(PublicBookingStatus.Success, new(view, management.PlainText, "/mi-cita#" + management.PlainText));
     }
 
     public async Task<PublicBookingResult<PublicAppointmentView>> ReadAsync(string? token, CancellationToken ct)
@@ -100,7 +100,7 @@ public sealed class PublicBookingService(
         await store.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         var view = await MapAsync(appointment, null, ct);
-        return new(PublicBookingStatus.Success, new(view, management.PlainText, "/book/manage#" + management.PlainText));
+        return new(PublicBookingStatus.Success, new(view, management.PlainText, "/mi-cita#" + management.PlainText));
     }
 
     public async Task<PublicBookingResult<PublicAppointmentView>> CancelAsync(string? token, uint version, CancellationToken ct)

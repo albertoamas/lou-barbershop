@@ -197,7 +197,7 @@ export const ReportsPage = () => {
                   <strong>{centsToBolivianos(report.productRevenueCents)}</strong>
                   <span>COGS: {centsToBolivianos(report.productCostCents)}</span>
                 </a>
-                <a href="/commissions" className="metric-card">
+                <a href="/app/comisiones" className="metric-card">
                   <small>Comisión generada</small>
                   <strong>{centsToBolivianos(report.commissionGeneratedCents)}</strong>
                   <span>No es dinero cobrado</span>
@@ -227,15 +227,15 @@ export const ReportsPage = () => {
                 Deuda generada y liquidaciones, sin confundirlas con el dinero cobrado.
               </p>
               <div className="metric-grid compact-metrics">
-                <a href="/commissions" className="metric-card">
+                <a href="/app/comisiones" className="metric-card">
                   <small>Disponibles</small>
                   <strong>{centsToBolivianos(report.commissionAvailableCents)}</strong>
                 </a>
-                <a href="/commissions" className="metric-card">
+                <a href="/app/comisiones" className="metric-card">
                   <small>Liquidadas</small>
                   <strong>{centsToBolivianos(report.commissionSettledCents)}</strong>
                 </a>
-                <a href="/commissions" className="metric-card">
+                <a href="/app/comisiones" className="metric-card">
                   <small>Entradas pagadas</small>
                   <strong>{centsToBolivianos(report.commissionPaidCents)}</strong>
                 </a>
@@ -306,7 +306,7 @@ export const ReportsPage = () => {
                     Entradas no anuladas ganadas dentro del período.
                   </p>
                 </div>
-                <a href="/commissions">Abrir ledger completo</a>
+                <a href="/app/comisiones">Abrir ledger completo</a>
               </div>
               {report.commissions.length === 0 ? (
                 <p className="empty-state">No hay comisiones generadas.</p>

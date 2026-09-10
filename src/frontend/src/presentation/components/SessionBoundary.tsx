@@ -28,18 +28,18 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   }
 
   if (session.error instanceof ApiError) {
-    const destination = session.error.problem.status === 403 ? '/access-denied' : '/login'
+    const destination = session.error.problem.status === 403 ? '/app/acceso-denegado' : '/app/login'
     return <Navigate to={destination} replace state={{ from: location.pathname }} />
   }
 
   if (session.isError || !session.data) {
-    return <Navigate to="/session-expired" replace />
+    return <Navigate to="/app/sesion-expirada" replace />
   }
 
   const logout = async () => {
     await authApi.logout()
     queryClient.clear()
-    navigate('/login', { replace: true })
+    navigate('/app/login', { replace: true })
   }
 
   return (

@@ -40,6 +40,8 @@ Se mantuvieron foco visible, áreas táctiles mínimas, etiquetas accesibles, es
 - [Reserva pública móvil](assets/design/lou-booking-mobile-v1.png)
 - [Dashboard tablet](assets/design/lou-dashboard-tablet-v1.png)
 - [Dashboard escritorio](assets/design/lou-dashboard-desktop-v1.png)
+- [Landing pública móvil](assets/design/lou-landing-mobile-v1.png)
+- [Landing pública escritorio](assets/design/lou-landing-desktop-v1.png)
 
 Las respuestas de catálogo y sesión usadas para las capturas fueron ficticias, interceptadas sólo en el navegador de prueba y nunca persistidas.
 
@@ -68,3 +70,5 @@ La suite .NET no se repitió porque esta sesión no expuso el SDK 10.0.400 y el 
 ## 7. Riesgo residual y siguiente puerta
 
 El ejecutable Docker no estuvo disponible en el `PATH` de la sesión de verificación, aunque el frontend pudo ejecutarse y probarse de forma aislada con Vite. Antes de staging debe reconstruirse la imagen web con `docker compose up --build`, repetir los flujos con API/PostgreSQL reales y completar la aceptación humana G11. Esto no bloquea la revisión visual local ni cambia el estado técnico de Fase 12.
+
+La separación posterior entre experiencia pública e interna se documenta en [47-reorganizacion-rutas-y-landing.md](47-reorganizacion-rutas-y-landing.md).

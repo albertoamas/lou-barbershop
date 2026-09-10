@@ -7,7 +7,7 @@
 
 ## Resultado
 
-`/book` permite reservar sin cuenta con servicio, preferencia de barbero, fecha, horario, nombre y teléfono. `/book/manage#token` consulta, reprograma o cancela sólo esa cita. El backend comparte el motor autoritativo de disponibilidad, revalida dentro de la misma transacción de agenda y no acepta precio/duración del navegador.
+`/reservar` permite reservar sin cuenta con servicio, preferencia de barbero, fecha, horario, nombre y teléfono. `/mi-cita#token` consulta, reprograma o cancela sólo esa cita. El backend comparte el motor autoritativo de disponibilidad, revalida dentro de la misma transacción de agenda y no acepta precio/duración del navegador. Desde el 9 de septiembre de 2026, `/book` y `/book/manage#token` permanecen como redirecciones compatibles.
 
 ## Entregables y criterios
 
@@ -29,11 +29,11 @@ El incremento opcional de medición de abandono no fue activado: requería aprob
 - Migración `20260909111737_AddPublicBookingManagement` probada desde base vacía.
 - PWA: TypeScript estricto, lint, Prettier, 29 pruebas Vitest y build Workbox aprobados.
 - Compose reconstruido: PostgreSQL, API y web quedaron `healthy`; `GET /health/ready` respondió `200 Healthy`.
-- Playwright validó `/book` a 390 × 844, sin errores ni advertencias durante el flujo conectado. El service worker tomó control después de su instalación y la recarga sin red conservó el shell y el catálogo, mostró el aviso offline y no habilitó mutaciones. [Captura móvil](../output/playwright/phase11-public-mobile.png).
+- Playwright validó la reserva pública a 390 × 844, sin errores ni advertencias durante el flujo conectado. El service worker tomó control después de su instalación y la recarga sin red conservó el shell y el catálogo, mostró el aviso offline y no habilitó mutaciones. [Captura móvil](../output/playwright/phase11-public-mobile.png).
 - La inspección del artefacto final confirmó modo standalone, iconos 192/512, shortcut de reserva, rutas cacheables explícitas y ausencia de Background Sync.
 
 ## Puerta G11
 
-Abrir `/book` en teléfono, completar una reserva sin explicación, guardar el enlace, reprogramar y cancelar. Repetir brevemente sin red para comprobar que ninguna mutación se confirma y aceptar una actualización sólo al terminar la tarea. Con esa validación el dueño puede aprobar G11 y habilitar Fase 12.
+Abrir `/reservar` en teléfono, completar una reserva sin explicación, guardar el enlace, reprogramar y cancelar. Repetir brevemente sin red para comprobar que ninguna mutación se confirma y aceptar una actualización sólo al terminar la tarea. Con esa validación el dueño puede aprobar G11 y habilitar Fase 12.
 
 El 9 de septiembre de 2026 el dueño decidió dejar esta prueba pendiente porque la aplicación aún no está desplegada y autorizó continuar Fase 12 en local. Esta excepción habilita trabajo técnico de hardening, pero no equivale a aprobar G11 ni sustituye la validación posterior en un entorno accesible para clientes.

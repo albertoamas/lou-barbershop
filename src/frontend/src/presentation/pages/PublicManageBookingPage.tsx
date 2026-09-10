@@ -98,7 +98,7 @@ export const PublicManageBookingPage = () => {
     try {
       const cancelled = await publicBookingApi.cancel(token, appointment.data)
       client.setQueryData(['public-booking', 'manage', token], cancelled)
-      window.history.replaceState(null, '', '/book/manage')
+      window.history.replaceState(null, '', '/mi-cita')
       setNotice('La cita fue cancelada. Ese horario volvió a quedar disponible.')
     } catch (error) {
       setNotice(
@@ -234,7 +234,7 @@ export const PublicManageBookingPage = () => {
         </p>
       )}
       <p className="public-access">
-        <Link to="/book">Hacer otra reserva</Link>
+        <Link to="/reservar">Hacer otra reserva</Link>
       </p>
     </main>
   )
@@ -247,7 +247,7 @@ const InvalidLink = ({ message }: { message?: string }) => (
     <p role="alert">
       {message || 'El enlace no es válido, ya venció o la cita dejó de estar disponible.'}
     </p>
-    <Link className="primary-button button-link" to="/book">
+    <Link className="primary-button button-link" to="/reservar">
       Reservar una nueva cita
     </Link>
   </main>

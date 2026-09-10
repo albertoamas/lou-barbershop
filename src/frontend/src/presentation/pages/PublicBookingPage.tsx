@@ -91,7 +91,7 @@ export const PublicBookingPage = () => {
             Administrar mi cita
           </Link>
         </div>
-        <Link to="/book">Reservar otra cita</Link>
+        <Link to="/reservar">Reservar otra cita</Link>
       </main>
     )
   }
@@ -258,7 +258,7 @@ export const PublicBookingPage = () => {
       )}
       <p className="public-access">
         Para cambiar una cita, abre el enlace privado que recibiste. ·{' '}
-        <Link to="/login">Acceso del equipo</Link>
+        <Link to="/app/login">Acceso del equipo</Link>
       </p>
     </main>
   )

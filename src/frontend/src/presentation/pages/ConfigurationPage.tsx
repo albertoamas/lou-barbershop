@@ -28,7 +28,7 @@ export const ConfigurationPage = () => {
   const [busy, setBusy] = useState(false)
 
   if (session.data && !session.data.roles.includes('OWNER'))
-    return <Navigate to="/access-denied" replace />
+    return <Navigate to="/app/acceso-denegado" replace />
   if (snapshot.isPending)
     return (
       <main className="content" aria-busy="true">

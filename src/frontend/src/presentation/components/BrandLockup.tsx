@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 interface BrandLockupProps {
   compact?: boolean
   linked?: boolean
+  to?: string
 }
 
-export const BrandLockup = ({ compact = false, linked = true }: BrandLockupProps) => {
+export const BrandLockup = ({ compact = false, linked = true, to = '/' }: BrandLockupProps) => {
   const content = (
     <>
       <img className="brand-logo" src="/brand/lou-logo.jpg" alt="" />
@@ -19,7 +20,7 @@ export const BrandLockup = ({ compact = false, linked = true }: BrandLockupProps
   )
 
   return linked ? (
-    <Link className="brand-lockup" to="/" aria-label="Lou Barbershop, inicio">
+    <Link className="brand-lockup" to={to} aria-label="Lou Barbershop, inicio">
       {content}
     </Link>
   ) : (

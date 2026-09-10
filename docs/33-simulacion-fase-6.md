@@ -44,7 +44,7 @@ docker compose -f deploy/compose.acceptance.yaml run --rm -e BootstrapOwner__Use
 
 Esperar a que la API responda antes del bootstrap/seed. El seed se ejecuta una sola vez por base vacía. Las credenciales visibles en estos archivos son fixtures públicas, descartables y exclusivas de QA, nunca credenciales operativas. El proyecto `lou-acceptance` publica solo `127.0.0.1:8091` y usa PostgreSQL en tmpfs. No reutilizar esta configuración fuera de pruebas locales.
 
-Abrir `http://127.0.0.1:8091/agenda`, usar las cuentas ficticias del seed y el guion del acta. Elegir una fecha futura si se reproduce después del 5/9/2026. Al terminar:
+Abrir `http://127.0.0.1:8091/app/agenda`, usar las cuentas ficticias del seed y el guion del acta. Elegir una fecha futura si se reproduce después del 5/9/2026. Al terminar:
 
 ```powershell
 docker compose -f deploy/compose.acceptance.yaml down -v

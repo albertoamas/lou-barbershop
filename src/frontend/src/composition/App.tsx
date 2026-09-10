@@ -15,6 +15,9 @@ import { CommissionsPage } from '../presentation/pages/CommissionsPage'
 import { ReportsPage } from '../presentation/pages/ReportsPage'
 import { PublicBookingPage } from '../presentation/pages/PublicBookingPage'
 import { PublicManageBookingPage } from '../presentation/pages/PublicManageBookingPage'
+import { LandingPage } from '../presentation/pages/LandingPage'
+import { LegacyRedirect } from '../presentation/pages/LegacyRedirect'
+import { NotFoundPage } from '../presentation/pages/NotFoundPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,10 +32,11 @@ export const App = () => (
       <BrowserRouter>
         <AppShell>
           <Routes>
-            <Route path="/book" element={<PublicBookingPage />} />
-            <Route path="/book/manage" element={<PublicManageBookingPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/reservar" element={<PublicBookingPage />} />
+            <Route path="/mi-cita" element={<PublicManageBookingPage />} />
             <Route
-              path="/reports"
+              path="/app/reportes"
               element={
                 <SessionBoundary>
                   <ReportsPage />
@@ -40,7 +44,7 @@ export const App = () => (
               }
             />
             <Route
-              path="/commissions"
+              path="/app/comisiones"
               element={
                 <SessionBoundary>
                   <CommissionsPage />
@@ -48,7 +52,7 @@ export const App = () => (
               }
             />
             <Route
-              path="/inventory"
+              path="/app/inventario"
               element={
                 <SessionBoundary>
                   <InventoryPage />
@@ -56,7 +60,7 @@ export const App = () => (
               }
             />
             <Route
-              path="/operations"
+              path="/app/atenciones"
               element={
                 <SessionBoundary>
                   <OperationsPage />
@@ -64,16 +68,16 @@ export const App = () => (
               }
             />
             <Route
-              path="/agenda"
+              path="/app/agenda"
               element={
                 <SessionBoundary>
                   <AgendaPage />
                 </SessionBoundary>
               }
             />
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/app/login" element={<LoginPage />} />
             <Route
-              path="/session-expired"
+              path="/app/sesion-expirada"
               element={
                 <AuthStatePage
                   title="Tu sesión terminó"
@@ -82,7 +86,7 @@ export const App = () => (
               }
             />
             <Route
-              path="/access-denied"
+              path="/app/acceso-denegado"
               element={
                 <AuthStatePage
                   title="Acceso restringido"
@@ -91,7 +95,7 @@ export const App = () => (
               }
             />
             <Route
-              path="/"
+              path="/app"
               element={
                 <SessionBoundary>
                   <FoundationPage />
@@ -99,7 +103,7 @@ export const App = () => (
               }
             />
             <Route
-              path="/configuration"
+              path="/app/configuracion"
               element={
                 <SessionBoundary>
                   <ConfigurationPage />
@@ -107,21 +111,34 @@ export const App = () => (
               }
             />
             <Route
-              path="/scheduling"
+              path="/app/disponibilidad"
               element={
                 <SessionBoundary>
                   <SchedulingPage />
                 </SessionBoundary>
               }
             />
+            <Route path="/book" element={<LegacyRedirect to="/reservar" />} />
+            <Route path="/book/manage" element={<LegacyRedirect to="/mi-cita" preserveHash />} />
+            <Route path="/login" element={<LegacyRedirect to="/app/login" />} />
+            <Route path="/session-expired" element={<LegacyRedirect to="/app/sesion-expirada" />} />
+            <Route path="/access-denied" element={<LegacyRedirect to="/app/acceso-denegado" />} />
+            <Route path="/agenda" element={<LegacyRedirect to="/app/agenda" />} />
+            <Route path="/operations" element={<LegacyRedirect to="/app/atenciones" />} />
+            <Route path="/commissions" element={<LegacyRedirect to="/app/comisiones" />} />
+            <Route path="/reports" element={<LegacyRedirect to="/app/reportes" />} />
+            <Route path="/inventory" element={<LegacyRedirect to="/app/inventario" />} />
+            <Route path="/scheduling" element={<LegacyRedirect to="/app/disponibilidad" />} />
+            <Route path="/configuration" element={<LegacyRedirect to="/app/configuracion" />} />
             <Route
-              path="*"
+              path="/app/*"
               element={
                 <SessionBoundary>
-                  <FoundationPage />
+                  <NotFoundPage />
                 </SessionBoundary>
               }
             />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AppShell>
       </BrowserRouter>

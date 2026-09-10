@@ -11,7 +11,7 @@ La reserva pública no usa cuenta. Su enlace privado debe autorizar sólo una ci
 
 - Emitir 32 bytes aleatorios codificados como Base64URL y entregarlos una sola vez al crear/reprogramar.
 - Guardar únicamente SHA-256 del token con índice único y caducidad 48 horas después de la cita.
-- Usar `/book/manage#token` en la PWA: el fragmento no viaja en la petición HTTP.
+- Usar `/mi-cita#token` en la PWA: el fragmento no viaja en la petición HTTP. La ruta histórica `/book/manage#token` redirige conservando el fragmento.
 - Enviar el token a endpoints fijos mediante `X-Management-Token`; nunca ruta o query string.
 - Rotar al reprogramar, revocar al cancelar y responder con un 404 indistinguible para token inválido/vencido/revocado.
 - Mantener antiforgery same-origin, rate limit por IP y revalidación transaccional de disponibilidad.
