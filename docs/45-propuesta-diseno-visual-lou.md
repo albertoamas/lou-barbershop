@@ -1,8 +1,10 @@
 # Propuesta de diseño visual — Lou Barbershop
 
-**Estado:** propuesta V1 para aprobación antes de implementar  
+**Estado:** aprobada e implementada el 9 de septiembre de 2026  
 **Fuente visual:** logo entregado por el dueño  
 **Alcance:** PWA pública e interna, móvil, tablet y escritorio
+
+La evidencia técnica y visual está registrada en [46-acta-implementacion-diseno-visual.md](46-acta-implementacion-diseno-visual.md).
 
 ![Logo de referencia](assets/brand/lou-logo-reference.jpg)
 
@@ -242,9 +244,9 @@ Cada incremento debe mantener contratos API, reglas de negocio y protección off
 - Capturas a 390 × 844, 768 × 1024 y 1440 × 900 mantienen jerarquía consistente.
 - Dueño, administración y barbero reconocen la aplicación como Lou Barbershop, no como una plantilla genérica.
 
-## 12. Decisiones que debe confirmar el dueño
+## 12. Decisiones confirmadas por el dueño
 
-Antes de implementación sólo requieren confirmación visual:
+El dueño aprobó iniciar la implementación con estas decisiones:
 
 - dirección monocromática negro/blanco/acero;
 - uso de fondo blanco cálido en lugar de blanco puro para áreas largas;

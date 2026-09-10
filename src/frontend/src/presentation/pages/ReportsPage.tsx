@@ -5,6 +5,7 @@ import { basisPointsToPercent } from '../../core/reporting/Reporting'
 import { todayInBusinessTime } from '../../core/scheduling/Scheduling'
 import { authApi } from '../../infrastructure/http/authApi'
 import { reportingApi } from '../../infrastructure/http/reportingApi'
+import { ReportTabs, type ReportTab } from '../components/ReportTabs'
 
 const shortDateTime = (value: string) =>
   new Intl.DateTimeFormat('es-BO', {
@@ -19,6 +20,7 @@ export const ReportsPage = () => {
   const [dateTo, setDateTo] = useState(today)
   const [entityType, setEntityType] = useState('')
   const [auditPage, setAuditPage] = useState(1)
+  const [activeTab, setActiveTab] = useState<ReportTab>('operation')
   const session = useQuery({ queryKey: ['auth', 'session'], queryFn: authApi.current })
   const enabled = session.data?.roles.includes('OWNER') === true && dateFrom <= dateTo
   const daily = useQuery({
@@ -54,7 +56,7 @@ export const ReportsPage = () => {
     <main className="content reports-page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Gestión del dueño · Fase 10</p>
+          <p className="eyebrow">Gestión del dueño</p>
           <h1>Paneles que vuelven a su origen.</h1>
           <p className="lead">
             Cobros, resultado, caja y comisiones se muestran separados para evitar conclusiones
@@ -95,6 +97,7 @@ export const ReportsPage = () => {
           Descargar producción CSV
         </a>
       </section>
+      <ReportTabs active={activeTab} onChange={setActiveTab} />
       {!enabled && <p role="alert">Selecciona un rango válido.</p>}
       {(period.isPending || daily.isPending) && enabled && (
         <p aria-busy="true">Calculando desde las fuentes…</p>
@@ -103,7 +106,7 @@ export const ReportsPage = () => {
         <p role="alert">No se pudieron cargar todos los reportes. Intenta nuevamente.</p>
       )}
 
-      {daily.data && (
+      {activeTab === 'operation' && daily.data && (
         <section aria-labelledby="daily-title">
           <h2 id="daily-title">Hoy operativo · {daily.data.date}</h2>
           <div className="metric-grid">
@@ -135,7 +138,7 @@ export const ReportsPage = () => {
           </div>
         </section>
       )}
-      {daily.data && (
+      {activeTab === 'operation' && daily.data && (
         <section
           id="appointments-detail"
           className="report-table"
@@ -176,230 +179,263 @@ export const ReportsPage = () => {
 
       {report && (
         <>
-          <section aria-labelledby="result-title">
-            <h2 id="result-title">Resultado del período</h2>
-            <p className="metric-definition">
-              Resultado operativo aproximado = servicios + productos − costo asignado de productos −
-              comisiones generadas − gastos. No es utilidad fiscal.
-            </p>
-            <div className="metric-grid">
-              <a href="#operations-detail" className="metric-card">
-                <small>Servicios</small>
-                <strong>{centsToBolivianos(report.serviceRevenueCents)}</strong>
-                <span>Cargos de operaciones pagadas</span>
-              </a>
-              <a href="#operations-detail" className="metric-card">
-                <small>Productos</small>
-                <strong>{centsToBolivianos(report.productRevenueCents)}</strong>
-                <span>COGS: {centsToBolivianos(report.productCostCents)}</span>
-              </a>
-              <a href="/commissions" className="metric-card">
-                <small>Comisión generada</small>
-                <strong>{centsToBolivianos(report.commissionGeneratedCents)}</strong>
-                <span>No es dinero cobrado</span>
-              </a>
-              <a href="#expenses-detail" className="metric-card">
-                <small>Gastos</small>
-                <strong>{centsToBolivianos(report.expenseCents)}</strong>
-                <span>Registrados y vigentes</span>
-              </a>
-              <article className="metric-card highlight">
-                <small>Resultado aproximado</small>
-                <strong>{centsToBolivianos(report.approximateOperatingResultCents)}</strong>
-                <span>Antes de impuestos y conceptos no registrados</span>
-              </article>
-              <article className="metric-card">
-                <small>Ticket promedio</small>
-                <strong>{centsToBolivianos(report.averageTicketCents)}</strong>
-                <span>{report.paidOperationCount} operaciones pagadas</span>
-              </article>
-            </div>
-          </section>
-          <section id="commissions-detail" aria-labelledby="commissions-title">
-            <h2 id="commissions-title">Comisiones y caja, sin mezclar</h2>
-            <div className="metric-grid compact-metrics">
-              <a href="/commissions" className="metric-card">
-                <small>Disponibles</small>
-                <strong>{centsToBolivianos(report.commissionAvailableCents)}</strong>
-              </a>
-              <a href="/commissions" className="metric-card">
-                <small>Liquidadas</small>
-                <strong>{centsToBolivianos(report.commissionSettledCents)}</strong>
-              </a>
-              <a href="/commissions" className="metric-card">
-                <small>Entradas pagadas</small>
-                <strong>{centsToBolivianos(report.commissionPaidCents)}</strong>
-              </a>
-              <article className="metric-card">
-                <small>Pagos de liquidación</small>
-                <strong>{centsToBolivianos(report.commissionPaymentsCents)}</strong>
-              </article>
-              <a href="/inventory" className="metric-card">
-                <small>Compra inventario</small>
-                <strong>{centsToBolivianos(report.inventoryPurchaseCents)}</strong>
-              </a>
-              <article className="metric-card highlight">
-                <small>Flujo neto</small>
-                <strong>{centsToBolivianos(report.cashFlowCents)}</strong>
-                <span>Cobros − compras − gastos − liquidaciones</span>
-              </article>
-              <article className="metric-card">
-                <small>Flujo CASH</small>
-                <strong>{centsToBolivianos(report.cashFlowCashCents)}</strong>
-                <span>Entradas y salidas en efectivo</span>
-              </article>
-              <article className="metric-card">
-                <small>Flujo QR</small>
-                <strong>{centsToBolivianos(report.cashFlowQrCents)}</strong>
-                <span>Entradas y salidas QR</span>
-              </article>
-            </div>
-          </section>
-          <section
-            id="operations-detail"
-            className="report-table"
-            aria-labelledby="operations-title"
-          >
-            <h2 id="operations-title">Origen: operaciones</h2>
-            {report.operations.length === 0 ? (
-              <p className="empty-state">No hay operaciones pagadas en el período.</p>
-            ) : (
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Barbero / cliente</th>
-                      <th>Servicios</th>
-                      <th>Productos</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.operations.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.date}</td>
-                        <td>
-                          <strong>{row.barberName}</strong>
-                          <small>{row.customerName}</small>
-                        </td>
-                        <td>
-                          {row.serviceQuantity} · {centsToBolivianos(row.serviceRevenueCents)}
-                        </td>
-                        <td>
-                          {row.productQuantity} · {centsToBolivianos(row.productRevenueCents)}
-                          <small>COGS {centsToBolivianos(row.productCostCents)}</small>
-                        </td>
-                        <td>
-                          {centsToBolivianos(row.totalCents)}
-                          <small>
-                            CASH {centsToBolivianos(row.cashCents)} · QR{' '}
-                            {centsToBolivianos(row.qrCents)}
-                          </small>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {activeTab === 'operation' && (
+            <section aria-labelledby="result-title">
+              <h2 id="result-title">Resultado del período</h2>
+              <p className="metric-definition">
+                Resultado operativo aproximado = servicios + productos − costo asignado de productos
+                − comisiones generadas − gastos. No es utilidad fiscal.
+              </p>
+              <div className="metric-grid">
+                <a href="#operations-detail" className="metric-card">
+                  <small>Servicios</small>
+                  <strong>{centsToBolivianos(report.serviceRevenueCents)}</strong>
+                  <span>Cargos de operaciones pagadas</span>
+                </a>
+                <a href="#operations-detail" className="metric-card">
+                  <small>Productos</small>
+                  <strong>{centsToBolivianos(report.productRevenueCents)}</strong>
+                  <span>COGS: {centsToBolivianos(report.productCostCents)}</span>
+                </a>
+                <a href="/commissions" className="metric-card">
+                  <small>Comisión generada</small>
+                  <strong>{centsToBolivianos(report.commissionGeneratedCents)}</strong>
+                  <span>No es dinero cobrado</span>
+                </a>
+                <a href="#expenses-detail" className="metric-card">
+                  <small>Gastos</small>
+                  <strong>{centsToBolivianos(report.expenseCents)}</strong>
+                  <span>Registrados y vigentes</span>
+                </a>
+                <article className="metric-card highlight">
+                  <small>Resultado aproximado</small>
+                  <strong>{centsToBolivianos(report.approximateOperatingResultCents)}</strong>
+                  <span>Antes de impuestos y conceptos no registrados</span>
+                </article>
+                <article className="metric-card">
+                  <small>Ticket promedio</small>
+                  <strong>{centsToBolivianos(report.averageTicketCents)}</strong>
+                  <span>{report.paidOperationCount} operaciones pagadas</span>
+                </article>
               </div>
-            )}
-          </section>
-          <section className="report-table" aria-labelledby="commission-sources-title">
-            <div className="report-section-heading">
-              <div>
-                <h2 id="commission-sources-title">Origen: comisiones generadas</h2>
+            </section>
+          )}
+          {activeTab === 'commissions' && (
+            <section id="commissions-detail" aria-labelledby="commissions-title">
+              <h2 id="commissions-title">Comisiones del período</h2>
+              <p className="metric-definition">
+                Deuda generada y liquidaciones, sin confundirlas con el dinero cobrado.
+              </p>
+              <div className="metric-grid compact-metrics">
+                <a href="/commissions" className="metric-card">
+                  <small>Disponibles</small>
+                  <strong>{centsToBolivianos(report.commissionAvailableCents)}</strong>
+                </a>
+                <a href="/commissions" className="metric-card">
+                  <small>Liquidadas</small>
+                  <strong>{centsToBolivianos(report.commissionSettledCents)}</strong>
+                </a>
+                <a href="/commissions" className="metric-card">
+                  <small>Entradas pagadas</small>
+                  <strong>{centsToBolivianos(report.commissionPaidCents)}</strong>
+                </a>
+                <article className="metric-card">
+                  <small>Pagos de liquidación</small>
+                  <strong>{centsToBolivianos(report.commissionPaymentsCents)}</strong>
+                </article>
+              </div>
+            </section>
+          )}
+          {activeTab === 'operation' && (
+            <section
+              id="operations-detail"
+              className="report-table"
+              aria-labelledby="operations-title"
+            >
+              <h2 id="operations-title">Origen: operaciones</h2>
+              {report.operations.length === 0 ? (
+                <p className="empty-state">No hay operaciones pagadas en el período.</p>
+              ) : (
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Barbero / cliente</th>
+                        <th>Servicios</th>
+                        <th>Productos</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.operations.map((row) => (
+                        <tr key={row.id}>
+                          <td>{row.date}</td>
+                          <td>
+                            <strong>{row.barberName}</strong>
+                            <small>{row.customerName}</small>
+                          </td>
+                          <td>
+                            {row.serviceQuantity} · {centsToBolivianos(row.serviceRevenueCents)}
+                          </td>
+                          <td>
+                            {row.productQuantity} · {centsToBolivianos(row.productRevenueCents)}
+                            <small>COGS {centsToBolivianos(row.productCostCents)}</small>
+                          </td>
+                          <td>
+                            {centsToBolivianos(row.totalCents)}
+                            <small>
+                              CASH {centsToBolivianos(row.cashCents)} · QR{' '}
+                              {centsToBolivianos(row.qrCents)}
+                            </small>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+          {activeTab === 'commissions' && (
+            <section className="report-table" aria-labelledby="commission-sources-title">
+              <div className="report-section-heading">
+                <div>
+                  <h2 id="commission-sources-title">Origen: comisiones generadas</h2>
+                  <p className="metric-definition">
+                    Entradas no anuladas ganadas dentro del período.
+                  </p>
+                </div>
+                <a href="/commissions">Abrir ledger completo</a>
+              </div>
+              {report.commissions.length === 0 ? (
+                <p className="empty-state">No hay comisiones generadas.</p>
+              ) : (
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Barbero</th>
+                        <th>Estado</th>
+                        <th>Importe</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.commissions.map((row) => (
+                        <tr key={row.id}>
+                          <td>{row.date}</td>
+                          <td>{row.barberName}</td>
+                          <td>{row.status}</td>
+                          <td>{centsToBolivianos(row.amountCents)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+          {activeTab === 'cash' && (
+            <>
+              <section aria-labelledby="cash-title">
+                <h2 id="cash-title">Caja del período</h2>
                 <p className="metric-definition">
-                  Entradas no anuladas ganadas dentro del período.
+                  Entradas y salidas reales, separadas de la deuda de comisión.
                 </p>
-              </div>
-              <a href="/commissions">Abrir ledger completo</a>
-            </div>
-            {report.commissions.length === 0 ? (
-              <p className="empty-state">No hay comisiones generadas.</p>
-            ) : (
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Barbero</th>
-                      <th>Estado</th>
-                      <th>Importe</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.commissions.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.date}</td>
-                        <td>{row.barberName}</td>
-                        <td>{row.status}</td>
-                        <td>{centsToBolivianos(row.amountCents)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-          <section id="expenses-detail" className="report-table" aria-labelledby="expenses-title">
-            <h2 id="expenses-title">Origen: gastos y pagos de liquidación</h2>
-            {[...report.expenses, ...report.inventoryPurchases, ...report.settlementPayments]
-              .length === 0 ? (
-              <p className="empty-state">No hay salidas registradas.</p>
-            ) : (
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Concepto</th>
-                      <th>Medio</th>
-                      <th>Importe</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.expenses.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.date}</td>
-                        <td>
-                          <strong>{row.category}</strong>
-                          <small>{row.description}</small>
-                        </td>
-                        <td>{row.method}</td>
-                        <td>{centsToBolivianos(row.amountCents)}</td>
-                      </tr>
-                    ))}
-                    {report.inventoryPurchases.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.date}</td>
-                        <td>
-                          <strong>Compra de inventario</strong>
-                          <small>Recepción confirmada</small>
-                        </td>
-                        <td>{row.method}</td>
-                        <td>{centsToBolivianos(row.amountCents)}</td>
-                      </tr>
-                    ))}
-                    {report.settlementPayments.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.date}</td>
-                        <td>
-                          <strong>Liquidación</strong>
-                          <small>{row.barberName}</small>
-                        </td>
-                        <td>{row.method}</td>
-                        <td>{centsToBolivianos(row.amountCents)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+                <div className="metric-grid compact-metrics">
+                  <article className="metric-card highlight">
+                    <small>Flujo neto</small>
+                    <strong>{centsToBolivianos(report.cashFlowCents)}</strong>
+                    <span>Cobros − compras − gastos − liquidaciones</span>
+                  </article>
+                  <article className="metric-card">
+                    <small>Flujo CASH</small>
+                    <strong>{centsToBolivianos(report.cashFlowCashCents)}</strong>
+                  </article>
+                  <article className="metric-card">
+                    <small>Flujo QR</small>
+                    <strong>{centsToBolivianos(report.cashFlowQrCents)}</strong>
+                  </article>
+                  <article className="metric-card">
+                    <small>Compras de inventario</small>
+                    <strong>{centsToBolivianos(report.inventoryPurchaseCents)}</strong>
+                  </article>
+                  <article className="metric-card">
+                    <small>Gastos</small>
+                    <strong>{centsToBolivianos(report.expenseCents)}</strong>
+                  </article>
+                  <article className="metric-card">
+                    <small>Pagos de liquidación</small>
+                    <strong>{centsToBolivianos(report.commissionPaymentsCents)}</strong>
+                  </article>
+                </div>
+              </section>
+              <section
+                id="expenses-detail"
+                className="report-table"
+                aria-labelledby="expenses-title"
+              >
+                <h2 id="expenses-title">Origen: gastos y pagos de liquidación</h2>
+                {[...report.expenses, ...report.inventoryPurchases, ...report.settlementPayments]
+                  .length === 0 ? (
+                  <p className="empty-state">No hay salidas registradas.</p>
+                ) : (
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Concepto</th>
+                          <th>Medio</th>
+                          <th>Importe</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.expenses.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.date}</td>
+                            <td>
+                              <strong>{row.category}</strong>
+                              <small>{row.description}</small>
+                            </td>
+                            <td>{row.method}</td>
+                            <td>{centsToBolivianos(row.amountCents)}</td>
+                          </tr>
+                        ))}
+                        {report.inventoryPurchases.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.date}</td>
+                            <td>
+                              <strong>Compra de inventario</strong>
+                              <small>Recepción confirmada</small>
+                            </td>
+                            <td>{row.method}</td>
+                            <td>{centsToBolivianos(row.amountCents)}</td>
+                          </tr>
+                        ))}
+                        {report.settlementPayments.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.date}</td>
+                            <td>
+                              <strong>Liquidación</strong>
+                              <small>{row.barberName}</small>
+                            </td>
+                            <td>{row.method}</td>
+                            <td>{centsToBolivianos(row.amountCents)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
         </>
       )}
 
-      {barbers.data && (
+      {activeTab === 'team' && barbers.data && (
         <section className="report-table" aria-labelledby="barbers-title">
           <h2 id="barbers-title">Producción y ocupación por barbero</h2>
           <p className="metric-definition">
@@ -441,70 +477,72 @@ export const ReportsPage = () => {
         </section>
       )}
 
-      <section className="report-table" aria-labelledby="audit-title">
-        <div className="report-section-heading">
-          <div>
-            <h2 id="audit-title">Bitácora de auditoría</h2>
-            <p className="metric-definition">Sólo el dueño puede consultar cambios sensibles.</p>
+      {activeTab === 'audit' && (
+        <section className="report-table" aria-labelledby="audit-title">
+          <div className="report-section-heading">
+            <div>
+              <h2 id="audit-title">Bitácora de auditoría</h2>
+              <p className="metric-definition">Sólo el dueño puede consultar cambios sensibles.</p>
+            </div>
+            <label>
+              Entidad
+              <input
+                value={entityType}
+                maxLength={80}
+                placeholder="Ej. settlement"
+                onChange={(event) => {
+                  setEntityType(event.target.value)
+                  setAuditPage(1)
+                }}
+              />
+            </label>
           </div>
-          <label>
-            Entidad
-            <input
-              value={entityType}
-              maxLength={80}
-              placeholder="Ej. settlement"
-              onChange={(event) => {
-                setEntityType(event.target.value)
-                setAuditPage(1)
-              }}
-            />
-          </label>
-        </div>
-        {audit.data?.items.length === 0 ? (
-          <p className="empty-state">No hay eventos con estos filtros.</p>
-        ) : (
-          <div className="audit-list">
-            {audit.data?.items.map((row) => (
-              <details key={row.id}>
-                <summary>
-                  <strong>
-                    {row.action} · {row.entityType}
-                  </strong>
-                  <span>
-                    {shortDateTime(row.createdAt)} · {row.actorName ?? 'Sistema'}
-                  </span>
-                </summary>
-                <p>
-                  Entidad: <code>{row.entityId}</code>
-                </p>
-                {row.beforeData && <pre aria-label="Estado anterior">{row.beforeData}</pre>}
-                {row.afterData && <pre aria-label="Estado posterior">{row.afterData}</pre>}
-              </details>
-            ))}
-          </div>
-        )}{' '}
-        {audit.data && audit.data.total > audit.data.pageSize && (
-          <div className="pagination">
-            <button
-              type="button"
-              disabled={auditPage === 1}
-              onClick={() => setAuditPage((value) => value - 1)}
-            >
-              Anterior
-            </button>
-            <span>
-              Página {auditPage} de {Math.ceil(audit.data.total / audit.data.pageSize)}
-            </span>
-            <button
-              type="button"
-              disabled={auditPage * audit.data.pageSize >= audit.data.total}
-              onClick={() => setAuditPage((value) => value + 1)}
-            >
-              Siguiente
-            </button>
-          </div>
-        )}
-      </section>
+          {audit.data?.items.length === 0 ? (
+            <p className="empty-state">No hay eventos con estos filtros.</p>
+          ) : (
+            <div className="audit-list">
+              {audit.data?.items.map((row) => (
+                <details key={row.id}>
+                  <summary>
+                    <strong>
+                      {row.action} · {row.entityType}
+                    </strong>
+                    <span>
+                      {shortDateTime(row.createdAt)} · {row.actorName ?? 'Sistema'}
+                    </span>
+                  </summary>
+                  <p>
+                    Entidad: <code>{row.entityId}</code>
+                  </p>
+                  {row.beforeData && <pre aria-label="Estado anterior">{row.beforeData}</pre>}
+                  {row.afterData && <pre aria-label="Estado posterior">{row.afterData}</pre>}
+                </details>
+              ))}
+            </div>
+          )}{' '}
+          {audit.data && audit.data.total > audit.data.pageSize && (
+            <div className="pagination">
+              <button
+                type="button"
+                disabled={auditPage === 1}
+                onClick={() => setAuditPage((value) => value - 1)}
+              >
+                Anterior
+              </button>
+              <span>
+                Página {auditPage} de {Math.ceil(audit.data.total / audit.data.pageSize)}
+              </span>
+              <button
+                type="button"
+                disabled={auditPage * audit.data.pageSize >= audit.data.total}
+                onClick={() => setAuditPage((value) => value + 1)}
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   )
 }

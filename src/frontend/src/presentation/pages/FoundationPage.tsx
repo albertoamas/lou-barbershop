@@ -1,40 +1,50 @@
 import { Link } from 'react-router-dom'
 import { useConnectivity } from '../hooks/useConnectivity'
+import { AppIcon } from '../components/AppIcon'
 
 export const FoundationPage = () => {
   const connectivity = useConnectivity()
 
   return (
-    <main className="content">
-      <p className="eyebrow">Lou · Operación local</p>
-      <h1>Tu jornada comienza aquí.</h1>
-      <p className="lead">
-        Ya puedes gestionar la jornada completa: agenda, atención real, cobros, inventario, gastos,
-        comisiones, liquidaciones y reportes reconciliables, cada concepto con su propia
-        trazabilidad.
-      </p>
+    <main className="content dashboard-page">
+      <header className="dashboard-hero">
+        <div>
+          <p className="eyebrow">Lou · Operación local</p>
+          <h1>Tu jornada comienza aquí.</h1>
+          <p className="lead">
+            Agenda, atención y economía conectadas, cada una con su propia trazabilidad.
+          </p>
+        </div>
+        <span className={`connection-status ${connectivity}`}>
+          <i />
+          {connectivity === 'online' ? 'Sistema conectado' : 'Sin conexión'}
+        </span>
+      </header>
 
-      <section className="foundation-grid" aria-label="Principios de la aplicación">
+      <section className="foundation-grid" aria-label="Acciones principales">
         <article className="foundation-card">
-          <span>01</span>
+          <span>
+            <AppIcon name="calendar" size={28} />
+          </span>
           <h2>Agenda</h2>
-          <p>Clientes, reservas, reprogramaciones y llegadas.</p>
+          <p>Revisa las citas, llegadas y cambios de hoy.</p>
           <Link to="/agenda">Abrir agenda</Link>
         </article>
         <article className="foundation-card">
-          <span>02</span>
+          <span>
+            <AppIcon name="scissors" size={28} />
+          </span>
           <h2>Atención</h2>
-          <p>
-            Servicios realizados, productos, cortesías y pagos mixtos sin confundirlos con la cita.
-          </p>
-          <Link to="/operations">Abrir atención</Link>
+          <p>Registra servicios, productos, cortesías y pagos mixtos.</p>
+          <Link to="/operations">Iniciar atención</Link>
         </article>
         <article className="foundation-card">
-          <span>03</span>
+          <span>
+            <AppIcon name="chart" size={28} />
+          </span>
           <h2>Economía</h2>
-          <p>Cobros, caja, comisiones y liquidaciones con trazabilidad independiente.</p>
-          <Link to="/commissions">Abrir comisiones</Link>
-          <Link to="/reports">Abrir reportes</Link>
+          <p>Cobros, caja, comisiones y liquidaciones, siempre separados.</p>
+          <Link to="/reports">Ver reportes</Link>
         </article>
       </section>
 

@@ -66,7 +66,7 @@ export const CommissionsPage = () => {
     <main className="content operations-page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Deuda al barbero · Fase 9</p>
+          <p className="eyebrow">Deuda al barbero</p>
           <h1>Comisiones separadas del dinero cobrado.</h1>
           <p>Cada centavo conserva operación, base, tasa histórica y estado.</p>
         </div>

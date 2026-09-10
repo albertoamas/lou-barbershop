@@ -102,7 +102,7 @@ export const OperationsPage = () => {
     <main className="content operations-page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Atención y cobro · Fase 7</p>
+          <p className="eyebrow">Atención y cobro</p>
           <h1>Lo que realmente ocurrió.</h1>
           <p>La cita orienta; servicios, ajustes y pago se confirman aquí.</p>
         </div>

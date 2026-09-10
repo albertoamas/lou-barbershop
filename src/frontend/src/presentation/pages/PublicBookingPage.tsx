@@ -100,8 +100,11 @@ export const PublicBookingPage = () => {
     <main className="public-page">
       <header className="public-hero">
         <p className="eyebrow">Reserva en línea</p>
-        <h1>Tu próximo corte, sin vueltas.</h1>
-        <p>Elige servicio, barbero y horario. No necesitas crear una cuenta.</p>
+        <h1>Reserva tu cita.</h1>
+        <p>
+          Tu próximo corte, sin vueltas. Elige servicio, barbero y horario; no necesitas crear una
+          cuenta.
+        </p>
       </header>
       <ol className="booking-progress" aria-label="Progreso de reserva">
         <li className={slot ? 'complete' : 'current'}>1. Horario</li>

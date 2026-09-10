@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
+import { InternalNavigation } from '../layout/InternalNavigation'
 
 interface SessionBoundaryProps {
   children: ReactNode
@@ -42,32 +43,13 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   }
 
   return (
-    <>
-      <div className="session-bar" aria-label="Sesión actual">
-        <nav aria-label="Navegación interna">
-          <Link to="/">Inicio</Link>
-          <Link to="/agenda">Agenda</Link>
-          <Link to="/operations">Atención y cobro</Link>
-          {(session.data.roles.includes('OWNER') || session.data.roles.includes('BARBER')) && (
-            <Link to="/commissions">Comisiones</Link>
-          )}
-          {session.data.roles.includes('OWNER') && <Link to="/reports">Reportes</Link>}
-          {(session.data.roles.includes('OWNER') || session.data.roles.includes('ADMIN')) && (
-            <Link to="/inventory">Inventario y gastos</Link>
-          )}
-          <Link to="/scheduling">Disponibilidad</Link>
-          {(session.data.roles.includes('OWNER') || session.data.roles.includes('ADMIN')) && (
-            <Link to="/configuration">Configuración</Link>
-          )}
-        </nav>
-        <span>
-          Sesión: <strong>{session.data.userName}</strong>
-        </span>
-        <button type="button" onClick={logout}>
-          Cerrar sesión
-        </button>
-      </div>
-      {children}
-    </>
+    <div className="authenticated-layout">
+      <InternalNavigation
+        roles={session.data.roles}
+        userName={session.data.userName}
+        onLogout={logout}
+      />
+      <div className="authenticated-main">{children}</div>
+    </div>
   )
 }
