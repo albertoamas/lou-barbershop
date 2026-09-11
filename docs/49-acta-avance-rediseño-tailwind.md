@@ -1,12 +1,12 @@
 # Acta de avance — rediseño Tailwind y movimiento
 
-**Fecha:** 10 de septiembre de 2026  
-**Estado:** `CHECKPOINT 01 APROBADO — CHECKPOINT 02 HABILITADO`  
+**Fecha:** 11 de septiembre de 2026  
+**Estado:** `CHECKPOINT 02 EN REVISIÓN — CORRECCIONES MÓVILES APLICADAS`  
 **Plan:** [48-plan-rediseño-tailwind-y-movimiento.md](48-plan-rediseño-tailwind-y-movimiento.md)
 
 ## Situación actual y próxima decisión
 
-La fundación visual y la landing fueron aprobadas individualmente por el dueño el 10 de septiembre de 2026. Las demás pantallas mantienen implementación provisional hasta que sean presentadas en su checkpoint correspondiente.
+La fundación visual y la landing fueron aprobadas individualmente por el dueño el 10 de septiembre de 2026. La reserva pública está presentada para revisión después de una primera ronda de observaciones. Las demás pantallas mantienen implementación provisional hasta que sean presentadas en su checkpoint correspondiente.
 
 Desde este punto el trabajo queda ordenado por los checkpoints 00–14 definidos en el plan. No se implementará el checkpoint 09 (Inventario y gastos) hasta recorrer y aprobar explícitamente los checkpoints anteriores.
 
@@ -31,6 +31,33 @@ Revisión solicitada al dueño:
 - comportamiento y jerarquía en móvil y escritorio.
 
 **Decisión registrada:** `APROBADO`. El checkpoint `02 — Reserva pública` queda habilitado como siguiente revisión, pero todavía no ha sido presentado.
+
+### Checkpoint presentado actualmente
+
+**`02 — Reserva pública`** (`/reservar`)
+
+La pantalla se reorganizó como un wizard real de cinco decisiones: servicio, barbero, fecha y hora,
+datos y confirmación. Cada paso reemplaza únicamente el contenido de trabajo con una transición
+direccional; volver conserva las selecciones. En escritorio el resumen permanece lateral y en móvil
+se presenta como un control desplegable inequívoco.
+
+El dueño solicitó cuatro correcciones durante la primera revisión del 11 de septiembre:
+
+1. sustituir la línea de progreso horizontal que no se adaptaba bien al teléfono;
+2. presentar la fecha como calendario y hacer más cómoda la elección de hora;
+3. convertir `Ver resumen` en un control que se reconozca visualmente como botón;
+4. evitar una lista excesivamente larga de horas en móvil.
+
+La segunda presentación incorpora:
+
+- progreso móvil con nombre del paso, porcentaje y cinco segmentos sin desplazamiento horizontal;
+- campo de calendario acompañado por cinco fechas rápidas;
+- periodos `Mañana` y `Tarde` con cantidad disponible;
+- deduplicación visual por hora cuando el cliente acepta cualquier barbero;
+- ocho horarios iniciales y expansión voluntaria mediante `Ver horarios más`;
+- botón blanco `Ver resumen` con indicador de apertura dentro del resumen móvil.
+
+**Decisión pendiente:** aprobación explícita del dueño. El checkpoint 03 continúa bloqueado.
 
 ### Correcciones solicitadas para el checkpoint 01
 
@@ -86,7 +113,7 @@ Además, las pantallas se cargan por ruta mediante `React.lazy`, reduciendo el p
 |---|---|---|
 | 00 Base visual y navegación | terminada | `APROBADO` |
 | 01 Landing | terminada | `APROBADO` |
-| 02 Reserva pública | provisional terminada | `LISTO_PARA_REVISIÓN` |
+| 02 Reserva pública | terminada y corregida | `EN_REVISIÓN` |
 | 03 Mi cita | provisional; falta token vigente | bloqueada por 02 |
 | 04 Login | provisional terminada | bloqueada por 03 |
 | 05 Inicio por rol | provisional; referencias incompletas | bloqueada por 04 |
@@ -144,6 +171,9 @@ El cambio permanece limitado a presentación y composición. No modifica reglas 
 - [Checkpoint 01 — proceso de reserva en móvil](assets/design/lou-checkpoint-01-process-mobile.png)
 - [Checkpoint 01 — ubicación en escritorio](assets/design/lou-checkpoint-01-location-desktop.png)
 - [Checkpoint 01 — ubicación en móvil](assets/design/lou-checkpoint-01-location-mobile.png)
+- [Checkpoint 02 — reserva en móvil](assets/design/lou-checkpoint-02-booking-mobile.png)
+- [Checkpoint 02 — fecha y horarios en móvil](assets/design/lou-checkpoint-02-booking-schedule-mobile.png)
+- [Checkpoint 02 — reserva en escritorio](assets/design/lou-checkpoint-02-booking-desktop.png)
 
 Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de editor y atención usan respuestas ficticias aisladas mediante Playwright porque el runtime activo no conservaba los usuarios sembrados; no modifican la base ni contienen datos reales.
 
@@ -168,6 +198,10 @@ Las capturas anteriores usan fixtures locales. Las tres capturas nuevas de edito
 - Corrección del aviso PWA: fixture de actualización visible a 390 × 844 confirmó cabecera en `y=0..73`, aviso desde `y=73`, capas `40/30`, navegación `Reservar` interactuable y consola con cero errores y cero advertencias.
 - Corrección CSP/preload validada en el contenedor principal de `localhost:8088`: `frame-src https://www.google.com`, mapa visible y cargado, cero elementos `modulepreload`, cero errores y cero advertencias de consola.
 - Corrección de movimiento medida en Chromium: tarjeta `0 → -1,69 → -2 px` y botón `0 → -0,88 → -1 px` durante 300 ms; ambos declaran `translate` en `transition-property` y la consola termina sin errores ni advertencias.
+- Checkpoint 02: seed local ejecutado dos veces consecutivas sin duplicados; se verificaron 5 servicios públicos, 2 barberos ficticios y 64 huecos antes de crear la cita de prueba.
+- Checkpoint 02: reserva real ficticia completada de punta a punta en `localhost:8088`, incluido enlace privado de gestión; consola con cero errores y cero advertencias.
+- Checkpoint 02: Playwright verificó progreso, resumen, calendario, periodos y límite inicial de horarios a 390 × 844; `scrollWidth` coincide con el viewport a 320 y 1440 px.
+- Checkpoint 02: Prettier, ESLint, Oxlint, TypeScript, build PWA y 19 archivos con 41 pruebas Vitest aprobados.
 
 El único `401` observado correspondió a un primer intento manual de QA con una contraseña de fixture equivocada; el segundo acceso con la credencial correcta fue exitoso. No es un defecto de la aplicación.
 

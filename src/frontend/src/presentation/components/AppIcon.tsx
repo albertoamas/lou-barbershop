@@ -10,6 +10,9 @@ export type IconName =
   | 'settings'
   | 'logout'
   | 'arrow-right'
+  | 'arrow-left'
+  | 'check'
+  | 'chevron-down'
   | 'close'
   | 'map-pin'
 
@@ -75,6 +78,9 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   'arrow-right': <path d="M5 12h14M14 7l5 5-5 5" />,
+  'arrow-left': <path d="M19 12H5M10 7l-5 5 5 5" />,
+  check: <path d="m5 12 4.5 4.5L19 7" />,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   'map-pin': (
     <>

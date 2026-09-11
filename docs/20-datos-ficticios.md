@@ -145,3 +145,23 @@ Se busca `+59170000006`; aparecen dos clientes y administración elige la person
 - Builders expresan intención (`AConfirmedAppointment`, `APaidCourtesyOperation`).
 - No reutilizar la base de desarrollo para integración automatizada.
 
+## 11. Seed visual local
+
+El script `deploy/seed-local-demo.ps1` prepara en la instalación principal de desarrollo los
+servicios, usuarios, perfiles de barbero, ofertas, horarios, comisiones y cliente ficticio de este
+documento. Es idempotente por identidad funcional y no contiene contraseñas.
+
+Antes de ejecutarlo debe existir `owner.demo`. La cuenta se crea o recupera mediante el comando de
+bootstrap descrito en `09-seguridad-roles-y-auditoria.md`, pasando la contraseña sólo como variable
+efímera. Después se ejecuta:
+
+```powershell
+$env:LOU_DEMO_OWNER_PASSWORD = '<contraseña local de owner.demo>'
+$env:LOU_DEMO_STAFF_PASSWORD = '<contraseña local para cuentas ficticias>'
+.\deploy\seed-local-demo.ps1
+Remove-Item Env:LOU_DEMO_OWNER_PASSWORD, Env:LOU_DEMO_STAFF_PASSWORD
+```
+
+El destino predeterminado es `http://127.0.0.1:8088`; se puede cambiar con `-BaseUrl`. Este seed es
+exclusivo de desarrollo local. No debe apuntar a producción ni sustituye los datos reales que el
+dueño deberá aprobar.
