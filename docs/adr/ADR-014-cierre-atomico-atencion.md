@@ -31,4 +31,4 @@ Cobrar una atención puede modificar en conjunto la operación, sus pagos, la co
 - `PhaseSevenOperationTests`: totales, pago mixto, cortesía, inmutabilidad y desbordes.
 - `PhaseSevenEndpointTests`: precio autoritativo, desajuste sin efectos, replay, comisión, permisos, cierre de cita y rollback por regla faltante.
 - Migraciones `AddServiceOperations` y `HardenServiceOperations`.
-- Simulación real documentada en `docs/34-acta-fase-7-g7.md`.
+- Simulación real documentada en `docs/archivo/fases/34-acta-fase-7-g7.md`.

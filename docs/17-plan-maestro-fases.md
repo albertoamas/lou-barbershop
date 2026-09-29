@@ -177,7 +177,7 @@ flowchart LR
 **Objetivo:** congelar una línea base coherente para que el código no empiece sobre decisiones implícitas.  
 **Dependencias:** documentación 01–16.  
 **Alcance:** planificación y preparación; no implementación funcional.  
-**Estado:** `DONE`; G0 aprobada. Evidencia en [22-acta-fase-0-g0.md](22-acta-fase-0-g0.md).
+**Estado:** `DONE`; G0 aprobada. Evidencia en [22-acta-fase-0-g0.md](archivo/fases/22-acta-fase-0-g0.md).
 
 ### Actividades
 
@@ -219,7 +219,7 @@ Plan, alcance y decisiones técnicas aprobados. Cualquier cambio posterior sigue
 **Objetivo:** disponer de un repositorio que compile, pruebe, se ejecute con Docker y se despliegue sin lógica de negocio falsa.  
 **Dependencias:** G0.  
 **Tamaño:** L.  
-**Estado:** `ACCEPTANCE`; implementación local y CI remoto verificados, G1 aún no aprobada por staging e instalación manual. Evidencia en [24-evidencia-fase-1-g1.md](24-evidencia-fase-1-g1.md).
+**Estado:** `ACCEPTANCE`; implementación local y CI remoto verificados, G1 aún no aprobada por staging e instalación manual. Evidencia en [24-evidencia-fase-1-g1.md](archivo/fases/24-evidencia-fase-1-g1.md).
 
 ### Backend
 
@@ -346,7 +346,7 @@ Invariantes fundamentales verdes y modelo técnico capaz de soportar slices sin 
 **Dependencias:** G2.  
 **Cobertura:** RF-001–003, CU-01, HU-001 y base de HU-002.  
 **Tamaño:** M.
-**Estado:** `DONE`; G3 aprobada localmente el 2 de septiembre de 2026. La validación detrás de proxy se ejecutó con Compose/Caddy local bajo la excepción de despliegue ya aprobada; Railway continúa diferido. Evidencia en [28-acta-fase-3-g3.md](28-acta-fase-3-g3.md).
+**Estado:** `DONE`; G3 aprobada localmente el 2 de septiembre de 2026. La validación detrás de proxy se ejecutó con Compose/Caddy local bajo la excepción de despliegue ya aprobada; Railway continúa diferido. Evidencia en [28-acta-fase-3-g3.md](archivo/fases/28-acta-fase-3-g3.md).
 
 ### Trabajo
 
@@ -447,7 +447,7 @@ Dueño puede configurar los maestros necesarios y reproducir qué condición est
 - Vigencia de horarios.
 - Excepciones `UNAVAILABLE` y `AVAILABLE_OVERRIDE`.
 - Motor puro de disponibilidad con zona `America/La_Paz`.
-- Incremento visible de 15 minutos, ocupación por intervalo real.
+- Inicios visibles cada 30 minutos (`:00`/`:30`), con ocupación por intervalo real y contención obligatoria en 08:00–13:00 o 15:00–21:00.
 - Búsqueda por servicio, barbero/cualquiera y rango acotado.
 - Precio/duración devueltos por alternativa.
 - Endpoints y UI de administración de horarios.
@@ -479,7 +479,7 @@ El motor pasa matriz exhaustiva de intervalos y puede ser usado por agenda inter
 
 ## 12. Fase 6 — Clientes y agenda interna
 
-**Seguimiento:** `DONE`. G6 aprobada por el dueño el 7 de septiembre de 2026 después de revisar la [simulación delegada](33-simulacion-fase-6.md). AC-06-08 queda limitado a T-001/T-002; T-003/T-004 permanecen exigidos por AC-07-08. La medición humana de velocidad continúa visible como mejora de validación, sin bloquear la autorización explícita para Fase 7.
+**Seguimiento:** `DONE`. G6 aprobada por el dueño el 7 de septiembre de 2026 después de revisar la [simulación delegada](archivo/fases/33-simulacion-fase-6.md). AC-06-08 queda limitado a T-001/T-002; T-003/T-004 permanecen exigidos por AC-07-08. La medición humana de velocidad continúa visible como mejora de validación, sin bloquear la autorización explícita para Fase 7.
 
 **Objetivo:** reemplazar operativamente la edición de Google Calendar para reservas internas.  
 **Dependencias:** G5.  
@@ -538,7 +538,7 @@ Administración y un barbero completan un día simulado de agenda sin usar Calen
 **Cobertura:** RF-030–037 sin productos definitivos; CU-09–11; HU-020, HU-021, HU-023, HU-024; RN-ATE y RN-PAG.  
 **Tamaño:** XL.
 
-**Seguimiento:** `DONE`. G7 aprobada por el dueño el 8 de septiembre de 2026 tras la simulación delegada de una jornada de servicios. Evidencia, criterios, corrección exploratoria y límites en [34-acta-fase-7-g7.md](34-acta-fase-7-g7.md). Fase 8 queda habilitada.
+**Seguimiento:** `DONE`. G7 aprobada por el dueño el 8 de septiembre de 2026 tras la simulación delegada de una jornada de servicios. Evidencia, criterios, corrección exploratoria y límites en [34-acta-fase-7-g7.md](archivo/fases/34-acta-fase-7-g7.md). Fase 8 queda habilitada.
 
 ### Incrementos
 
@@ -627,13 +627,13 @@ Una jornada simulada solo con servicios cuadra atenciones, totales y medios de p
 
 Conteo inicial + recepciones − ventas ± ajustes coincide con existencia visible, y el flujo distingue inventario de gasto.
 
-**Seguimiento:** `DONE`. G8 aprobada por el dueño el 8 de septiembre de 2026 mediante «Vamos con la fase 9». La evidencia, criterios y límites están en [35-acta-fase-8-g8.md](35-acta-fase-8-g8.md). Fase 9 queda habilitada.
+**Seguimiento:** `DONE`. G8 aprobada por el dueño el 8 de septiembre de 2026 mediante «Vamos con la fase 9». La evidencia, criterios y límites están en [35-acta-fase-8-g8.md](archivo/fases/35-acta-fase-8-g8.md). Fase 9 queda habilitada.
 
 ---
 
 ## 15. Fase 9 — Comisiones, liquidaciones y reversos
 
-> **Seguimiento:** `DONE`. G9 aprobada explícitamente por el dueño el 9 de septiembre de 2026 mediante «Listo la fase 9». Evidencia en [36-acta-fase-9-g9.md](36-acta-fase-9-g9.md). Fase 10 queda habilitada.
+> **Seguimiento:** `DONE`. G9 aprobada explícitamente por el dueño el 9 de septiembre de 2026 mediante «Listo la fase 9». Evidencia en [36-acta-fase-9-g9.md](archivo/fases/36-acta-fase-9-g9.md). Fase 10 queda habilitada.
 
 **Objetivo:** separar deuda generada al barbero del cobro y pagarla sin duplicidad.  
 **Dependencias:** G7 para servicios y G8 para productos.  
@@ -679,7 +679,7 @@ El dueño liquida un período de prueba y el barbero puede reconciliar cada cent
 
 ## 16. Fase 10 — Paneles, reportes y auditoría
 
-> **Seguimiento:** `DONE`. G10 aprobada por el dueño el 9 de septiembre de 2026 mediante «Perfecto vamos con la siguiente fase». Evidencia en [37-acta-fase-10-g10.md](37-acta-fase-10-g10.md); Fase 11 queda habilitada.
+> **Seguimiento:** `DONE`. G10 aprobada por el dueño el 9 de septiembre de 2026 mediante «Perfecto vamos con la siguiente fase». Evidencia en [37-acta-fase-10-g10.md](archivo/fases/37-acta-fase-10-g10.md); Fase 11 queda habilitada.
 
 **Objetivo:** ofrecer información útil y reconciliable sin inventar contabilidad fiscal.  
 **Dependencias:** G8 y G9.  
@@ -725,7 +725,7 @@ El dueño reconcilia un período de prueba desde operaciones individuales hasta 
 
 ## 17. Fase 11 — Reserva pública y madurez PWA
 
-> **Seguimiento:** `ACCEPTANCE-DEFERRED`. Los incrementos obligatorios están implementados y verificados técnicamente. El dueño aplazó la prueba humana G11 hasta disponer de un despliegue y autorizó el 9 de septiembre de 2026 continuar Fase 12 en local. Evidencia y excepción en [39-acta-fase-11-g11.md](39-acta-fase-11-g11.md).
+> **Seguimiento:** `ACCEPTANCE-DEFERRED`. Los incrementos obligatorios están implementados y verificados técnicamente. El dueño aplazó la prueba humana G11 hasta disponer de un despliegue y autorizó el 9 de septiembre de 2026 continuar Fase 12 en local. Evidencia y excepción en [39-acta-fase-11-g11.md](archivo/fases/39-acta-fase-11-g11.md).
 
 **Objetivo:** permitir al cliente reservar sin cuenta manteniendo disponibilidad, privacidad y simplicidad.  
 **Dependencias:** G6 estable y G10 para observación; se libera después de operación interna confiable.  
@@ -771,9 +771,9 @@ Usuarios de prueba completan reserva y gestión sin explicación; pruebas de abu
 
 ## 18. Fase 12 — Hardening y preparación productiva
 
-> **Seguimiento:** `LOCAL-COMPLETE / G12-DEFERRED`. El incremento ejecutable en local quedó terminado y verificado el 9 de septiembre de 2026. La excepción autorizada mantiene G11 humana, staging, proveedores operativos y la firma del release candidate pendientes hasta el despliegue. Evidencia en [44-acta-fase-12-local.md](44-acta-fase-12-local.md).
+> **Seguimiento:** `LOCAL-HARDENED / G12-DEFERRED`. El incremento ejecutable en local fue revalidado el 19 de septiembre de 2026 con 102 pruebas backend, 116 frontend, MFA, controles antiabuso, privacidad, cadena de suministro fijada y restauración consistente. La excepción autorizada mantiene G11 humana, staging, proveedores operativos y la firma del release candidate pendientes hasta el despliegue. Evidencia vigente en [54-cierre-seguridad-preproduccion.md](tecnica/54-cierre-seguridad-preproduccion.md); acta histórica en [44-acta-fase-12-local.md](archivo/fases/44-acta-fase-12-local.md).
 
-> **Corrección visual previa a staging:** la [propuesta visual de Lou Barbershop](45-propuesta-diseno-visual-lou.md) fue implementada localmente el 9 de septiembre de 2026. El refinamiento no modificó reglas, contratos ni alcance funcional. Evidencia en [46-acta-implementacion-diseno-visual.md](46-acta-implementacion-diseno-visual.md); la aceptación humana completa permanece unida a G11 en staging.
+> **Corrección visual previa a staging:** la [propuesta visual de Lou Barbershop](archivo/diseno/45-propuesta-diseno-visual-lou.md) fue implementada localmente el 9 de septiembre de 2026. El refinamiento no modificó reglas, contratos ni alcance funcional. Evidencia en [46-acta-implementacion-diseno-visual.md](archivo/diseno/46-acta-implementacion-diseno-visual.md); la aceptación humana completa permanece unida a G11 en staging.
 
 **Objetivo:** convertir releases funcionales en un candidato seguro, observable, recuperable y operable.  
 **Dependencias:** G10 y G11.  

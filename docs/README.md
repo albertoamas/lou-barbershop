@@ -1,82 +1,75 @@
-# Documentación de producto y desarrollo — Lou Barbershop
+# Documentación de Lou Barbershop
 
-Este directorio contiene la especificación de arranque para construir la aplicación web de Lou Barbershop. Está pensada para una barbería de **una sola sucursal**, con un equipo pequeño y uso principalmente móvil.
+La documentación vigente está organizada por propósito. Las actas antiguas se conservan en `archivo/`, pero no forman parte de la lectura cotidiana ni sustituyen el estado actual.
 
-La documentación convierte el [análisis integral del negocio](../ANALISIS_NEGOCIO_LOU_BARBERSHOP.md) en decisiones funcionales y técnicas implementables. Cuando el contexto original no daba una respuesta, se eligió la alternativa más simple y coherente para el negocio; esas decisiones están registradas en [01-contexto-alcance-y-decisiones.md](01-contexto-alcance-y-decisiones.md).
+## Empieza aquí
 
-## Orden recomendado de lectura
+1. [Estado actual de la aplicación](ESTADO-ACTUAL.md): qué está terminado, qué puede probarse y qué falta para producción.
+2. [Plan maestro por fases](17-plan-maestro-fases.md): dependencias, puertas y próximos pasos.
+3. [Guía de páginas y roles](diseno/53-guia-paginas-secciones-y-roles.md): rutas, secciones y acciones por usuario.
+4. [Guía de desarrollo local](operacion/23-guia-desarrollo-local.md): cómo ejecutar y mantener el entorno.
+5. [Convenciones de trabajo](19-convenciones-trabajo.md): reglas que debe seguir cada cambio.
 
-1. [Contexto, alcance y decisiones](01-contexto-alcance-y-decisiones.md)
-2. [Reglas de negocio y estados](02-reglas-negocio-y-estados.md)
-3. [Requisitos y casos de uso](03-requisitos-y-casos-de-uso.md)
-4. [Historias de usuario y criterios de aceptación](04-historias-de-usuario.md)
-5. [Flujos y diagramas de secuencia](05-flujos-y-secuencias.md)
-6. [Modelo de dominio y datos](06-modelo-dominio-y-datos.md)
-7. [Arquitectura y decisiones técnicas](07-arquitectura.md)
-8. [Contrato inicial de API](08-api.md)
-9. [Seguridad, roles y auditoría](09-seguridad-roles-y-auditoria.md)
-10. [UX móvil y diseño de interacción](10-ux-movil.md)
-11. [Plan de desarrollo y backlog](11-plan-desarrollo.md)
-12. [Estrategia de pruebas](12-estrategia-pruebas.md)
-13. [Matriz de trazabilidad](13-trazabilidad.md)
-14. [Clean Architecture y SOLID](14-clean-architecture-y-solid.md)
-15. [Stack tecnológico, PWA y Docker](15-stack-pwa-y-docker.md)
-16. [Skills oficiales instaladas](16-skills-instaladas.md)
-17. [Plan maestro detallado por fases](17-plan-maestro-fases.md)
-18. [Backlog operativo](18-backlog-operativo.md)
-19. [Convenciones de trabajo](19-convenciones-trabajo.md)
-20. [Datos ficticios](20-datos-ficticios.md)
-21. [Wireframes de flujos críticos](21-wireframes-flujos-criticos.md)
-22. [Acta de Fase 0 y puerta G0](22-acta-fase-0-g0.md)
-23. [Guía de desarrollo local](23-guia-desarrollo-local.md)
-24. [Evidencia de Fase 1 y puerta G1](24-evidencia-fase-1-g1.md)
-25. [Excepción local G1 → Fase 2](25-excepcion-g1-local.md)
-26. [Evidencia de avance de Fase 2](26-evidencia-avance-fase-2.md)
-27. [Acta de Fase 2 y puerta G2](27-acta-fase-2-g2.md)
-28. [Acta de Fase 3 y puerta G3](28-acta-fase-3-g3.md)
-29. [Acta de Fase 4 y puerta G4](29-acta-fase-4-g4.md)
-30. [Acta de Fase 5 y puerta G5](30-acta-fase-5-g5.md)
-31. [Fase 6 y puerta G6](31-acta-fase-6-g6.md)
-32. [Guía de transición desde Google Calendar](32-transicion-google-calendar.md)
-33. [Simulación delegada de Fase 6 sobre imágenes de producción](33-simulacion-fase-6.md)
-34. [Fase 7 y puerta G7](34-acta-fase-7-g7.md)
-35. [Fase 8 y evidencia para G8](35-acta-fase-8-g8.md)
-36. [Fase 9 y evidencia para G9](36-acta-fase-9-g9.md)
-37. [Fase 10 y evidencia para G10](37-acta-fase-10-g10.md)
-38. [Diccionario de métricas](38-diccionario-metricas.md)
-39. [Fase 11 y evidencia para G11](39-acta-fase-11-g11.md)
-40. [Política PWA de caché y actualización](40-politica-pwa-cache-actualizacion.md)
-41. [Modelo de amenazas del repositorio](Peluqueria-threat-model.md)
-42. [Hardening y evidencia de preparación productiva](41-hardening-y-evidencia.md)
-43. [Runbooks de operación y recuperación](42-runbooks-operacion-y-recuperacion.md)
-44. [Privacidad, retención y respuesta sobre datos](43-privacidad-retencion-y-datos.md)
-45. [Acta de cierre técnico local de Fase 12](44-acta-fase-12-local.md)
-46. [Propuesta de diseño visual de Lou Barbershop](45-propuesta-diseno-visual-lou.md)
-47. [Acta de implementación del diseño visual](46-acta-implementacion-diseno-visual.md)
-48. [Reorganización de rutas y landing pública](47-reorganizacion-rutas-y-landing.md)
-49. [Plan de rediseño visual, Tailwind y movimiento](48-plan-rediseño-tailwind-y-movimiento.md)
-50. [Acta de avance del rediseño Tailwind](49-acta-avance-rediseño-tailwind.md)
+Con esos cinco documentos se entiende el estado general. Los siguientes son referencias detalladas para cuando una tarea las necesite.
 
-## Convenciones
+## Producto y negocio — `producto/`
 
-- **MVP:** alcance necesario para operar el negocio de punta a punta.
-- **Posterior:** mejora válida que no bloquea el primer lanzamiento.
-- Los importes se almacenan y procesan en **centavos de boliviano** para evitar errores de coma flotante.
-- Las fechas y horas operativas se interpretan en `America/La_Paz`.
-- Los diagramas Mermaid son documentación conceptual, no código ejecutable.
-- Los identificadores `RN`, `RF`, `CU`, `HU`, `RNF` y `ADR` permiten rastrear reglas, requisitos y decisiones.
+- [Contexto, alcance y decisiones](producto/01-contexto-alcance-y-decisiones.md)
+- [Reglas de negocio y estados](producto/02-reglas-negocio-y-estados.md)
+- [Requisitos y casos de uso](producto/03-requisitos-y-casos-de-uso.md)
+- [Historias de usuario](producto/04-historias-de-usuario.md)
+- [Flujos y secuencias](producto/05-flujos-y-secuencias.md)
+- [Modelo de dominio y datos](producto/06-modelo-dominio-y-datos.md)
+- [UX móvil](producto/10-ux-movil.md)
+- [Trazabilidad](producto/13-trazabilidad.md)
+- [Backlog operativo](producto/18-backlog-operativo.md)
+- [Datos ficticios](producto/20-datos-ficticios.md)
+- [Wireframes](producto/21-wireframes-flujos-criticos.md)
+- [Diccionario de métricas](producto/38-diccionario-metricas.md)
+- [Horario de sucursal y cadencia](producto/50-correccion-horario-sucursal-y-cadencia.md)
 
-## Definición de “listo para desarrollar”
+## Ingeniería — `tecnica/`
 
-Una historia puede entrar en desarrollo cuando tiene criterios de aceptación, reglas relacionadas, permisos definidos, estados afectados y casos de prueba identificables. Una historia está terminada cuando pasa pruebas automáticas y exploratorias, respeta auditoría y permisos, y no rompe los invariantes económicos.
+- [Arquitectura y ADR iniciales](tecnica/07-arquitectura.md)
+- [Contrato de API](tecnica/08-api.md)
+- [Seguridad, roles y auditoría](tecnica/09-seguridad-roles-y-auditoria.md)
+- [Estrategia de pruebas](tecnica/12-estrategia-pruebas.md)
+- [Clean Architecture y SOLID](tecnica/14-clean-architecture-y-solid.md)
+- [Stack, PWA y Docker](tecnica/15-stack-pwa-y-docker.md)
+- [Política PWA](tecnica/40-politica-pwa-cache-actualizacion.md)
+- [Hardening](tecnica/41-hardening-y-evidencia.md)
+- [Privacidad y retención](tecnica/43-privacidad-retencion-y-datos.md)
+- [Modelo de amenazas](tecnica/Peluqueria-threat-model.md)
+- [Cierre de seguridad preproducción](tecnica/54-cierre-seguridad-preproduccion.md)
+- [ADR independientes](adr/README.md)
 
-## Principios rectores
+## Diseño — `diseno/`
 
-1. La cita planifica; la atención registra lo que realmente ocurrió.
-2. El cobro del cliente y la deuda de comisión son movimientos diferentes.
-3. El dueño es una sola persona con roles de propietario y barbero.
-4. El historial económico no se reescribe: se corrige mediante ajustes.
-5. La operación cotidiana debe requerir pocos pasos y funcionar bien en teléfono o tablet.
-6. La solución será un monolito modular; una sola sucursal no justifica microservicios.
-7. La aplicación será PWA y las mutaciones económicas requerirán conexión.
-8. Las dependencias apuntan hacia el dominio; frameworks y tecnologías permanecen en adaptadores reemplazables.
+- [Plan visual aprobado](diseno/48-plan-rediseño-tailwind-y-movimiento.md)
+- [Componentes, accesibilidad y pulido](diseno/51-guia-componentes-accesibilidad-y-pulido.md)
+- [Páginas, secciones y roles](diseno/53-guia-paginas-secciones-y-roles.md)
+
+## Operación — `operacion/`
+
+- [Desarrollo local](operacion/23-guia-desarrollo-local.md)
+- [Transición desde Google Calendar](operacion/32-transicion-google-calendar.md)
+- [Runbooks, respaldo y recuperación](operacion/42-runbooks-operacion-y-recuperacion.md)
+- [Última validación integral](operacion/52-validacion-integral-seguridad-y-operacion-2026-09-19.md)
+- [Checklist de entrega y piloto](operacion/55-checklist-entrega-y-piloto.md)
+
+## Historial — `archivo/`
+
+[Índice histórico](archivo/README.md) contiene actas de fases, decisiones visuales reemplazadas y documentos de planificación ya superados. Se conserva por trazabilidad; no debe editarse para describir el estado vigente.
+
+## Prioridad entre documentos
+
+Si dos documentos parecen contradecirse, prevalecen en este orden:
+
+1. reglas e invariantes de producto vigentes;
+2. ADR aceptados;
+3. estado actual y validación integral más reciente;
+4. plan maestro y convenciones;
+5. documentos temáticos vigentes;
+6. actas archivadas.
+
+Principios que nunca cambian silenciosamente: la cita planifica, la atención registra lo ocurrido, el pago del cliente y la comisión son conceptos separados, el historial económico se corrige mediante reversos o ajustes y las mutaciones críticas requieren conexión.
