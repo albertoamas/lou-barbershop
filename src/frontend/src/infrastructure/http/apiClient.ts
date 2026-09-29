@@ -2,6 +2,7 @@ export interface ApiProblem {
   status: number
   title: string
   detail?: string
+  code?: string
   requestId?: string
 }
 

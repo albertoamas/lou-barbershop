@@ -81,6 +81,10 @@ export interface ConfigurationSnapshot {
 
 export interface ConfigurationPort {
   load(): Promise<ConfigurationSnapshot>
+  createUser(input: { userName: string; password: string; roles: string[] }): Promise<UserSummary>
+  setUserActive(userId: string, active: boolean): Promise<void>
+  replaceUserRoles(userId: string, roles: string[]): Promise<void>
+  resetUserPassword(userId: string, newPassword: string): Promise<void>
   listOfferings(barberId: string): Promise<Offering[]>
   listCommissionRules(barberId: string): Promise<CommissionRule[]>
   createStaff(input: { userId: string; displayName: string; phone?: string }): Promise<StaffProfile>
@@ -136,3 +140,11 @@ export const bolivianosToCents = (value: string): number | null => {
 
 export const centsToBolivianos = (cents: number) =>
   new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(cents / 100)
+
+export const percentToBasisPoints = (value: string): number | null => {
+  const normalized = value.trim().replace(',', '.')
+  if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return null
+  const [whole = '', fraction = ''] = normalized.split('.')
+  const points = Number(whole) * 100 + Number(fraction.padEnd(2, '0'))
+  return Number.isSafeInteger(points) && points <= 10_000 ? points : null
+}

@@ -1,4 +1,4 @@
-import { useSyncExternalStore, type ReactNode } from 'react'
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BrandLockup } from '../components/BrandLockup'
 import { ConnectivityBanner } from '../components/ConnectivityBanner'
@@ -27,13 +27,26 @@ export const AppShell = ({ children }: AppShellProps) => {
     () => false,
   )
   const internalPath = location.pathname === '/app' || location.pathname.startsWith('/app/')
-  const authenticationScreen = ['/app/login', '/app/sesion-expirada', '/app/acceso-denegado'].some(
-    (route) => location.pathname === route || location.pathname.startsWith(`${route}/`),
-  )
-  const publicShell = !internalPath || authenticationScreen
+  const publicShell = !internalPath
+  const contentRef = useRef<HTMLDivElement>(null)
+  const previousPath = useRef(location.pathname)
+
+  useEffect(() => {
+    if (previousPath.current === location.pathname) return
+    previousPath.current = location.pathname
+    if (location.hash) return
+    contentRef.current?.focus({ preventScroll: true })
+    window.scrollTo(0, 0)
+  }, [location.pathname, location.hash])
 
   return (
     <div className="flex min-h-dvh min-w-0 flex-col bg-lou-paper text-lou-ink">
+      <a
+        className="sr-only fixed top-3 left-3 z-100 rounded-lg bg-white px-4 py-3 font-bold text-lou-ink shadow-lou-lg focus:not-sr-only"
+        href="#main-content"
+      >
+        Saltar al contenido
+      </a>
       {publicShell && (
         <header
           className={`top-0 z-40 w-full text-white transition-[background-color,border-color,box-shadow] duration-200 ${
@@ -93,7 +106,15 @@ export const AppShell = ({ children }: AppShellProps) => {
         <ConnectivityBanner connectivity={connectivity} />
         <ServiceWorkerUpdateBanner />
       </div>
-      <div className="min-w-0 flex-1">{children}</div>
+      <div
+        ref={contentRef}
+        id="main-content"
+        className="min-w-0 flex-1"
+        tabIndex={-1}
+        aria-label="Contenido de la página"
+      >
+        {children}
+      </div>
       {publicShell && (
         <footer className="border-t border-lou-fog bg-white">
           <div className="mx-auto grid max-w-360 gap-8 px-4 py-10 sm:grid-cols-[1fr_auto] sm:px-6 lg:px-10">
@@ -110,6 +131,13 @@ export const AppShell = ({ children }: AppShellProps) => {
               </Link>
               <Link className="font-semibold hover:underline" to="/mi-cita" viewTransition>
                 Gestionar mi cita
+              </Link>
+              <Link
+                className="text-lou-graphite/65 hover:underline"
+                to="/privacidad"
+                viewTransition
+              >
+                Privacidad
               </Link>
               <Link className="text-lou-graphite/65 hover:underline" to="/app/login" viewTransition>
                 Acceso del equipo

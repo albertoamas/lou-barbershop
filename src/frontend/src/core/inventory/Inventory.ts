@@ -66,5 +66,40 @@ export interface CashFlow {
   netQrCents: number
 }
 
+export interface InventoryMovement {
+  id: string
+  productId: string
+  type: MovementType
+  quantityDelta: number
+  unitCostCents: number
+  reason?: string
+  occurredAt: string
+}
+
+export const movementLabel = (type: MovementType) =>
+  (
+    ({
+      OPENING: 'Saldo inicial',
+      PURCHASE_RECEIPT: 'Compra recibida',
+      SALE: 'Venta',
+      SALE_REVERSAL: 'Reverso de venta',
+      COUNT_ADJUSTMENT: 'Ajuste por conteo',
+      DAMAGE: 'Daño o baja',
+      LOSS: 'Pérdida',
+      INTERNAL_USE: 'Uso interno',
+    }) as const
+  )[type]
+
+export const stockAlerts = (items: InventoryItem[] | undefined) =>
+  (items ?? []).filter((item) => item.active && item.lowStock)
+
+export const filterStock = (items: InventoryItem[] | undefined, search: string, onlyLow: boolean) =>
+  (items ?? []).filter((item) => {
+    const matchesSearch = `${item.name} ${item.sku ?? ''}`
+      .toLocaleLowerCase('es-BO')
+      .includes(search.trim().toLocaleLowerCase('es-BO'))
+    return matchesSearch && (!onlyLow || (item.active && item.lowStock))
+  })
+
 export const receiptTotal = (items: { quantity: number; unitCostCents: number }[]) =>
   items.reduce((total, item) => total + item.quantity * item.unitCostCents, 0)

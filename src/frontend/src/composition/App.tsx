@@ -61,6 +61,9 @@ const PublicManageBookingPage = lazy(() =>
     default: module.PublicManageBookingPage,
   })),
 )
+const PrivacyPage = lazy(() =>
+  import('../presentation/pages/PrivacyPage').then((module) => ({ default: module.PrivacyPage })),
+)
 const ReportsPage = lazy(() =>
   import('../presentation/pages/ReportsPage').then((module) => ({ default: module.ReportsPage })),
 )
@@ -68,6 +71,9 @@ const SchedulingPage = lazy(() =>
   import('../presentation/pages/SchedulingPage').then((module) => ({
     default: module.SchedulingPage,
   })),
+)
+const SecurityPage = lazy(() =>
+  import('../presentation/pages/SecurityPage').then((module) => ({ default: module.SecurityPage })),
 )
 
 const queryClient = new QueryClient({
@@ -96,25 +102,10 @@ export const App = () => (
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/reservar" element={<PublicBookingPage />} />
                 <Route path="/mi-cita" element={<PublicManageBookingPage />} />
+                <Route path="/privacidad" element={<PrivacyPage />} />
                 <Route path="/app/login" element={<LoginPage />} />
-                <Route
-                  path="/app/sesion-expirada"
-                  element={
-                    <AuthStatePage
-                      title="Tu sesión terminó"
-                      message="Vuelve a ingresar para continuar de forma segura."
-                    />
-                  }
-                />
-                <Route
-                  path="/app/acceso-denegado"
-                  element={
-                    <AuthStatePage
-                      title="Acceso restringido"
-                      message="Tu cuenta no tiene permiso para realizar esta acción."
-                    />
-                  }
-                />
+                <Route path="/app/sesion-expirada" element={<AuthStatePage kind="expired" />} />
+                <Route path="/app/acceso-denegado" element={<AuthStatePage kind="denied" />} />
                 <Route path="/app" element={<SessionBoundary />}>
                   <Route index element={<FoundationPage />} />
                   <Route path="agenda" element={<AgendaPage />} />
@@ -124,6 +115,7 @@ export const App = () => (
                   <Route path="disponibilidad" element={<SchedulingPage />} />
                   <Route path="reportes" element={<ReportsPage />} />
                   <Route path="configuracion" element={<ConfigurationPage />} />
+                  <Route path="seguridad" element={<SecurityPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
                 <Route path="/book" element={<LegacyRedirect to="/reservar" />} />

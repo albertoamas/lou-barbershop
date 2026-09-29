@@ -2,6 +2,7 @@ import type {
   CashFlow,
   Expense,
   InventoryItem,
+  InventoryMovement,
   MovementType,
   Receipt,
 } from '../../core/inventory/Inventory'
@@ -10,6 +11,8 @@ import { apiRequest, secureApiRequest } from './apiClient'
 
 export const inventoryApi = {
   inventory: () => apiRequest<InventoryItem[]>('/api/v1/inventory'),
+  movements: (productId: string) =>
+    apiRequest<InventoryMovement[]>(`/api/v1/products/${productId}/movements`),
   receipts: () => apiRequest<Receipt[]>('/api/v1/inventory-receipts'),
   receive: (input: {
     receiptDate: string

@@ -46,6 +46,13 @@ export interface DailyOperations {
 }
 export const paymentMatches = (total: number, cash: number, qr: number) =>
   cash >= 0 && qr >= 0 && cash + qr === total
+export const paymentDifference = (total: number, cash: number, qr: number) => total - cash - qr
+export const operationStep = (operation?: Pick<Operation, 'status'>) => {
+  if (!operation) return 1
+  if (operation.status === 'DRAFT') return 2
+  if (operation.status === 'READY_TO_PAY') return 4
+  return 5
+}
 export const paymentDraftFor = (
   currentOperationId: string | undefined,
   nextOperationId: string,

@@ -126,3 +126,22 @@ export interface AuditPage {
 }
 
 export const basisPointsToPercent = (value: number) => `${(value / 100).toFixed(2)} %`
+
+const appointmentLabels: Record<string, string> = {
+  CONFIRMED: 'Confirmada',
+  CHECKED_IN: 'Llegó',
+  IN_SERVICE: 'En atención',
+  COMPLETED: 'Completada',
+  CANCELLED: 'Cancelada',
+  NO_SHOW: 'No asistió',
+}
+const commissionLabels: Record<string, string> = {
+  AVAILABLE: 'Disponible',
+  SETTLED: 'Liquidada',
+  PAID: 'Pagada',
+  VOIDED: 'Anulada',
+}
+
+export const appointmentReportLabel = (status: string) => appointmentLabels[status] ?? status
+export const commissionReportLabel = (status: string) => commissionLabels[status] ?? status
+export const paymentReportLabel = (method: 'CASH' | 'QR') => (method === 'CASH' ? 'Efectivo' : 'QR')

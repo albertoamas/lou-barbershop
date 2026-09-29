@@ -2,9 +2,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { internalReturnPath } from '../../core/auth/AuthSession'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
 import { InternalNavigation } from '../layout/InternalNavigation'
+import { Button } from './Button'
 
 interface SessionBoundaryProps {
   children?: ReactNode
@@ -31,13 +33,36 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
     )
   }
 
-  if (session.error instanceof ApiError) {
-    const destination = session.error.problem.status === 403 ? '/app/acceso-denegado' : '/app/login'
-    return <Navigate to={destination} replace state={{ from: location.pathname }} />
+  const from = internalReturnPath(`${location.pathname}${location.search}${location.hash}`)
+  if (session.error instanceof ApiError && session.error.problem.status === 401) {
+    return <Navigate to="/app/sesion-expirada" replace state={{ from }} />
   }
-
-  if (session.isError || !session.data) {
-    return <Navigate to="/app/sesion-expirada" replace />
+  if (session.error instanceof ApiError && session.error.problem.status === 403) {
+    return <Navigate to="/app/acceso-denegado" replace state={{ from }} />
+  }
+  if (session.isError && !session.data) {
+    return (
+      <main className="grid min-h-[65dvh] place-items-center px-4 py-10">
+        <section className="w-full max-w-lg rounded-2xl border border-lou-fog bg-white p-7 shadow-lou-sm">
+          <h1 className="font-display text-3xl font-bold">No pudimos verificar tu sesión</h1>
+          <p className="mt-3 text-sm leading-6 text-lou-graphite/65">
+            Revisa tu conexión y vuelve a intentarlo. No se enviará ninguna operación mientras no
+            podamos confirmar el acceso.
+          </p>
+          <Button className="mt-5" onClick={() => void session.refetch()}>
+            Reintentar
+          </Button>
+        </section>
+      </main>
+    )
+  }
+  if (!session.data) return <Navigate to="/app/sesion-expirada" replace state={{ from }} />
+  if (
+    session.data.mfaRequired &&
+    !session.data.mfaEnabled &&
+    location.pathname !== '/app/seguridad'
+  ) {
+    return <Navigate to="/app/seguridad" replace />
   }
 
   const logout = async () => {

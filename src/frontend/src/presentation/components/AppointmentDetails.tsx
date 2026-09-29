@@ -22,8 +22,16 @@ const actionLabels: Record<AgendaAction, string> = {
   'check-in': 'Registrar llegada',
   start: 'Iniciar atención',
 }
+const appointmentDateLabel = (value: string) =>
+  new Intl.DateTimeFormat('es-BO', {
+    timeZone: 'America/La_Paz',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(value))
 const describe = (snapshot: AppointmentSnapshot) =>
-  `${snapshot.startsAt.slice(0, 10)} ${agendaTime(snapshot.startsAt)}–${agendaTime(snapshot.endsAt)} · ${statusLabels[snapshot.status]} · ${snapshot.durationMinutes} min · ${centsToBolivianos(snapshot.priceCents)}`
+  `${appointmentDateLabel(snapshot.startsAt)}, ${agendaTime(snapshot.startsAt)}–${agendaTime(snapshot.endsAt)} · ${statusLabels[snapshot.status]} · ${snapshot.durationMinutes} min · ${centsToBolivianos(snapshot.priceCents)}`
 interface Props {
   appointment: Appointment
   canManage: boolean
@@ -98,7 +106,12 @@ export const AppointmentDetails = ({
           <p className="mt-1 font-display text-xl font-bold tabular-nums">
             {agendaTime(appointment.startsAt)}–{agendaTime(appointment.endsAt)}
           </p>
-          <p className="text-sm text-lou-graphite/60">{statusLabels[appointment.status]}</p>
+          <p className="text-sm capitalize text-lou-graphite/60">
+            {appointmentDateLabel(appointment.startsAt)}
+          </p>
+          <span className="mt-2 inline-flex rounded-full bg-black/7 px-2.5 py-1 text-xs font-bold">
+            {statusLabels[appointment.status]}
+          </span>
         </div>
       </div>
       {appointment.quotedPriceCents !== null && (
@@ -212,18 +225,12 @@ export const AppointmentDetails = ({
                 {event.before && <p>Antes: {describe(event.before)}</p>}
                 <p>Después: {describe(event.after)}</p>
                 {event.before?.barberId !== event.after.barberId && event.before && (
-                  <p>
-                    Barbero anterior: {event.before.barberId}. Barbero nuevo: {event.after.barberId}
-                    .
-                  </p>
+                  <p className="font-semibold">Se cambió el barbero asignado.</p>
                 )}
                 {event.before?.serviceId !== event.after.serviceId && event.before && (
-                  <p>
-                    Servicio anterior: {event.before.serviceId}. Servicio nuevo:{' '}
-                    {event.after.serviceId}.
-                  </p>
+                  <p className="font-semibold">Se cambió el servicio.</p>
                 )}
-                <small className="text-lou-graphite/45">Actor: {event.actorId}</small>
+                <small className="text-lou-graphite/45">Cambio registrado por el equipo.</small>
               </li>
             ))}
           </ol>

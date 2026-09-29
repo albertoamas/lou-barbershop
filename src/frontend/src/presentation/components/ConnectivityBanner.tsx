@@ -14,8 +14,8 @@ export const ConnectivityBanner = ({ connectivity }: ConnectivityBannerProps) =>
       className="border-b border-amber-800/20 bg-amber-100 px-4 py-2.5 text-center text-sm font-medium text-amber-950"
       role="status"
     >
-      Sin conexión. Puedes consultar el contenido disponible, pero no reservar ni registrar
-      movimientos económicos.
+      Sin conexión. Lo que ya ves puede estar desactualizado; no puedes reservar ni guardar cambios
+      o movimientos económicos hasta volver a conectarte.
     </div>
   )
 }

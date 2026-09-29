@@ -229,14 +229,11 @@ export const PublicBookingPage = () => {
   )
 }
 
-const StepHeading = ({ eyebrow, children }: { eyebrow: string; children: ReactNode }) => {
+const StepHeading = ({ children }: { children: ReactNode }) => {
   const headingRef = useRef<HTMLHeadingElement>(null)
   useEffect(() => headingRef.current?.focus(), [])
   return (
     <header>
-      <p className="mb-2 text-xs font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
-        {eyebrow}
-      </p>
       <h2
         className="m-0 font-display text-4xl leading-none font-bold outline-none sm:text-5xl"
         ref={headingRef}
@@ -257,16 +254,9 @@ const BookingProgress = ({
 }) => (
   <nav className="mt-8" aria-label="Progreso de reserva">
     <div className="mb-3 flex items-end justify-between sm:hidden">
-      <div>
-        <span className="text-xs font-bold tracking-[0.16em] text-lou-graphite/45 uppercase">
-          Paso {currentStep + 1} de {steps.length}
-        </span>
-        <strong className="mt-1 block font-display text-2xl leading-none">
-          {steps[currentStep]}
-        </strong>
-      </div>
-      <span className="font-display text-2xl font-bold tabular-nums">
-        {Math.round(((currentStep + 1) / steps.length) * 100)}%
+      <strong className="font-display text-2xl leading-none">{steps[currentStep]}</strong>
+      <span className="text-sm font-bold text-lou-graphite/60 tabular-nums">
+        Paso {currentStep + 1} de {steps.length}
       </span>
     </div>
     <ol className="grid grid-cols-5 gap-1.5 sm:gap-3">
@@ -311,7 +301,7 @@ const ServiceStep = ({
   onSelect: (service: PublicService) => void
 }) => (
   <>
-    <StepHeading eyebrow="Paso 1 de 5">¿Qué servicio quieres?</StepHeading>
+    <StepHeading>¿Qué servicio quieres?</StepHeading>
     <p className="mt-3 text-sm text-lou-graphite/60">El precio mostrado es la referencia actual.</p>
     {catalog.isPending && (
       <p className="mt-6" role="status">
@@ -376,7 +366,7 @@ const BarberStep = ({
   onSelect: (barber?: PublicBarber) => void
 }) => (
   <>
-    <StepHeading eyebrow="Paso 2 de 5">¿Con quién te atiendes?</StepHeading>
+    <StepHeading>¿Con quién te atiendes?</StepHeading>
     <p className="mt-3 text-sm text-lou-graphite/60">
       Si no tienes preferencia, encontraremos el primer horario libre.
     </p>
@@ -463,20 +453,17 @@ const ScheduleStep = ({
   offline: boolean
 }) => {
   const [period, setPeriod] = useState<'morning' | 'afternoon'>('morning')
-  const [showAll, setShowAll] = useState(false)
-  const quickDates = nextBookingDates(5)
   const uniqueSlots = Array.from(
     new Map((slots.data ?? []).map((item) => [agendaTime(item.startsAt), item])).values(),
   )
-  const morningSlots = uniqueSlots.filter((item) => bookingHour(item.startsAt) < 12)
-  const afternoonSlots = uniqueSlots.filter((item) => bookingHour(item.startsAt) >= 12)
+  const morningSlots = uniqueSlots.filter((item) => bookingHour(item.startsAt) < 13)
+  const afternoonSlots = uniqueSlots.filter((item) => bookingHour(item.startsAt) >= 15)
   const activePeriod = period === 'morning' && morningSlots.length === 0 ? 'afternoon' : period
   const periodSlots = activePeriod === 'morning' ? morningSlots : afternoonSlots
-  const visibleSlots = showAll ? periodSlots : periodSlots.slice(0, 8)
 
   return (
     <>
-      <StepHeading eyebrow="Paso 3 de 5">Elige fecha y hora</StepHeading>
+      <StepHeading>Elige fecha y hora</StepHeading>
       <div className="mt-6 rounded-2xl border border-lou-fog bg-lou-paper/60 p-4 sm:p-5">
         <label className={labelClassName}>
           Selecciona una fecha
@@ -490,35 +477,10 @@ const ScheduleStep = ({
               required
               min={todayInBusinessTime()}
               value={date}
-              onChange={(event) => {
-                setShowAll(false)
-                onDateChange(event.target.value)
-              }}
+              onChange={(event) => onDateChange(event.target.value)}
             />
           </span>
         </label>
-        <div className="mt-4 grid grid-cols-5 gap-1.5" aria-label="Próximos días">
-          {quickDates.map((item) => (
-            <button
-              className={cn(
-                'grid min-h-14 place-content-center rounded-xl border px-1 text-center transition-colors',
-                date === item.value
-                  ? 'border-lou-ink bg-lou-ink text-white'
-                  : 'border-lou-fog bg-white text-lou-ink hover:border-lou-steel',
-              )}
-              type="button"
-              key={item.value}
-              aria-pressed={date === item.value}
-              onClick={() => {
-                setShowAll(false)
-                onDateChange(item.value)
-              }}
-            >
-              <span className="text-[0.62rem] font-bold uppercase opacity-60">{item.weekday}</span>
-              <strong className="font-display text-xl leading-none">{item.day}</strong>
-            </button>
-          ))}
-        </div>
       </div>
       {slots.isFetching && (
         <p className="mt-6" role="status">
@@ -545,29 +507,29 @@ const ScheduleStep = ({
       {slots.data && slots.data.length > 0 && (
         <div className="mt-6">
           <div
-            className="grid grid-cols-2 rounded-xl bg-lou-fog/70 p-1"
+            className="relative grid grid-cols-2 rounded-xl bg-lou-fog/70 p-1"
             role="tablist"
             aria-label="Periodo del día"
           >
+            <m.span
+              className="pointer-events-none absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-sm"
+              aria-hidden="true"
+              animate={{ x: activePeriod === 'morning' ? '0%' : '100%' }}
+              transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+            />
             <PeriodButton
               label="Mañana"
               count={morningSlots.length}
               selected={activePeriod === 'morning'}
               disabled={morningSlots.length === 0}
-              onClick={() => {
-                setShowAll(false)
-                setPeriod('morning')
-              }}
+              onClick={() => setPeriod('morning')}
             />
             <PeriodButton
               label="Tarde"
               count={afternoonSlots.length}
               selected={activePeriod === 'afternoon'}
               disabled={afternoonSlots.length === 0}
-              onClick={() => {
-                setShowAll(false)
-                setPeriod('afternoon')
-              }}
+              onClick={() => setPeriod('afternoon')}
             />
           </div>
           <div
@@ -575,7 +537,7 @@ const ScheduleStep = ({
             role="radiogroup"
             aria-label={`Horarios de ${activePeriod === 'morning' ? 'la mañana' : 'la tarde'}`}
           >
-            {visibleSlots.map((item) => {
+            {periodSlots.map((item) => {
               const selected =
                 selectedSlot?.barberId === item.barberId && selectedSlot.startsAt === item.startsAt
               return (
@@ -600,16 +562,6 @@ const ScheduleStep = ({
               )
             })}
           </div>
-          {!showAll && periodSlots.length > visibleSlots.length && (
-            <Button
-              className="mt-3"
-              variant="secondary"
-              width="full"
-              onClick={() => setShowAll(true)}
-            >
-              Ver {periodSlots.length - visibleSlots.length} horarios más
-            </Button>
-          )}
         </div>
       )}
       {offline && slots.data && (
@@ -637,8 +589,9 @@ const PeriodButton = ({
 }) => (
   <button
     className={cn(
-      'min-h-10 rounded-lg px-3 text-sm font-bold transition-[background-color,color,box-shadow]',
-      selected ? 'bg-white text-lou-ink shadow-sm' : 'text-lou-graphite/55',
+      'relative z-10 min-h-10 rounded-lg px-3 text-sm font-bold transition-colors duration-300',
+      selected ? 'text-lou-ink' : 'text-lou-graphite/55',
+      disabled && 'cursor-not-allowed opacity-40',
     )}
     type="button"
     role="tab"
@@ -666,7 +619,7 @@ const CustomerStep = ({
   onPrivacyChange: (value: boolean) => void
 }) => (
   <>
-    <StepHeading eyebrow="Paso 4 de 5">¿A nombre de quién?</StepHeading>
+    <StepHeading>¿A nombre de quién?</StepHeading>
     <p className="mt-3 text-sm text-lou-graphite/60">
       No necesitas cuenta. Usaremos estos datos sólo para tu cita.
     </p>
@@ -704,6 +657,13 @@ const CustomerStep = ({
         />
         <span>Autorizo usar mi nombre y teléfono únicamente para gestionar esta cita.</span>
       </label>
+      <p className="text-sm text-lou-graphite/70">
+        Consulta cómo protegemos la información en nuestro{' '}
+        <Link className="font-bold text-lou-ink underline underline-offset-4" to="/privacidad">
+          aviso de privacidad
+        </Link>
+        .
+      </p>
     </div>
   </>
 )
@@ -718,7 +678,7 @@ const ReviewStep = ({
   displayName: string
 }) => (
   <>
-    <StepHeading eyebrow="Paso 5 de 5">Revisa antes de confirmar</StepHeading>
+    <StepHeading>Revisa antes de confirmar</StepHeading>
     <p className="mt-3 text-sm text-lou-graphite/60">
       El horario se valida nuevamente al confirmar.
     </p>
@@ -840,8 +800,24 @@ const InlineError = ({ children }: { children: ReactNode }) => (
   </p>
 )
 
-const BookingSuccess = ({ confirmation }: { confirmation: PublicBookingConfirmation }) => {
+export const BookingSuccess = ({ confirmation }: { confirmation: PublicBookingConfirmation }) => {
   const appointment = confirmation.appointment
+  const [copyNotice, setCopyNotice] = useState('')
+  const managementUrl = new URL(confirmation.managementPath, window.location.origin).toString()
+  const whatsappText = encodeURIComponent(
+    `Mi cita en Lou Barbershop: ${formatBookingDate(appointment.startsAt)}. Enlace privado: ${managementUrl}`,
+  )
+
+  const copyManagementLink = async () => {
+    try {
+      await navigator.clipboard.writeText(managementUrl)
+      setCopyNotice('Enlace copiado. Guárdalo en un lugar privado.')
+    } catch {
+      setCopyNotice(
+        'No pudimos copiar automáticamente. Abre “Gestionar mi cita” y guarda esa página.',
+      )
+    }
+  }
   return (
     <main className="bg-lou-paper px-4 py-12 sm:px-6 lg:py-20">
       <div className="mx-auto w-full max-w-4xl text-center">
@@ -856,8 +832,12 @@ const BookingSuccess = ({ confirmation }: { confirmation: PublicBookingConfirmat
         <p className="mt-6 text-xs font-bold tracking-[0.2em] text-emerald-800 uppercase">
           Reserva confirmada
         </p>
-        <h1 className="mt-3 font-display text-5xl leading-[0.9] font-bold sm:text-7xl">
-          Te esperamos, {appointment.customerName}.
+        <h1
+          className="mx-auto! mt-3! flex max-w-full! flex-wrap items-baseline justify-center gap-x-[0.18em] text-center font-display text-5xl! leading-[0.9]! font-bold sm:text-6xl! lg:flex-nowrap lg:text-7xl!"
+          aria-label={`Te esperamos, ${appointment.customerName}.`}
+        >
+          <span className="whitespace-nowrap">Te esperamos,</span>
+          <span className="min-w-0 break-words">{appointment.customerName}.</span>
         </h1>
         <div className="text-left">
           <AppointmentSummary appointment={appointment} />
@@ -867,14 +847,40 @@ const BookingSuccess = ({ confirmation }: { confirmation: PublicBookingConfirmat
           <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
             Lo necesitarás para consultar, cambiar o cancelar esta cita. No lo compartas.
           </p>
-          <Link
-            className={cn(buttonStyles({ variant: 'secondary' }), 'mt-5')}
-            to={confirmation.managementPath}
-            viewTransition
-          >
-            <AppIcon name="calendar" size={18} />
-            Gestionar mi cita
-          </Link>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              className={buttonStyles({ variant: 'secondary' })}
+              to={confirmation.managementPath}
+              viewTransition
+            >
+              <AppIcon name="calendar" size={18} />
+              Gestionar mi cita
+            </Link>
+            <Button
+              type="button"
+              variant="ghost"
+              className="border-white/20 text-white hover:bg-white/10"
+              onClick={() => void copyManagementLink()}
+            >
+              Copiar enlace
+            </Button>
+            <a
+              className={cn(
+                buttonStyles({ variant: 'ghost' }),
+                'border-white/20 text-white hover:bg-white/10',
+              )}
+              href={`https://wa.me/?text=${whatsappText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Compartir por WhatsApp
+            </a>
+          </div>
+          {copyNotice && (
+            <p className="mt-3 text-sm text-white/70" role="status">
+              {copyNotice}
+            </p>
+          )}
         </div>
         <Link
           className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold hover:underline"
@@ -888,15 +894,16 @@ const BookingSuccess = ({ confirmation }: { confirmation: PublicBookingConfirmat
   )
 }
 
-const formatBookingDate = (startsAt: string) =>
-  new Intl.DateTimeFormat('es-BO', {
+const formatBookingDate = (startsAt: string) => {
+  const date = new Intl.DateTimeFormat('es-BO', {
     timeZone: 'America/La_Paz',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
   }).format(new Date(startsAt))
+
+  return `${date}, ${agendaTime(startsAt)}`
+}
 
 const formatCalendarDate = (date: string) =>
   new Intl.DateTimeFormat('es-BO', {
@@ -914,21 +921,6 @@ const bookingHour = (startsAt: string) =>
       hour12: false,
     }).format(new Date(startsAt)),
   )
-
-const nextBookingDates = (count: number) => {
-  const first = new Date(`${todayInBusinessTime()}T00:00:00Z`)
-  return Array.from({ length: count }, (_, index) => {
-    const current = new Date(first)
-    current.setUTCDate(first.getUTCDate() + index)
-    return {
-      value: current.toISOString().slice(0, 10),
-      weekday: new Intl.DateTimeFormat('es-BO', { weekday: 'short', timeZone: 'UTC' })
-        .format(current)
-        .replace('.', ''),
-      day: current.getUTCDate(),
-    }
-  })
-}
 
 interface SummaryAppointment {
   serviceName: string

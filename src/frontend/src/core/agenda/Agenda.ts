@@ -8,6 +8,14 @@ export const agendaTime = (value: string) =>
     hour12: false,
   }).format(new Date(value))
 
+export const agendaDate = (value: string) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/La_Paz',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value))
+
 export type AppointmentStatus =
   'CONFIRMED' | 'CHECKED_IN' | 'IN_SERVICE' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 export interface Customer {
@@ -89,6 +97,23 @@ export const statusLabels: Record<AppointmentStatus, string> = {
   CANCELLED: 'Cancelada',
   NO_SHOW: 'No asistió',
 }
+
+export const sortAppointments = (appointments: Appointment[]) =>
+  [...appointments].sort((left, right) => left.startsAt.localeCompare(right.startsAt))
+
+export const appointmentsForDate = (appointments: Appointment[], date: string) =>
+  sortAppointments(appointments.filter((appointment) => agendaDate(appointment.startsAt) === date))
+
+export const overlapsAnotherAppointment = (appointment: Appointment, appointments: Appointment[]) =>
+  appointments.some(
+    (candidate) =>
+      candidate.id !== appointment.id &&
+      candidate.barberId === appointment.barberId &&
+      !['CANCELLED', 'NO_SHOW'].includes(candidate.status) &&
+      !['CANCELLED', 'NO_SHOW'].includes(appointment.status) &&
+      appointment.startsAt < candidate.endsAt &&
+      appointment.endsAt > candidate.startsAt,
+  )
 export const agendaActions = (status: AppointmentStatus, canManage: boolean): AgendaAction[] => {
   if (status === 'CONFIRMED') return canManage ? ['check-in', 'cancel', 'no-show'] : ['check-in']
   if (status === 'CHECKED_IN') return canManage ? ['start', 'cancel'] : ['start']

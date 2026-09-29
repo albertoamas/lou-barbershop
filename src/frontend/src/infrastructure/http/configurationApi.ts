@@ -16,6 +16,13 @@ export const configurationApi: ConfigurationPort = {
     ])
     return { users, staff, barbers, services, products, expenseCategories }
   },
+  createUser: (input) => secureApiRequest('/api/v1/users', 'POST', input),
+  setUserActive: (userId, active) =>
+    secureApiRequest(`/api/v1/users/${userId}/${active ? 'activate' : 'deactivate'}`, 'POST'),
+  replaceUserRoles: (userId, roles) =>
+    secureApiRequest(`/api/v1/users/${userId}/roles`, 'PUT', { roles }),
+  resetUserPassword: (userId, newPassword) =>
+    secureApiRequest(`/api/v1/users/${userId}/reset-password`, 'POST', { newPassword }),
   listOfferings: (barberId) => apiRequest(`/api/v1/barbers/${barberId}/offerings`),
   listCommissionRules: (barberId) => apiRequest(`/api/v1/barbers/${barberId}/commission-rules`),
   createStaff: (input) => secureApiRequest('/api/v1/staff', 'POST', input),

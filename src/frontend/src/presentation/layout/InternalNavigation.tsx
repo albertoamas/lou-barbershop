@@ -1,5 +1,5 @@
 import { AnimatePresence, m } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AppIcon, type IconName } from '../components/AppIcon'
 import { BrandLockup } from '../components/BrandLockup'
@@ -77,6 +77,16 @@ const MobileLink = ({ item, onNavigate }: { item: NavigationItem; onNavigate?: (
 
 export const InternalNavigation = ({ roles, userName, onLogout }: InternalNavigationProps) => {
   const [moreOpen, setMoreOpen] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const wasOpen = useRef(false)
+
+  useEffect(() => {
+    if (moreOpen) closeButtonRef.current?.focus()
+    else if (wasOpen.current) moreButtonRef.current?.focus()
+    wasOpen.current = moreOpen
+  }, [moreOpen])
   const isOwner = roles.includes('OWNER')
   const isAdmin = roles.includes('ADMIN')
   const isBarberOnly = roles.includes('BARBER') && !isOwner && !isAdmin
@@ -111,6 +121,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
         ]
       : []),
     { icon: 'clock', label: 'Disponibilidad', to: '/app/disponibilidad' },
+    { icon: 'shield', label: 'Seguridad', to: '/app/seguridad' },
     ...(isOwner
       ? [{ icon: 'settings' as const, label: 'Configuración', to: '/app/configuracion' }]
       : []),
@@ -159,6 +170,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
           <MobileLink key={item.to} item={item} />
         ))}
         <button
+          ref={moreButtonRef}
           aria-expanded={moreOpen}
           aria-controls="mobile-more-menu"
           className={cn(
@@ -183,9 +195,33 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
             onClick={(event) => {
               if (event.currentTarget === event.target) setMoreOpen(false)
             }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                setMoreOpen(false)
+                return
+              }
+              if (event.key !== 'Tab') return
+              const focusable = Array.from(
+                menuRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ??
+                  [],
+              )
+              const first = focusable[0]
+              const last = focusable.at(-1)
+              if (event.shiftKey && document.activeElement === first && last) {
+                event.preventDefault()
+                last.focus()
+              } else if (!event.shiftKey && document.activeElement === last && first) {
+                event.preventDefault()
+                first.focus()
+              }
+            }}
           >
             <m.div
+              ref={menuRef}
               id="mobile-more-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Más opciones del equipo"
               className="max-h-[80vh] w-full overflow-y-auto rounded-2xl bg-white p-4 text-lou-ink shadow-lou-lg"
               initial={{ y: 32, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -199,6 +235,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
                   <strong className="mt-1 block">{userName}</strong>
                 </span>
                 <button
+                  ref={closeButtonRef}
                   className="grid size-11 place-items-center rounded-xl bg-black/5 text-2xl"
                   type="button"
                   aria-label="Cerrar menú"

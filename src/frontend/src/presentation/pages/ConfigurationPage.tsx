@@ -1,813 +1,750 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
-import { bolivianosToCents, centsToBolivianos } from '../../core/configuration/Configuration'
+import { useState } from 'react'
+import { Navigate, useSearchParams } from 'react-router-dom'
+import { centsToBolivianos } from '../../core/configuration/Configuration'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
 import { configurationApi } from '../../infrastructure/http/configurationApi'
+import { Button } from '../components/Button'
+import { ConfigurationEditor, type ConfigurationPanel } from '../components/ConfigurationEditor'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { useConnectivity } from '../hooks/useConnectivity'
+import { cn } from '../styles/cn'
+import {
+  errorClassName,
+  fieldClassName,
+  noticeClassName,
+  panelClassName,
+} from '../styles/formStyles'
 
-type Section = 'team' | 'services' | 'products' | 'expenses'
-
-const messageFor = (error: unknown) =>
+type Section = 'team' | 'services' | 'offerings' | 'products' | 'commissions' | 'expenses' | 'users'
+const sections: ReadonlyArray<{ id: Section; label: string; noun: string }> = [
+  { id: 'team', label: 'Equipo', noun: 'persona' },
+  { id: 'services', label: 'Servicios', noun: 'servicio' },
+  { id: 'offerings', label: 'Ofertas', noun: 'oferta' },
+  { id: 'products', label: 'Productos', noun: 'producto' },
+  { id: 'commissions', label: 'Comisiones', noun: 'regla' },
+  { id: 'expenses', label: 'Gastos', noun: 'categoría' },
+  { id: 'users', label: 'Usuarios', noun: 'usuario' },
+]
+const isSection = (value: string | null): value is Section =>
+  sections.some((item) => item.id === value)
+const roleLabel = (role: string) =>
+  ({ OWNER: 'Dueño', ADMIN: 'Administrador', BARBER: 'Barbero' })[role] ?? role
+const percent = (basisPoints: number) =>
+  `${new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(basisPoints / 100)} %`
+const errorMessage = (error: unknown) =>
   error instanceof ApiError
     ? (error.problem.detail ?? error.problem.title)
-    : 'No se pudo completar la acción. Intenta nuevamente.'
+    : 'No se pudo guardar el cambio. Intenta nuevamente.'
 
 export const ConfigurationPage = () => {
+  const [params, setParams] = useSearchParams()
+  const section: Section = isSection(params.get('seccion'))
+    ? (params.get('seccion') as Section)
+    : 'team'
+  const [selectedId, setSelectedId] = useState('')
+  const [selectedBarberId, setSelectedBarberId] = useState('')
+  const [panel, setPanel] = useState<ConfigurationPanel | null>(null)
+  const [confirm, setConfirm] = useState<{ label: string; action: () => Promise<unknown> } | null>(
+    null,
+  )
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null)
+  const queryClient = useQueryClient()
+  const connectivity = useConnectivity()
   const session = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: authApi.current,
     retry: false,
   })
-  const snapshot = useQuery({ queryKey: ['configuration'], queryFn: configurationApi.load })
-  const queryClient = useQueryClient()
-  const connectivity = useConnectivity()
-  const [section, setSection] = useState<Section>('team')
-  const [notice, setNotice] = useState('')
-  const [busy, setBusy] = useState(false)
+  const isOwner = session.data?.roles.includes('OWNER') ?? false
+  const snapshot = useQuery({
+    queryKey: ['configuration'],
+    queryFn: configurationApi.load,
+    enabled: isOwner,
+  })
+  const data = snapshot.data
+  const activeBarberId = selectedBarberId || data?.barbers.find((item) => item.active)?.id || ''
+  const offerings = useQuery({
+    queryKey: ['offerings', activeBarberId],
+    queryFn: () => configurationApi.listOfferings(activeBarberId),
+    enabled: isOwner && section === 'offerings' && Boolean(activeBarberId),
+  })
+  const rules = useQuery({
+    queryKey: ['commission-rules', activeBarberId],
+    queryFn: () => configurationApi.listCommissionRules(activeBarberId),
+    enabled: isOwner && section === 'commissions' && Boolean(activeBarberId),
+  })
 
-  if (session.data && !session.data.roles.includes('OWNER'))
-    return <Navigate to="/app/acceso-denegado" replace />
-  if (snapshot.isPending)
-    return (
-      <main className="content" aria-busy="true">
-        <p className="eyebrow">Configuración</p>
-        <h1>Cargando maestros…</h1>
-      </main>
-    )
-  if (snapshot.isError || !snapshot.data)
-    return (
-      <main className="content">
-        <p className="eyebrow">Configuración</p>
-        <h1>No pudimos cargar los maestros.</h1>
-        <button type="button" className="primary-button" onClick={() => void snapshot.refetch()}>
-          Reintentar
-        </button>
-      </main>
-    )
-
-  const execute = async (action: () => Promise<unknown>, extraKeys: string[][] = []) => {
+  const save = async (action: () => Promise<unknown>, extra: string[][] = []) => {
     if (connectivity !== 'online') {
-      setNotice('Recupera la conexión para guardar cambios.')
-      return
+      setNotice({ text: 'Recupera la conexión para guardar cambios.', error: true })
+      return false
     }
     setBusy(true)
-    setNotice('')
+    setNotice(null)
     try {
       await action()
       await queryClient.invalidateQueries({ queryKey: ['configuration'] })
-      for (const key of extraKeys) await queryClient.invalidateQueries({ queryKey: key })
-      setNotice('Cambio guardado correctamente.')
+      for (const key of extra) await queryClient.invalidateQueries({ queryKey: key })
+      setNotice({ text: 'Cambio guardado. El historial anterior permanece intacto.', error: false })
+      setPanel(null)
+      setConfirm(null)
+      return true
     } catch (error) {
-      setNotice(messageFor(error))
+      setNotice({ text: errorMessage(error), error: true })
+      return false
     } finally {
       setBusy(false)
     }
   }
+  const requestToggle = (label: string, action: () => Promise<unknown>) =>
+    setConfirm({ label, action })
+  const changeSection = (next: Section) => {
+    const nextParams = new URLSearchParams(params)
+    nextParams.set('seccion', next)
+    setParams(nextParams, { replace: true })
+    setSelectedId('')
+    setNotice(null)
+  }
+
+  if (session.isPending) return <Loading title="Comprobando acceso" />
+  if (session.isError)
+    return (
+      <main className="mx-auto max-w-360 px-4 py-8">
+        <p className={errorClassName} role="alert">
+          No se pudo comprobar tu sesión.{' '}
+          <button className="font-bold underline" onClick={() => void session.refetch()}>
+            Reintentar
+          </button>
+        </p>
+      </main>
+    )
+  if (!isOwner) return <Navigate to="/app/acceso-denegado" replace />
+  if (snapshot.isPending) return <Loading title="Cargando configuración" />
+  if (snapshot.isError || !data)
+    return (
+      <main className="mx-auto max-w-360 px-4 py-8">
+        <p className={errorClassName} role="alert">
+          No se pudo cargar la configuración.{' '}
+          <button className="font-bold underline" onClick={() => void snapshot.refetch()}>
+            Reintentar
+          </button>
+        </p>
+      </main>
+    )
+
+  const barber = data.barbers.find((item) => item.id === activeBarberId)
+  const barberName = (staffId: string) =>
+    data.staff.find((item) => item.id === staffId)?.displayName ?? 'Barbero'
+  const sectionRows: Array<{ id: string; title: string; subtitle: string; active: boolean }> =
+    section === 'team'
+      ? data.staff.map((item) => ({
+          id: item.id,
+          title: item.displayName,
+          subtitle: `${data.barbers.some((barber) => barber.staffProfileId === item.id) ? 'Barbero' : 'Personal'} · ${item.active ? 'Activo' : 'Inactivo'}`,
+          active: item.active,
+        }))
+      : section === 'services'
+        ? data.services.map((item) => ({
+            id: item.id,
+            title: item.name,
+            subtitle: `${item.defaultDurationMinutes} min · ${centsToBolivianos(item.defaultPriceCents)}`,
+            active: item.active,
+          }))
+        : section === 'offerings'
+          ? (offerings.data ?? []).map((item) => ({
+              id: item.id,
+              title:
+                data.services.find((service) => service.id === item.serviceId)?.name ?? 'Servicio',
+              subtitle: `${centsToBolivianos(item.priceCents)} · desde ${item.validFrom}`,
+              active: item.active,
+            }))
+          : section === 'products'
+            ? data.products.map((item) => ({
+                id: item.id,
+                title: item.name,
+                subtitle: `${item.brand || 'Sin marca'} · ${centsToBolivianos(item.salePriceCents)}`,
+                active: item.active,
+              }))
+            : section === 'commissions'
+              ? (rules.data ?? []).map((item) => ({
+                  id: item.id,
+                  title: item.kind === 'SERVICE' ? 'Servicios' : 'Productos',
+                  subtitle: `${percent(item.rateBasisPoints)} · desde ${item.validFrom}`,
+                  active: item.active,
+                }))
+              : section === 'expenses'
+                ? data.expenseCategories.map((item) => ({
+                    id: item.id,
+                    title: item.name,
+                    subtitle: item.active ? 'Activa' : 'Inactiva',
+                    active: item.active,
+                  }))
+                : data.users.map((item) => ({
+                    id: item.id,
+                    title: item.userName,
+                    subtitle: item.roles.map(roleLabel).join(' · '),
+                    active: item.active,
+                  }))
+  const currentId = sectionRows.some((item) => item.id === selectedId)
+    ? selectedId
+    : (sectionRows[0]?.id ?? '')
+  const current = sectionRows.find((item) => item.id === currentId)
+  const selectedStaff = data.staff.find((item) => item.id === currentId)
+  const selectedBarber = data.barbers.find((item) => item.staffProfileId === currentId)
+  const selectedService = data.services.find((item) => item.id === currentId)
+  const selectedOffering = offerings.data?.find((item) => item.id === currentId)
+  const selectedProduct = data.products.find((item) => item.id === currentId)
+  const selectedRule = rules.data?.find((item) => item.id === currentId)
+  const selectedExpense = data.expenseCategories.find((item) => item.id === currentId)
+  const selectedUser = data.users.find((item) => item.id === currentId)
+  const createPanel: ConfigurationPanel = { kind: `create-${section}` }
 
   return (
-    <main className="content configuration-page">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">R1 · Maestros operativos</p>
-          <h1>Configura lo que Lou ofrece.</h1>
-          <p className="lead">Personal, precios, duración y tasas con historia reproducible.</p>
-        </div>
-        <span className="history-badge">Los cambios no reescriben operaciones pasadas</span>
-      </div>
-      <nav className="section-tabs" aria-label="Secciones de configuración">
-        {(
-          [
-            ['team', 'Personal'],
-            ['services', 'Servicios y tasas'],
-            ['products', 'Productos'],
-            ['expenses', 'Gastos'],
-          ] as const
-        ).map(([id, label]) => (
+    <main className="mx-auto w-full max-w-360 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
+      <header className="border-b border-lou-fog pb-7">
+        <p className="mb-2 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
+          Gestión del dueño
+        </p>
+        <h1 className="font-display text-5xl leading-[0.9] font-bold sm:text-6xl">Configuración</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-lou-graphite/65">
+          Personas y catálogo en un solo lugar. Las nuevas condiciones tienen vigencia; las
+          operaciones pasadas no se reescriben.
+        </p>
+      </header>
+      <nav
+        className="mt-5 flex gap-1 overflow-x-auto rounded-2xl border border-lou-fog bg-white p-1.5 xl:grid xl:grid-cols-7"
+        aria-label="Secciones de configuración"
+      >
+        {sections.map((item) => (
           <button
+            key={item.id}
             type="button"
-            key={id}
-            aria-current={section === id ? 'page' : undefined}
-            onClick={() => setSection(id)}
+            aria-current={section === item.id ? 'page' : undefined}
+            className={cn(
+              'min-h-11 shrink-0 rounded-xl px-4 text-sm font-bold whitespace-nowrap transition-colors duration-200 xl:px-3',
+              section === item.id
+                ? 'bg-lou-ink text-white'
+                : 'text-lou-graphite/60 hover:bg-lou-paper hover:text-lou-ink',
+            )}
+            onClick={() => changeSection(item.id)}
           >
-            {label}
+            {item.label}
           </button>
         ))}
       </nav>
       {notice && (
         <p
-          className={notice.includes('correctamente') ? 'form-success' : 'form-error'}
-          role="status"
+          className={cn('mt-4', notice.error ? errorClassName : noticeClassName)}
+          role={notice.error ? 'alert' : 'status'}
         >
-          {notice}
+          {notice.text}
         </p>
       )}
-      {section === 'team' && <TeamSection data={snapshot.data} busy={busy} execute={execute} />}
-      {section === 'services' && (
-        <ServicesSection data={snapshot.data} busy={busy} execute={execute} />
+      {(section === 'offerings' || section === 'commissions') && (
+        <section className={cn(panelClassName, 'mt-5')} aria-label="Barbero seleccionado">
+          <label className="grid max-w-sm gap-1.5 text-xs font-bold text-lou-graphite">
+            Barbero
+            <select
+              className={fieldClassName}
+              value={activeBarberId}
+              onChange={(event) => {
+                setSelectedBarberId(event.target.value)
+                setSelectedId('')
+              }}
+            >
+              {data.barbers
+                .filter((item) => item.active)
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {barberName(item.staffProfileId)}
+                  </option>
+                ))}
+            </select>
+          </label>
+          {barber?.employmentType === 'OWNER' && section === 'commissions' && (
+            <p className="mt-3 text-sm text-lou-graphite/60">
+              El dueño también atiende, pero su producción no genera deuda de comisión.
+            </p>
+          )}
+        </section>
       )}
-      {section === 'products' && (
-        <ProductsSection data={snapshot.data} busy={busy} execute={execute} />
+      <div className="mt-5 grid items-start gap-4 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.6fr)]">
+        <section
+          className={panelClassName}
+          aria-label={`Lista de ${sections.find((item) => item.id === section)?.label.toLowerCase()}`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-2xl font-bold">
+                {sections.find((item) => item.id === section)?.label}
+              </h2>
+              <p className="text-xs text-lou-graphite/50">
+                {sectionRows.length} {sectionRows.length === 1 ? 'registro' : 'registros'}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              disabled={
+                busy ||
+                ((section === 'offerings' || section === 'commissions') && !activeBarberId) ||
+                (section === 'commissions' && barber?.employmentType === 'OWNER')
+              }
+              onClick={() => setPanel(createPanel)}
+            >
+              Crear
+            </Button>
+          </div>
+          {(section === 'offerings' && offerings.isPending) ||
+          (section === 'commissions' && rules.isPending) ? (
+            <div className="mt-5 space-y-2" role="status" aria-label="Cargando condiciones">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="h-16 animate-pulse rounded-xl bg-lou-paper" />
+              ))}
+            </div>
+          ) : (section === 'offerings' && offerings.isError) ||
+            (section === 'commissions' && rules.isError) ? (
+            <p className={cn('mt-4', errorClassName)} role="alert">
+              No se pudo cargar esta lista.{' '}
+              <button
+                className="font-bold underline"
+                onClick={() =>
+                  void (section === 'offerings' ? offerings.refetch() : rules.refetch())
+                }
+              >
+                Reintentar
+              </button>
+            </p>
+          ) : sectionRows.length ? (
+            <div className="mt-4 space-y-1" aria-label="Registros">
+              {sectionRows.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-current={currentId === item.id ? 'true' : undefined}
+                  onClick={() => setSelectedId(item.id)}
+                  className={cn(
+                    'w-full rounded-xl border px-4 py-3 text-left transition-colors duration-200',
+                    currentId === item.id
+                      ? 'border-lou-ink bg-lou-paper'
+                      : 'border-transparent hover:bg-lou-paper/60',
+                  )}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <strong className="text-sm">{item.title}</strong>
+                    <span
+                      className={cn(
+                        'h-2 w-2 shrink-0 rounded-full',
+                        item.active ? 'bg-emerald-600' : 'bg-lou-steel',
+                      )}
+                      aria-label={item.active ? 'Activo' : 'Inactivo'}
+                    />
+                  </span>
+                  <span className="mt-1 block text-xs text-lou-graphite/55">{item.subtitle}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-5 rounded-xl bg-lou-paper p-5 text-sm text-lou-graphite/60">
+              Aún no hay {sections.find((item) => item.id === section)?.noun}s. Usa Crear para
+              añadir el primero.
+            </p>
+          )}
+        </section>
+        <section className={panelClassName} aria-label="Detalle seleccionado">
+          {current ? (
+            <>
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-lou-fog pb-5">
+                <div>
+                  <p className="text-xs font-bold tracking-[0.16em] text-lou-graphite/45 uppercase">
+                    Detalle
+                  </p>
+                  <h2 className="mt-1 font-display text-3xl font-bold">{current.title}</h2>
+                  <p className="mt-1 text-sm text-lou-graphite/55">{current.subtitle}</p>
+                </div>
+                <span
+                  className={cn(
+                    'rounded-full px-3 py-1 text-xs font-bold',
+                    current.active
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : 'bg-lou-paper text-lou-graphite/60',
+                  )}
+                >
+                  {current.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+              <div className="mt-5 space-y-5 text-sm">
+                {selectedStaff && section === 'team' && (
+                  <>
+                    <Detail
+                      label="Cuenta"
+                      value={
+                        data.users.find((user) => user.id === selectedStaff.userId)?.userName ??
+                        'Sin cuenta'
+                      }
+                    />
+                    <Detail label="Teléfono" value={selectedStaff.phone || 'No registrado'} />
+                    <Detail
+                      label="Función"
+                      value={
+                        selectedBarber
+                          ? selectedBarber.employmentType === 'OWNER'
+                            ? 'Dueño y barbero'
+                            : 'Barbero contratado'
+                          : 'Personal'
+                      }
+                    />
+                    {selectedBarber && (
+                      <Detail
+                        label="Liquidación"
+                        value={
+                          selectedBarber.settlementFrequency === 'BIWEEKLY'
+                            ? 'Quincenal'
+                            : 'Mensual'
+                        }
+                      />
+                    )}
+                  </>
+                )}
+                {selectedService && section === 'services' && (
+                  <>
+                    <Detail
+                      label="Precio de referencia"
+                      value={centsToBolivianos(selectedService.defaultPriceCents)}
+                    />
+                    <Detail
+                      label="Duración"
+                      value={`${selectedService.defaultDurationMinutes} min`}
+                    />
+                    <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
+                      Cambiar esta referencia no modifica reservas, atenciones ni precios
+                      históricos.
+                    </p>
+                  </>
+                )}
+                {selectedOffering && section === 'offerings' && (
+                  <>
+                    <Detail
+                      label="Barbero"
+                      value={barber ? barberName(barber.staffProfileId) : '—'}
+                    />
+                    <Detail
+                      label="Precio acordado"
+                      value={centsToBolivianos(selectedOffering.priceCents)}
+                    />
+                    <Detail label="Duración" value={`${selectedOffering.durationMinutes} min`} />
+                    <Detail
+                      label="Vigencia"
+                      value={`${selectedOffering.validFrom} — ${selectedOffering.validTo || 'sin fin'}`}
+                    />
+                    <HistoryHint />
+                  </>
+                )}
+                {selectedProduct && section === 'products' && (
+                  <>
+                    <Detail
+                      label="Marca / SKU"
+                      value={`${selectedProduct.brand || 'Sin marca'} · ${selectedProduct.sku || 'Sin SKU'}`}
+                    />
+                    <Detail
+                      label="Precio de venta"
+                      value={centsToBolivianos(selectedProduct.salePriceCents)}
+                    />
+                    <Detail
+                      label="Stock mínimo"
+                      value={`${selectedProduct.minimumStock} unidades`}
+                    />
+                    <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
+                      Las existencias y movimientos reales se gestionan en Inventario.
+                    </p>
+                  </>
+                )}
+                {selectedRule && section === 'commissions' && (
+                  <>
+                    <Detail
+                      label="Tipo"
+                      value={selectedRule.kind === 'SERVICE' ? 'Servicio' : 'Producto'}
+                    />
+                    <Detail label="Tasa" value={percent(selectedRule.rateBasisPoints)} />
+                    <Detail
+                      label="Vigencia"
+                      value={`${selectedRule.validFrom} — ${selectedRule.validTo || 'sin fin'}`}
+                    />
+                    <HistoryHint />
+                  </>
+                )}
+                {selectedExpense && section === 'expenses' && (
+                  <p className="text-lou-graphite/60">
+                    Esta categoría clasifica gastos; desactivarla no modifica los gastos ya
+                    registrados.
+                  </p>
+                )}
+                {selectedUser && section === 'users' && (
+                  <>
+                    <Detail label="Roles" value={selectedUser.roles.map(roleLabel).join(', ')} />
+                    <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
+                      Cambiar roles, contraseña o estado revoca las sesiones existentes de esta
+                      cuenta.
+                    </p>
+                  </>
+                )}
+              </div>
+              <div className="mt-7 flex flex-wrap gap-2 border-t border-lou-fog pt-5">
+                {section === 'team' && selectedStaff && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setPanel({ kind: 'edit-team', id: selectedStaff.id })}
+                    >
+                      Editar persona
+                    </Button>
+                    {selectedBarber ? (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setPanel({ kind: 'edit-barber', id: selectedBarber.id })}
+                      >
+                        Editar barbero
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setPanel({ kind: 'create-barber', id: selectedStaff.id })}
+                      >
+                        Habilitar barbero
+                      </Button>
+                    )}
+                  </>
+                )}
+                {section === 'services' && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPanel({ kind: 'edit-services', id: currentId })}
+                  >
+                    Editar servicio
+                  </Button>
+                )}
+                {section === 'products' && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPanel({ kind: 'edit-products', id: currentId })}
+                  >
+                    Editar producto
+                  </Button>
+                )}
+                {section === 'expenses' && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPanel({ kind: 'edit-expenses', id: currentId })}
+                  >
+                    Editar categoría
+                  </Button>
+                )}
+                {section === 'users' && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setPanel({ kind: 'roles-users', id: currentId })}
+                    >
+                      Cambiar roles
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setPanel({ kind: 'password-users', id: currentId })}
+                    >
+                      Nueva contraseña
+                    </Button>
+                  </>
+                )}
+                {section === 'team' && selectedBarber && (
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(
+                        `${selectedBarber.active ? 'Desactivar' : 'Activar'} barbería de ${current.title}`,
+                        () => configurationApi.updateBarber(selectedBarber, !selectedBarber.active),
+                      )
+                    }
+                  >
+                    {selectedBarber.active ? 'Desactivar barbería' : 'Activar barbería'}
+                  </Button>
+                )}
+                {section === 'team' && selectedStaff && (
+                  <ToggleButton
+                    active={selectedStaff.active}
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(
+                        `${selectedStaff.active ? 'Desactivar' : 'Activar'} a ${current.title}`,
+                        () => configurationApi.updateStaff(selectedStaff, !selectedStaff.active),
+                      )
+                    }
+                  />
+                )}
+                {section === 'services' && selectedService && (
+                  <ToggleButton
+                    active={selectedService.active}
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(
+                        `${selectedService.active ? 'Desactivar' : 'Activar'} ${current.title}`,
+                        () =>
+                          configurationApi.updateService(selectedService, !selectedService.active),
+                      )
+                    }
+                  />
+                )}
+                {section === 'offerings' && selectedOffering?.active && (
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(`Desactivar oferta de ${current.title}`, () =>
+                        configurationApi.deactivateOffering(selectedOffering),
+                      )
+                    }
+                  >
+                    Desactivar vigencia
+                  </Button>
+                )}
+                {section === 'products' && selectedProduct && (
+                  <ToggleButton
+                    active={selectedProduct.active}
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(
+                        `${selectedProduct.active ? 'Desactivar' : 'Activar'} ${current.title}`,
+                        () =>
+                          configurationApi.updateProduct(selectedProduct, !selectedProduct.active),
+                      )
+                    }
+                  />
+                )}
+                {section === 'commissions' && selectedRule?.active && (
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(`Desactivar tasa de ${current.title}`, () =>
+                        configurationApi.deactivateCommissionRule(selectedRule),
+                      )
+                    }
+                  >
+                    Desactivar vigencia
+                  </Button>
+                )}
+                {section === 'expenses' && selectedExpense && (
+                  <ToggleButton
+                    active={selectedExpense.active}
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(
+                        `${selectedExpense.active ? 'Desactivar' : 'Activar'} ${current.title}`,
+                        () =>
+                          configurationApi.updateExpenseCategory(
+                            selectedExpense,
+                            !selectedExpense.active,
+                          ),
+                      )
+                    }
+                  />
+                )}
+                {section === 'users' && selectedUser && (
+                  <ToggleButton
+                    active={selectedUser.active}
+                    disabled={busy}
+                    onClick={() =>
+                      requestToggle(
+                        `${selectedUser.active ? 'Desactivar' : 'Activar'} cuenta ${current.title}`,
+                        () => configurationApi.setUserActive(selectedUser.id, !selectedUser.active),
+                      )
+                    }
+                  />
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-lou-graphite/55">
+              Selecciona un registro para ver sus detalles.
+            </p>
+          )}
+        </section>
+      </div>
+      {panel && (
+        <ConfigurationEditor
+          key={`${panel.kind}-${panel.id ?? ''}`}
+          panel={panel}
+          data={data}
+          barberId={activeBarberId}
+          busy={busy}
+          error={notice?.error ? notice.text : undefined}
+          onClose={() => setPanel(null)}
+          onSave={save}
+        />
       )}
-      {section === 'expenses' && (
-        <ExpensesSection data={snapshot.data} busy={busy} execute={execute} />
+      {confirm && (
+        <ConfirmDialog
+          busy={busy}
+          title={confirm.label}
+          confirmLabel="Confirmar cambio"
+          cancelLabel="Cancelar"
+          onCancel={() => setConfirm(null)}
+          onConfirm={() =>
+            void save(
+              confirm.action,
+              section === 'offerings'
+                ? [['offerings', activeBarberId]]
+                : section === 'commissions'
+                  ? [['commission-rules', activeBarberId]]
+                  : [],
+            )
+          }
+        >
+          <p>Revisa el registro antes de continuar. Los cambios no reescriben el historial.</p>
+          {notice?.error && (
+            <p className={cn('mt-3', errorClassName)} role="alert">
+              {notice.text}
+            </p>
+          )}
+        </ConfirmDialog>
       )}
     </main>
   )
 }
 
-type Snapshot = Awaited<ReturnType<typeof configurationApi.load>>
-type Execute = (action: () => Promise<unknown>, extraKeys?: string[][]) => Promise<void>
-
-const TeamSection = ({
-  data,
-  busy,
-  execute,
-}: {
-  data: Snapshot
-  busy: boolean
-  execute: Execute
-}) => {
-  const [userId, setUserId] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [staffId, setStaffId] = useState('')
-  const [employmentType, setEmploymentType] = useState('CONTRACTOR')
-  const [color, setColor] = useState('#A55F32')
-  const availableUsers = data.users.filter(
-    (user) => !data.staff.some((staff) => staff.userId === user.id),
-  )
-  const availableStaff = data.staff.filter(
-    (staff) => staff.active && !data.barbers.some((barber) => barber.staffProfileId === staff.id),
-  )
-  const submitStaff = (event: FormEvent) => {
-    event.preventDefault()
-    void execute(() =>
-      configurationApi.createStaff({ userId, displayName, ...(phone ? { phone } : {}) }),
-    ).then(() => {
-      setDisplayName('')
-      setPhone('')
-    })
-  }
-  const submitBarber = (event: FormEvent) => {
-    event.preventDefault()
-    void execute(() =>
-      configurationApi.createBarber({
-        staffProfileId: staffId,
-        employmentType,
-        settlementFrequency: 'BIWEEKLY',
-        color,
-      }),
-    ).then(() => setStaffId(''))
-  }
-  return (
-    <section className="master-layout">
-      <div className="form-stack">
-        <form className="master-form" onSubmit={submitStaff}>
-          <div>
-            <p className="step-number">01</p>
-            <h2>Vincular persona</h2>
-            <p>Una cuenta técnica corresponde a una sola persona.</p>
-          </div>
-          <label>
-            Cuenta
-            <select value={userId} onChange={(event) => setUserId(event.target.value)} required>
-              <option value="">Selecciona…</option>
-              {availableUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.userName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Nombre visible
-            <input
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              maxLength={120}
-              required
-            />
-          </label>
-          <label>
-            Teléfono opcional
-            <input
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              inputMode="tel"
-            />
-          </label>
-          <button className="primary-button" disabled={busy || !userId}>
-            Crear perfil
-          </button>
-        </form>
-        <form className="master-form" onSubmit={submitBarber}>
-          <div>
-            <p className="step-number">02</p>
-            <h2>Habilitar barbero</h2>
-            <p>El tipo laboral determina si genera deuda de comisión.</p>
-          </div>
-          <label>
-            Persona
-            <select value={staffId} onChange={(event) => setStaffId(event.target.value)} required>
-              <option value="">Selecciona…</option>
-              {availableStaff.map((staff) => (
-                <option key={staff.id} value={staff.id}>
-                  {staff.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Tipo
-            <select
-              value={employmentType}
-              onChange={(event) => setEmploymentType(event.target.value)}
-            >
-              <option value="CONTRACTOR">Contratado</option>
-              <option value="OWNER">Dueño</option>
-            </select>
-          </label>
-          <label>
-            Color de agenda
-            <input type="color" value={color} onChange={(event) => setColor(event.target.value)} />
-          </label>
-          <button className="primary-button" disabled={busy || !staffId}>
-            Habilitar barbero
-          </button>
-        </form>
-      </div>
-      <div className="master-list">
-        <div className="list-heading">
-          <h2>Equipo</h2>
-          <span>{data.staff.length} personas</span>
-        </div>
-        {data.staff.length === 0 ? (
-          <EmptyState text="Aún no hay personal vinculado." />
-        ) : (
-          data.staff.map((staff) => {
-            const barber = data.barbers.find((item) => item.staffProfileId === staff.id)
-            return (
-              <article className="master-row" key={staff.id}>
-                <div>
-                  <strong>{staff.displayName}</strong>
-                  <small>
-                    {barber
-                      ? barber.employmentType === 'OWNER'
-                        ? 'Dueño · barbero'
-                        : 'Barbero contratado'
-                      : 'Personal'}{' '}
-                    · {staff.active ? 'Activo' : 'Inactivo'}
-                  </small>
-                </div>
-                <div className="row-actions">
-                  {barber && (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() =>
-                        void execute(() => configurationApi.updateBarber(barber, !barber.active))
-                      }
-                    >
-                      {barber.active ? 'Desactivar barbería' : 'Activar barbería'}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      void execute(() => configurationApi.updateStaff(staff, !staff.active))
-                    }
-                  >
-                    {staff.active ? 'Desactivar' : 'Activar'}
-                  </button>
-                </div>
-              </article>
-            )
-          })
-        )}
-        <p className="context-note">
-          Dueño y barbero pueden ser la misma cuenta. El dueño nunca genera comisión por pagar.
-        </p>
-      </div>
-    </section>
-  )
-}
-
-const ServicesSection = ({
-  data,
-  busy,
-  execute,
-}: {
-  data: Snapshot
-  busy: boolean
-  execute: Execute
-}) => {
-  const [name, setName] = useState('')
-  const [duration, setDuration] = useState('45')
-  const [price, setPrice] = useState('')
-  const [barberId, setBarberId] = useState(data.barbers.find((x) => x.active)?.id ?? '')
-  const [serviceId, setServiceId] = useState('')
-  const [overrideDuration, setOverrideDuration] = useState('45')
-  const [overridePrice, setOverridePrice] = useState('')
-  const [offeringValidFrom, setOfferingValidFrom] = useState(new Date().toISOString().slice(0, 10))
-  const [offeringValidTo, setOfferingValidTo] = useState('')
-  const [kind, setKind] = useState('SERVICE')
-  const [rate, setRate] = useState('')
-  const [ruleValidFrom, setRuleValidFrom] = useState(new Date().toISOString().slice(0, 10))
-  const [ruleValidTo, setRuleValidTo] = useState('')
-  const offerings = useQuery({
-    queryKey: ['offerings', barberId],
-    queryFn: () => configurationApi.listOfferings(barberId),
-    enabled: Boolean(barberId),
-  })
-  const rules = useQuery({
-    queryKey: ['commission-rules', barberId],
-    queryFn: () => configurationApi.listCommissionRules(barberId),
-    enabled: Boolean(barberId),
-  })
-  const selectedBarber = data.barbers.find((x) => x.id === barberId)
-  const serviceName = (id: string) =>
-    data.services.find((item) => item.id === id)?.name ?? 'Servicio'
-  const createService = (event: FormEvent) => {
-    event.preventDefault()
-    const cents = bolivianosToCents(price)
-    if (cents === null) return
-    void execute(() =>
-      configurationApi.createService({
-        name,
-        defaultDurationMinutes: Number(duration),
-        defaultPriceCents: cents,
-      }),
-    ).then(() => {
-      setName('')
-      setPrice('')
-    })
-  }
-  const createOffering = (event: FormEvent) => {
-    event.preventDefault()
-    const cents = bolivianosToCents(overridePrice)
-    if (cents === null) return
-    void execute(
-      () =>
-        configurationApi.createOffering(barberId, {
-          serviceId,
-          durationMinutes: Number(overrideDuration),
-          priceCents: cents,
-          validFrom: offeringValidFrom,
-          ...(offeringValidTo ? { validTo: offeringValidTo } : {}),
-        }),
-      [['offerings', barberId]],
-    ).then(() => setOverridePrice(''))
-  }
-  const createRule = (event: FormEvent) => {
-    event.preventDefault()
-    const basisPoints = Math.round(Number(rate.replace(',', '.')) * 100)
-    void execute(
-      () =>
-        configurationApi.createCommissionRule(barberId, {
-          kind,
-          rateBasisPoints: basisPoints,
-          validFrom: ruleValidFrom,
-          ...(ruleValidTo ? { validTo: ruleValidTo } : {}),
-        }),
-      [['commission-rules', barberId]],
-    ).then(() => setRate(''))
-  }
-  return (
-    <>
-      <section className="master-layout">
-        <form className="master-form" onSubmit={createService}>
-          <div>
-            <p className="step-number">01</p>
-            <h2>Nuevo servicio</h2>
-            <p>La referencia se usa cuando no hay condición específica.</p>
-          </div>
-          <label>
-            Nombre
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <div className="field-pair">
-            <label>
-              Duración
-              <input
-                type="number"
-                min="5"
-                max="480"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Precio Bs
-              <input
-                inputMode="decimal"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="60,00"
-                required
-              />
-            </label>
-          </div>
-          <button className="primary-button" disabled={busy}>
-            Crear servicio
-          </button>
-        </form>
-        <div className="master-list">
-          <div className="list-heading">
-            <h2>Catálogo</h2>
-            <span>{data.services.length} servicios</span>
-          </div>
-          {data.services.length === 0 ? (
-            <EmptyState text="Crea el primer servicio para continuar." />
-          ) : (
-            data.services.map((service) => (
-              <article className="master-row" key={service.id}>
-                <div>
-                  <strong>{service.name}</strong>
-                  <small>
-                    {service.defaultDurationMinutes} min ·{' '}
-                    {centsToBolivianos(service.defaultPriceCents)} ·{' '}
-                    {service.active ? 'Activo' : 'Inactivo'}
-                  </small>
-                </div>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void execute(() => configurationApi.updateService(service, !service.active))
-                  }
-                >
-                  {service.active ? 'Desactivar' : 'Activar'}
-                </button>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
-      <section className="version-panel">
-        <div className="version-intro">
-          <p className="eyebrow">Condiciones por fecha</p>
-          <h2>Oferta y comisión vigentes</h2>
-          <label>
-            Barbero
-            <select value={barberId} onChange={(e) => setBarberId(e.target.value)}>
-              <option value="">Selecciona…</option>
-              {data.barbers
-                .filter((x) => x.active)
-                .map((barber) => (
-                  <option value={barber.id} key={barber.id}>
-                    {data.staff.find((x) => x.id === barber.staffProfileId)?.displayName}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <p className="context-note">
-            Para cambiar una condición, desactiva la anterior y crea otra vigencia. Así se puede
-            reproducir cualquier fecha.
-          </p>
-        </div>
-        <div className="version-columns">
-          <form className="compact-form" onSubmit={createOffering}>
-            <h3>Oferta específica</h3>
-            <label>
-              Servicio
-              <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} required>
-                <option value="">Selecciona…</option>
-                {data.services
-                  .filter((x) => x.active)
-                  .map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <div className="field-pair">
-              <label>
-                Minutos
-                <input
-                  type="number"
-                  min="5"
-                  max="480"
-                  value={overrideDuration}
-                  onChange={(e) => setOverrideDuration(e.target.value)}
-                />
-              </label>
-              <label>
-                Precio Bs
-                <input
-                  value={overridePrice}
-                  onChange={(e) => setOverridePrice(e.target.value)}
-                  inputMode="decimal"
-                  required
-                />
-              </label>
-            </div>
-            <label>
-              Desde
-              <input
-                type="date"
-                value={offeringValidFrom}
-                onChange={(e) => setOfferingValidFrom(e.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Hasta (opcional)
-              <input
-                type="date"
-                min={offeringValidFrom}
-                value={offeringValidTo}
-                onChange={(e) => setOfferingValidTo(e.target.value)}
-              />
-            </label>
-            <button className="secondary-button" disabled={busy || !barberId}>
-              Agregar vigencia
-            </button>
-            {offerings.data?.map((item) => (
-              <div className="period-row" key={item.id}>
-                <span>
-                  {serviceName(item.serviceId)}
-                  <small>
-                    {item.durationMinutes} min · {centsToBolivianos(item.priceCents)} · desde{' '}
-                    {item.validFrom} {item.validTo ? `a ${item.validTo}` : 'en adelante'}
-                  </small>
-                </span>
-                {item.active && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void execute(
-                        () => configurationApi.deactivateOffering(item),
-                        [['offerings', barberId]],
-                      )
-                    }
-                  >
-                    Desactivar
-                  </button>
-                )}
-              </div>
-            ))}
-          </form>
-          <form className="compact-form" onSubmit={createRule}>
-            <h3>Comisión</h3>
-            {selectedBarber?.employmentType === 'OWNER' && (
-              <p className="owner-rule">Este barbero es dueño: su producción no crea deuda.</p>
-            )}
-            <label>
-              Tipo
-              <select value={kind} onChange={(e) => setKind(e.target.value)}>
-                <option value="SERVICE">Servicio</option>
-                <option value="PRODUCT">Producto</option>
-              </select>
-            </label>
-            <label>
-              Porcentaje
-              <input
-                inputMode="decimal"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                placeholder="50,00"
-                required
-              />
-            </label>
-            <label>
-              Desde
-              <input
-                type="date"
-                value={ruleValidFrom}
-                onChange={(e) => setRuleValidFrom(e.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Hasta (opcional)
-              <input
-                type="date"
-                min={ruleValidFrom}
-                value={ruleValidTo}
-                onChange={(e) => setRuleValidTo(e.target.value)}
-              />
-            </label>
-            <button
-              className="secondary-button"
-              disabled={busy || !barberId || selectedBarber?.employmentType === 'OWNER'}
-            >
-              Agregar tasa
-            </button>
-            {rules.data?.map((rule) => (
-              <div className="period-row" key={rule.id}>
-                <span>
-                  {rule.kind === 'SERVICE' ? 'Servicios' : 'Productos'}
-                  <small>
-                    {(rule.rateBasisPoints / 100).toFixed(2)} % · desde {rule.validFrom}{' '}
-                    {rule.validTo ? `a ${rule.validTo}` : 'en adelante'}
-                  </small>
-                </span>
-                {rule.active && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void execute(
-                        () => configurationApi.deactivateCommissionRule(rule),
-                        [['commission-rules', barberId]],
-                      )
-                    }
-                  >
-                    Desactivar
-                  </button>
-                )}
-              </div>
-            ))}
-          </form>
-        </div>
-      </section>
-    </>
-  )
-}
-
-const ProductsSection = ({
-  data,
-  busy,
-  execute,
-}: {
-  data: Snapshot
-  busy: boolean
-  execute: Execute
-}) => {
-  const [name, setName] = useState('')
-  const [brand, setBrand] = useState('')
-  const [sku, setSku] = useState('')
-  const [price, setPrice] = useState('')
-  const [minimumStock, setMinimumStock] = useState('0')
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    const cents = bolivianosToCents(price)
-    if (cents === null) return
-    void execute(() =>
-      configurationApi.createProduct({
-        name,
-        ...(brand ? { brand } : {}),
-        ...(sku ? { sku } : {}),
-        salePriceCents: cents,
-        minimumStock: Number(minimumStock),
-      }),
-    ).then(() => {
-      setName('')
-      setSku('')
-      setPrice('')
-    })
-  }
-  return (
-    <section className="master-layout">
-      <form className="master-form" onSubmit={submit}>
-        <div>
-          <p className="step-number">01</p>
-          <h2>Nuevo producto</h2>
-          <p>El stock real se derivará de movimientos; aquí sólo defines el mínimo.</p>
-        </div>
-        <label>
-          Nombre
-          <input value={name} onChange={(e) => setName(e.target.value)} required />
-        </label>
-        <div className="field-pair">
-          <label>
-            Marca
-            <input value={brand} onChange={(e) => setBrand(e.target.value)} />
-          </label>
-          <label>
-            SKU opcional
-            <input value={sku} onChange={(e) => setSku(e.target.value)} />
-          </label>
-        </div>
-        <div className="field-pair">
-          <label>
-            Precio Bs
-            <input
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              inputMode="decimal"
-              required
-            />
-          </label>
-          <label>
-            Stock mínimo
-            <input
-              type="number"
-              min="0"
-              value={minimumStock}
-              onChange={(e) => setMinimumStock(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <button className="primary-button" disabled={busy}>
-          Crear producto
-        </button>
-      </form>
-      <div className="master-list">
-        <div className="list-heading">
-          <h2>Productos</h2>
-          <span>{data.products.length} productos</span>
-        </div>
-        {data.products.length === 0 ? (
-          <EmptyState text="Aún no hay productos." />
-        ) : (
-          data.products.map((product) => (
-            <article className="master-row" key={product.id}>
-              <div>
-                <strong>{product.name}</strong>
-                <small>
-                  {product.brand || 'Sin marca'} · {centsToBolivianos(product.salePriceCents)} ·
-                  mínimo {product.minimumStock}
-                </small>
-              </div>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() =>
-                  void execute(() => configurationApi.updateProduct(product, !product.active))
-                }
-              >
-                {product.active ? 'Desactivar' : 'Activar'}
-              </button>
-            </article>
-          ))
-        )}
-      </div>
-    </section>
-  )
-}
-
-const ExpensesSection = ({
-  data,
-  busy,
-  execute,
-}: {
-  data: Snapshot
-  busy: boolean
-  execute: Execute
-}) => {
-  const [name, setName] = useState('')
-  const activeCount = useMemo(
-    () => data.expenseCategories.filter((x) => x.active).length,
-    [data.expenseCategories],
-  )
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    void execute(() => configurationApi.createExpenseCategory(name)).then(() => setName(''))
-  }
-  return (
-    <section className="master-layout">
-      <form className="master-form" onSubmit={submit}>
-        <div>
-          <p className="step-number">01</p>
-          <h2>Nueva categoría</h2>
-          <p>Clasifica gastos sin crear un módulo contable complejo.</p>
-        </div>
-        <label>
-          Nombre
-          <input value={name} onChange={(e) => setName(e.target.value)} required />
-        </label>
-        <button className="primary-button" disabled={busy}>
-          Crear categoría
-        </button>
-      </form>
-      <div className="master-list">
-        <div className="list-heading">
-          <h2>Categorías</h2>
-          <span>{activeCount} activas</span>
-        </div>
-        {data.expenseCategories.map((category) => (
-          <article className="master-row" key={category.id}>
-            <div>
-              <strong>{category.name}</strong>
-              <small>{category.active ? 'Activa' : 'Inactiva'}</small>
-            </div>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() =>
-                void execute(() =>
-                  configurationApi.updateExpenseCategory(category, !category.active),
-                )
-              }
-            >
-              {category.active ? 'Desactivar' : 'Activar'}
-            </button>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-const EmptyState = ({ text }: { text: string }) => (
-  <div className="empty-state">
-    <span aria-hidden="true">＋</span>
-    <p>{text}</p>
+const Detail = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 border-b border-lou-fog pb-3">
+    <span className="text-lou-graphite/55">{label}</span>
+    <strong className="text-right">{value}</strong>
   </div>
+)
+const HistoryHint = () => (
+  <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
+    Una condición nueva requiere otra vigencia. Desactivar ésta no modifica citas ni operaciones
+    históricas.
+  </p>
+)
+const ToggleButton = ({
+  active,
+  disabled,
+  onClick,
+}: {
+  active: boolean
+  disabled: boolean
+  onClick: () => void
+}) => (
+  <Button variant="secondary" disabled={disabled} onClick={onClick}>
+    {active ? 'Desactivar' : 'Activar'}
+  </Button>
+)
+const Loading = ({ title }: { title: string }) => (
+  <main className="mx-auto max-w-360 px-4 py-8" role="status" aria-label={title}>
+    <div className="h-12 w-52 animate-pulse rounded-xl bg-lou-fog" />
+    <div className="mt-8 grid gap-4 lg:grid-cols-2">
+      <div className="h-80 animate-pulse rounded-2xl bg-lou-fog" />
+      <div className="h-80 animate-pulse rounded-2xl bg-lou-fog" />
+    </div>
+  </main>
 )

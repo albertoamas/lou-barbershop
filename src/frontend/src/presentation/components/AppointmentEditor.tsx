@@ -86,6 +86,18 @@ export const AppointmentEditor = ({
       setBusy(false)
     }
   }
+  const slotGroups = slots.data
+    ? [
+        {
+          label: 'Mañana',
+          items: slots.data.filter((item) => agendaTime(item.startsAt) < '13:00'),
+        },
+        {
+          label: 'Tarde',
+          items: slots.data.filter((item) => agendaTime(item.startsAt) >= '13:00'),
+        },
+      ].filter((group) => group.items.length > 0)
+    : []
   return (
     <section className="grid gap-6" aria-label={appointment ? 'Reprogramar cita' : 'Nueva cita'}>
       <div className="flex items-start justify-between gap-4 border-b border-lou-fog pb-5">
@@ -211,31 +223,49 @@ export const AppointmentEditor = ({
         </p>
       )}
       {searchMatches && slots.data && slots.data.length > 0 && (
-        <label className={labelClassName}>
-          Horario disponible
-          <select
-            className={fieldClassName}
-            value={slot ? `${slot.barberId}|${slot.startsAt}` : ''}
-            onChange={(event) =>
-              setSlot(
-                slots.data.find(
-                  (item) => `${item.barberId}|${item.startsAt}` === event.target.value,
-                ),
-              )
-            }
-          >
-            <option value="">Selecciona un horario</option>
-            {slots.data.map((item) => (
-              <option
-                key={`${item.barberId}|${item.startsAt}`}
-                value={`${item.barberId}|${item.startsAt}`}
-              >
-                {agendaTime(item.startsAt)} · {item.barberName} · {item.durationMinutes} min ·{' '}
-                {centsToBolivianos(item.priceCents)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <fieldset className="grid gap-4">
+          <legend className="text-sm font-bold">Elige un horario disponible</legend>
+          {slotGroups.map((group) => (
+            <div key={group.label}>
+              <p className="mb-2 text-[0.65rem] font-bold tracking-[0.16em] text-lou-graphite/45 uppercase">
+                {group.label}
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {group.items.map((item) => {
+                  const selected =
+                    slot?.barberId === item.barberId && slot.startsAt === item.startsAt
+                  return (
+                    <button
+                      key={`${item.barberId}|${item.startsAt}`}
+                      className={`rounded-xl border p-3 text-left transition-[background-color,border-color,box-shadow] duration-300 ease-lou ${
+                        selected
+                          ? 'border-lou-ink bg-lou-ink text-white shadow-lou-sm'
+                          : 'border-lou-fog bg-white hover:border-lou-graphite/45 hover:shadow-lou-sm'
+                      }`}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setSlot(item)}
+                    >
+                      <strong className="block font-display text-xl tabular-nums">
+                        {agendaTime(item.startsAt)}
+                      </strong>
+                      <span
+                        className={`block truncate text-xs ${selected ? 'text-white/70' : 'text-lou-graphite/55'}`}
+                      >
+                        {item.barberName}
+                      </span>
+                      <span
+                        className={`mt-1 block text-[0.65rem] ${selected ? 'text-white/70' : 'text-lou-graphite/45'}`}
+                      >
+                        {item.durationMinutes} min · {centsToBolivianos(item.priceCents)}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </fieldset>
       )}
       {appointment && (
         <label className={labelClassName}>

@@ -11,14 +11,9 @@ export const schedulingApi: SchedulingPort = {
   listSchedules: (barberId) => apiRequest(`/api/v1/barbers/${barberId}/schedules`),
   createSchedule: (barberId, input) =>
     secureApiRequest(`/api/v1/barbers/${barberId}/schedules`, 'POST', input),
-  updateSchedule: (schedule, active) =>
+  updateSchedule: (schedule, input) =>
     secureApiRequest(`/api/v1/barbers/${schedule.barberId}/schedules/${schedule.id}`, 'PATCH', {
-      weekday: schedule.weekday,
-      startLocalTime: schedule.startLocalTime,
-      endLocalTime: schedule.endLocalTime,
-      validFrom: schedule.validFrom,
-      validTo: schedule.validTo,
-      active,
+      ...input,
       version: schedule.version,
     }),
   listExceptions: (barberId) => apiRequest(`/api/v1/barbers/${barberId}/availability-exceptions`),

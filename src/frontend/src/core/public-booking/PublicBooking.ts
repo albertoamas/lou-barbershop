@@ -70,3 +70,17 @@ export const managementTokenFromHash = (hash: string): string => {
   const value = hash.startsWith('#') ? hash.slice(1) : hash
   return /^[A-Za-z0-9_-]{43}$/.test(value) ? value : ''
 }
+
+export const managementTokenFromInput = (input: string): string => {
+  const value = input.trim()
+  const directToken = managementTokenFromHash(value)
+  if (directToken) return directToken
+
+  try {
+    const url = new URL(value, 'https://lou-barbershop.invalid')
+    if (!url.pathname.endsWith('/mi-cita')) return ''
+    return managementTokenFromHash(url.hash)
+  } catch {
+    return ''
+  }
+}

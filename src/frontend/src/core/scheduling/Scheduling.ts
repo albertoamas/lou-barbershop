@@ -58,6 +58,12 @@ export interface ScheduleChange {
   conflicts: AppointmentConflict[]
 }
 
+export type ScheduleInput = Pick<
+  WorkingSchedule,
+  'weekday' | 'startLocalTime' | 'endLocalTime' | 'validFrom' | 'validTo'
+>
+export type ScheduleUpdate = ScheduleInput & Pick<WorkingSchedule, 'active'>
+
 export interface ExceptionChange {
   exception: AvailabilityException
   conflicts: AppointmentConflict[]
@@ -73,11 +79,8 @@ export interface SchedulingPort {
     dateTo: string
   }): Promise<AvailabilitySlot[]>
   listSchedules(barberId: string): Promise<WorkingSchedule[]>
-  createSchedule(
-    barberId: string,
-    input: Omit<WorkingSchedule, 'id' | 'barberId' | 'active' | 'version'>,
-  ): Promise<ScheduleChange>
-  updateSchedule(schedule: WorkingSchedule, active: boolean): Promise<ScheduleChange>
+  createSchedule(barberId: string, input: ScheduleInput): Promise<ScheduleChange>
+  updateSchedule(schedule: WorkingSchedule, input: ScheduleUpdate): Promise<ScheduleChange>
   listExceptions(barberId: string): Promise<AvailabilityException[]>
   createException(
     barberId: string,
@@ -103,6 +106,30 @@ export const addCalendarDays = (date: string, days: number) => {
 }
 
 export const businessLocalToIso = (value: string) => `${value}:00-04:00`
+
+export const businessDateFromIso = (value: string) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/La_Paz',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value))
+
+export const weekStartFor = (date: string) => {
+  const weekday = new Date(`${date}T12:00:00Z`).getUTCDay()
+  return addCalendarDays(date, -(weekday === 0 ? 6 : weekday - 1))
+}
+
+export const scheduleAppliesOn = (schedule: WorkingSchedule, date: string) =>
+  schedule.active &&
+  schedule.weekday === ((new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7) + 1 &&
+  schedule.validFrom <= date &&
+  (!schedule.validTo || schedule.validTo >= date)
+
+export const exceptionAppliesOn = (exception: AvailabilityException, date: string) =>
+  exception.active &&
+  businessDateFromIso(exception.startsAt) <= date &&
+  businessDateFromIso(new Date(new Date(exception.endsAt).getTime() - 1).toISOString()) >= date
 
 export const weekdayLabels = [
   'Lunes',

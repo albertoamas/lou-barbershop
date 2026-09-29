@@ -15,6 +15,9 @@ export type IconName =
   | 'chevron-down'
   | 'close'
   | 'map-pin'
+  | 'eye'
+  | 'eye-off'
+  | 'shield'
 
 interface AppIconProps {
   name: IconName
@@ -88,12 +91,29 @@ const paths: Record<IconName, React.ReactNode> = {
       <circle cx="12" cy="10" r="2.5" />
     </>
   ),
+  eye: (
+    <>
+      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </>
+  ),
+  'eye-off': (
+    <>
+      <path d="M3 3l18 18M10.6 6.1A10.8 10.8 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-2.2 2.9M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3.1-.5M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 3 20 6v5c0 5-3.2 8.2-8 10-4.8-1.8-8-5-8-10V6Z" />
+      <path d="m8.5 12 2.2 2.2 4.8-5" />
+    </>
+  ),
 }
 
 export const AppIcon = ({ name, size = 22 }: AppIconProps) => (
   <svg
     aria-hidden="true"
-    className="app-icon"
+    className="shrink-0"
     fill="none"
     height={size}
     viewBox="0 0 24 24"

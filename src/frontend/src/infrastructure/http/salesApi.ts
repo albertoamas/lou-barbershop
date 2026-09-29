@@ -1,6 +1,7 @@
 import type { DailyOperations, Operation, PaymentMethod } from '../../core/sales/Sales'
 import { apiRequest, secureApiRequest } from './apiClient'
 export const salesApi = {
+  ownBarber: () => apiRequest<{ barberId: string }>('/api/v1/operations/own-barber'),
   read: (id: string) => apiRequest<Operation>(`/api/v1/operations/${id}`),
   daily: (date: string) =>
     apiRequest<DailyOperations>(`/api/v1/operations/daily?${new URLSearchParams({ date })}`),

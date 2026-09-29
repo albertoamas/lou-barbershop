@@ -57,4 +57,20 @@ describe('InternalNavigation', () => {
 
     expect(onLogout).toHaveBeenCalledOnce()
   })
+
+  it('keeps keyboard focus in the mobile menu and returns it when dismissed', async () => {
+    const user = userEvent.setup()
+    renderNavigation(['OWNER'])
+
+    const more = screen.getByRole('button', { name: 'Más' })
+    await user.click(more)
+    expect(screen.getByRole('dialog', { name: 'Más opciones del equipo' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar menú' })).toHaveFocus()
+
+    await user.keyboard('{Shift>}{Tab}{/Shift}')
+    expect(screen.getAllByRole('button', { name: 'Cerrar sesión' }).at(-1)).toHaveFocus()
+
+    await user.keyboard('{Escape}')
+    expect(more).toHaveFocus()
+  })
 })

@@ -4,6 +4,7 @@ import { Button } from './Button'
 
 interface ConfirmDialogProps {
   busy?: boolean
+  cancelLabel?: string
   children: ReactNode
   confirmLabel: string
   title: string
@@ -13,6 +14,7 @@ interface ConfirmDialogProps {
 
 export const ConfirmDialog = ({
   busy = false,
+  cancelLabel = 'Conservar cita',
   children,
   confirmLabel,
   title,
@@ -54,7 +56,7 @@ export const ConfirmDialog = ({
             {busy ? 'Procesando…' : confirmLabel}
           </Button>
           <Button variant="secondary" disabled={busy} onClick={onCancel}>
-            Conservar cita
+            {cancelLabel}
           </Button>
         </div>
       </m.div>
