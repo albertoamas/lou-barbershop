@@ -24,7 +24,7 @@ public sealed class PhaseSixEndpointTests(IdentityApiFixture fixture)
         var service = await PostAsync<Service>(owner, "/api/v1/services", new { name = $"Corte {suffix}", defaultDurationMinutes = 45, defaultPriceCents = 6000 });
         var tomorrow = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2));
         var date = tomorrow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-        await PostAsync<object>(owner, $"/api/v1/barbers/{barber.Id}/schedules", new { weekday = ((int)tomorrow.DayOfWeek + 6) % 7 + 1, startLocalTime = "09:00", endLocalTime = "18:00", validFrom = date, validTo = date });
+        await PostAsync<object>(owner, $"/api/v1/barbers/{barber.Id}/schedules", new { weekday = ((int)tomorrow.DayOfWeek + 6) % 7 + 1, startLocalTime = "09:00", endLocalTime = "13:00", validFrom = date, validTo = date });
         var customer = await PostAsync<CustomerChange>(owner, "/api/v1/customers", new { displayName = $"Cliente {suffix}", phone = "7123 4567" });
         Assert.Equal("+59171234567", customer.Customer.Phone);
         var duplicate = await PostAsync<CustomerChange>(owner, "/api/v1/customers", new { displayName = $"Familiar {suffix}", phone = "71234567" });
@@ -35,6 +35,21 @@ public sealed class PhaseSixEndpointTests(IdentityApiFixture fixture)
         Assert.True(correction.IsSuccessStatusCode);
         using var staleCustomer = await SendAsync(owner, HttpMethod.Patch, $"/api/v1/customers/{customer.Customer.Id}", new { displayName = "Cambio obsoleto", phone = "+59171234567", version = customer.Customer.Version });
         Assert.Equal(HttpStatusCode.Conflict, staleCustomer.StatusCode);
+        await using (var auditScope = fixture.Services.CreateAsyncScope())
+        {
+            var auditDb = auditScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var customerAudit = await auditDb.AuditLogs.AsNoTracking()
+                .Where(x => x.EntityType == "customer" && x.EntityId == customer.Customer.Id)
+                .ToArrayAsync();
+            Assert.NotEmpty(customerAudit);
+            Assert.All(customerAudit, row =>
+            {
+                Assert.DoesNotContain("71234567", row.BeforeData ?? string.Empty, StringComparison.Ordinal);
+                Assert.DoesNotContain("71234567", row.AfterData ?? string.Empty, StringComparison.Ordinal);
+                Assert.DoesNotContain("Preferencia de corte", row.BeforeData ?? string.Empty, StringComparison.Ordinal);
+                Assert.DoesNotContain("Preferencia de corte", row.AfterData ?? string.Empty, StringComparison.Ordinal);
+            });
+        }
 
         var input = new { customerId = customer.Customer.Id, barberId = barber.Id, serviceId = service.Id, startsAt = $"{date}T09:00:00-04:00" };
         var attempts = await Task.WhenAll(SendAsync(owner, HttpMethod.Post, "/api/v1/appointments", input), SendAsync(owner, HttpMethod.Post, "/api/v1/appointments", input));
@@ -75,6 +90,8 @@ public sealed class PhaseSixEndpointTests(IdentityApiFixture fixture)
         var customerForOperation = await barberClient.GetFromJsonAsync<Customer[]>($"/api/v1/customers?query={suffix}");
         Assert.Equal(2, customerForOperation!.Length);
         Assert.All(customerForOperation, x => Assert.Null(x.Notes));
+        var broadCustomerDirectory = await barberClient.GetFromJsonAsync<Customer[]>("/api/v1/customers?query=");
+        Assert.Empty(broadCustomerDirectory!);
         using var historyForbidden = await barberClient.GetAsync($"/api/v1/appointments/{appointment.Id}/events");
         Assert.Equal(HttpStatusCode.Forbidden, historyForbidden.StatusCode);
         using var forbidden = await SendAsync(barberClient, HttpMethod.Post, $"/api/v1/appointments/{appointment.Id}/cancel", new { version = appointment.Version, reason = "No permitido" });
@@ -93,7 +110,7 @@ public sealed class PhaseSixEndpointTests(IdentityApiFixture fixture)
         Assert.Equal(HttpStatusCode.Conflict, invalidCancel.StatusCode);
 
         // Arrange a past confirmed appointment to exercise no-show without changing the production clock.
-        var absent = await PostAsync<Appointment>(owner, "/api/v1/appointments", new { customerId = customer.Customer.Id, barberId = barber.Id, serviceId = service.Id, startsAt = $"{date}T13:00:00-04:00" });
+        var absent = await PostAsync<Appointment>(owner, "/api/v1/appointments", new { customerId = customer.Customer.Id, barberId = barber.Id, serviceId = service.Id, startsAt = $"{date}T12:00:00-04:00" });
         await using (var scope = fixture.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

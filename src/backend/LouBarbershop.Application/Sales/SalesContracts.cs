@@ -15,6 +15,7 @@ public sealed record OperationView(Guid Id, Guid? AppointmentId, Guid CustomerId
     string? AdjustmentReason, string? ReversalReason, DateTimeOffset OpenedAt, DateTimeOffset? PaidAt, DateTimeOffset? ReversedAt, uint Version, IReadOnlyCollection<ItemView> Items, IReadOnlyCollection<PaymentView> Payments);
 public sealed record ItemView(Guid Id, SaleItemType Type, Guid? ServiceId, Guid? ProductId, string Description, long UnitPriceCents, long UnitCostCents, int Quantity);
 public sealed record PaymentView(Guid Id, PaymentMethod Method, long AmountCents);
+public sealed record OwnBarberView(Guid BarberId);
 public sealed record DailyOperationsView(DateOnly Date, int DraftCount, int PaidCount, long TotalCents, long CashCents, long QrCents, IReadOnlyCollection<OperationView> Operations);
 
 public interface ISalesTransaction : IAsyncDisposable { Task CommitAsync(CancellationToken ct); }

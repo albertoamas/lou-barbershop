@@ -10,6 +10,7 @@ namespace LouBarbershop.Api.Controllers;
 [ApiController, Authorize(Policy = AuthorizationPolicies.ManageOperations), Route("api/v1/operations")]
 public sealed class OperationsController(SalesService sales, CommissionService commissions) : SalesControllerBase
 {
+    [HttpGet("own-barber")] public async Task<ActionResult<OwnBarberView>> OwnBarberAsync(CancellationToken ct) => Respond(await sales.OwnBarberAsync(ct));
     [HttpPost] public async Task<ActionResult<OperationView>> OpenAsync(OpenRequest request, CancellationToken ct) => Respond(await sales.OpenWalkInAsync(request.CustomerId, request.BarberId, ct));
     [HttpGet("{id:guid}")] public async Task<ActionResult<OperationView>> ReadAsync(Guid id, CancellationToken ct) => Respond(await sales.ReadAsync(id, ct));
     [HttpPut("{id:guid}/services")] public async Task<ActionResult<OperationView>> ServicesAsync(Guid id, ServicesRequest request, CancellationToken ct) => Respond(await sales.ReplaceServicesAsync(id, request.Version, request.Services.Select(x => new ServiceInput(x.ServiceId)).ToArray(), ct));
