@@ -49,6 +49,7 @@ services:
       Security__RequireSecureCookies: "false"
       ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-lou_barbershop};Username=${POSTGRES_USER:-lou};Password=${POSTGRES_PASSWORD:-lou_local_password};Timeout=3;Command Timeout=10
       DataProtection__KeysPath: /var/lib/lou-keys
+      DataProtection__AllowUnencryptedKeys: "true"
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -72,6 +73,11 @@ services:
     build:
       context: .
       dockerfile: deploy/docker/web.Dockerfile
+      args:
+        VITE_SOCIAL_FACEBOOK_URL: ${VITE_SOCIAL_FACEBOOK_URL:-}
+        VITE_SOCIAL_WHATSAPP_URL: ${VITE_SOCIAL_WHATSAPP_URL:-}
+        VITE_SOCIAL_INSTAGRAM_URL: ${VITE_SOCIAL_INSTAGRAM_URL:-}
+        VITE_SOCIAL_TIKTOK_URL: ${VITE_SOCIAL_TIKTOK_URL:-}
     depends_on:
       api:
         condition: service_healthy

@@ -1,0 +1,26 @@
+# Plantilla de endurecimiento para un despliegue Docker real.
+# Úsela como overlay de compose.yaml sólo después de crear secretos y roles separados.
+# No copie valores productivos a este archivo.
+
+services:
+  migrate:
+    environment:
+      ConnectionStrings__Database: ${MIGRATION_DATABASE_CONNECTION:?required}
+
+  api:
+    environment:
+      ConnectionStrings__Database: ${RUNTIME_DATABASE_CONNECTION:?required}
+      AllowedHosts: ${ALLOWED_HOSTS:?required}
+      Security__RequireSecureCookies: "true"
+      Security__RequireOwnerMfa: "true"
+      Security__SessionIdleMinutes: ${SESSION_IDLE_MINUTES:-60}
+      Security__SessionAbsoluteHours: ${SESSION_ABSOLUTE_HOURS:-8}
+      Http__UseHttpsRedirection: "true"
+      Http__TrustForwardedHeaders: ${TRUST_FORWARDED_HEADERS:-false}
+      DataProtection__AllowUnencryptedKeys: "false"
+      DataProtection__CertificateBase64: ${DATA_PROTECTION_CERTIFICATE_BASE64:?required}
+      DataProtection__CertificatePassword: ${DATA_PROTECTION_CERTIFICATE_PASSWORD:?required}
+
+  web:
+    ports:
+      - "${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${PUBLIC_PORT:-8088}:8080"

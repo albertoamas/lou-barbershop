@@ -3,6 +3,14 @@ WORKDIR /source
 COPY src/frontend/package.json src/frontend/package-lock.json ./
 RUN npm ci
 COPY src/frontend .
+ARG VITE_SOCIAL_FACEBOOK_URL
+ARG VITE_SOCIAL_WHATSAPP_URL
+ARG VITE_SOCIAL_INSTAGRAM_URL
+ARG VITE_SOCIAL_TIKTOK_URL
+ENV VITE_SOCIAL_FACEBOOK_URL=${VITE_SOCIAL_FACEBOOK_URL} \
+    VITE_SOCIAL_WHATSAPP_URL=${VITE_SOCIAL_WHATSAPP_URL} \
+    VITE_SOCIAL_INSTAGRAM_URL=${VITE_SOCIAL_INSTAGRAM_URL} \
+    VITE_SOCIAL_TIKTOK_URL=${VITE_SOCIAL_TIKTOK_URL}
 RUN npm run build
 
 FROM golang:1.26.7-alpine3.24 AS caddy-build
@@ -31,6 +39,8 @@ RUN apk upgrade --no-cache \
 COPY --from=caddy-build /out/caddy /usr/bin/caddy
 COPY deploy/docker/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /source/dist /srv
+ENV XDG_CONFIG_HOME=/config \
+    XDG_DATA_HOME=/data
 EXPOSE 8080
 USER 1000:1000
 ENTRYPOINT ["caddy"]
