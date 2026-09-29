@@ -17,6 +17,7 @@ public sealed class PublicBookingService(
     IIdGenerator ids)
 {
     private const int ManagementHoursAfterAppointment = 48;
+    private const int MaxActivePublicAppointmentsPerPhone = 2;
     private static readonly TimeZoneInfo BusinessZone = TimeZoneInfo.FindSystemTimeZoneById("America/La_Paz");
 
     public async Task<PublicCatalog> CatalogAsync(CancellationToken ct)
@@ -45,6 +46,11 @@ public sealed class PublicBookingService(
             return Invalid<PublicBookingConfirmation>(phone.Error!.Code, phone.Error.Message);
 
         await using var transaction = await store.BeginAsync(ct);
+        var activeBookings = await store.CountActivePublicAppointmentsAsync(phone.Value, clock.UtcNow, ct);
+        if (activeBookings >= MaxActivePublicAppointmentsPerPhone)
+            return Conflict<PublicBookingConfirmation>(
+                "booking.active_limit",
+                "Ese teléfono ya tiene el máximo de citas futuras. Gestiona una cita existente o contacta a la barbería.");
         var slot = await FindSlotAsync(input.BarberId, input.ServiceId, input.StartsAt, null, ct);
         if (slot is null) return SlotTaken<PublicBookingConfirmation>();
         var customer = await store.FindCustomerByIdentityAsync(displayName, phone.Value, ct);

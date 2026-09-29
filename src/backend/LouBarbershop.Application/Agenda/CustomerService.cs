@@ -13,6 +13,8 @@ public sealed class CustomerService(IAgendaStore store, ICurrentActor actor, ICl
         if (!CanOperate) return new(AgendaStatus.Forbidden);
         var normalized = query?.Trim() ?? string.Empty;
         if (normalized.Length > 120) return new(AgendaStatus.Invalid, Code: "query.invalid", Message: "La búsqueda admite hasta 120 caracteres.");
+        if (!CanManage && normalized.Length < 3)
+            return new(AgendaStatus.Success, Array.Empty<CustomerView>());
         var phone = NormalizePhone(normalized);
         var customers = await store.SearchCustomersAsync(normalized, phone.IsSuccess ? phone.Value : null, ct);
         return new(AgendaStatus.Success, customers.Select(MapForActor).ToArray());

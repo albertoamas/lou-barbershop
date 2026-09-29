@@ -150,8 +150,12 @@ public sealed class AppDbContext(
 
         foreach (var entry in changedEntries)
         {
-            var before = entry.State is EntityState.Added ? null : SerializeValues(entry.OriginalValues.Properties.ToDictionary(p => p.Name, p => entry.OriginalValues[p]));
-            var after = entry.State is EntityState.Deleted ? null : SerializeValues(entry.CurrentValues.Properties.ToDictionary(p => p.Name, p => entry.CurrentValues[p]));
+            var before = entry.State is EntityState.Added ? null : SerializeValues(
+                entry.Entity.GetType(),
+                entry.OriginalValues.Properties.ToDictionary(p => p.Name, p => entry.OriginalValues[p]));
+            var after = entry.State is EntityState.Deleted ? null : SerializeValues(
+                entry.Entity.GetType(),
+                entry.CurrentValues.Properties.ToDictionary(p => p.Name, p => entry.CurrentValues[p]));
             AuditLogs.Add(new AuditLog
             {
                 Id = Guid.NewGuid(),
@@ -167,8 +171,20 @@ public sealed class AppDbContext(
         }
     }
 
-    private static string SerializeValues(IReadOnlyDictionary<string, object?> values) =>
-        System.Text.Json.JsonSerializer.Serialize(values);
+    private static string SerializeValues(Type entityType, IReadOnlyDictionary<string, object?> values)
+    {
+        if (entityType != typeof(Customer))
+            return System.Text.Json.JsonSerializer.Serialize(values);
+
+        var redacted = values.ToDictionary(pair => pair.Key, pair => pair.Value);
+        if (redacted.ContainsKey(nameof(Customer.DisplayName)))
+            redacted[nameof(Customer.DisplayName)] = "[REDACTED]";
+        if (redacted.ContainsKey(nameof(Customer.PhoneNumber)))
+            redacted[nameof(Customer.PhoneNumber)] = "[REDACTED]";
+        if (redacted.TryGetValue(nameof(Customer.Notes), out var notes) && notes is not null)
+            redacted[nameof(Customer.Notes)] = "[REDACTED]";
+        return System.Text.Json.JsonSerializer.Serialize(redacted);
+    }
 
     private static string AuditEntityName(Type type) => type.Name switch
     {

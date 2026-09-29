@@ -67,6 +67,30 @@ public sealed class PhaseElevenEndpointTests(IdentityApiFixture fixture)
         Assert.Equal(43, confirmation.ManagementToken.Length);
         Assert.Equal($"/mi-cita#{confirmation.ManagementToken}", confirmation.ManagementPath);
         Assert.DoesNotContain("71234567", System.Text.Json.JsonSerializer.Serialize(confirmation), StringComparison.Ordinal);
+
+        var lastSlot = Assert.Single(availability!, x => x.BarberId == barber.Id && x.StartsAt.Hour == 15 && x.StartsAt.Minute == 0); // 11:00 Bolivia in UTC.
+        using var secondBooking = await SendAsync(firstClient, HttpMethod.Post, "/api/v1/public/appointments", new
+        {
+            serviceId = service.Id,
+            barberId = lastSlot.BarberId,
+            startsAt = lastSlot.StartsAt,
+            displayName = "Cliente público",
+            phone = "71234567",
+            privacyAccepted = true,
+        });
+        Assert.Equal(HttpStatusCode.Created, secondBooking.StatusCode);
+        var middleSlot = Assert.Single(availability!, x => x.BarberId == barber.Id && x.StartsAt.Hour == 14 && x.StartsAt.Minute == 0); // 10:00 Bolivia in UTC.
+        using var excessiveBooking = await SendAsync(firstClient, HttpMethod.Post, "/api/v1/public/appointments", new
+        {
+            serviceId = service.Id,
+            barberId = middleSlot.BarberId,
+            startsAt = middleSlot.StartsAt,
+            displayName = "Cliente público",
+            phone = "71234567",
+            privacyAccepted = true,
+        });
+        Assert.Equal(HttpStatusCode.Conflict, excessiveBooking.StatusCode);
+        Assert.Contains("booking.active_limit", await excessiveBooking.Content.ReadAsStringAsync(), StringComparison.Ordinal);
         await using (var scope = fixture.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -83,7 +107,7 @@ public sealed class PhaseElevenEndpointTests(IdentityApiFixture fixture)
         using var current = await ReadAsync(firstClient, confirmation.ManagementToken);
         Assert.Equal(HttpStatusCode.OK, current.StatusCode);
 
-        var nextSlot = Assert.Single(availability!, x => x.BarberId == barber.Id && x.StartsAt.Hour == 14 && x.StartsAt.Minute == 0); // 10:00 Bolivia in UTC.
+        var nextSlot = middleSlot;
         using var changedResponse = await SendAsync(firstClient, HttpMethod.Patch, "/api/v1/public/appointments/manage",
             new { serviceId = service.Id, barberId = barber.Id, startsAt = nextSlot.StartsAt, version = confirmation.Appointment.Version }, confirmation.ManagementToken);
         Assert.Equal(HttpStatusCode.OK, changedResponse.StatusCode);

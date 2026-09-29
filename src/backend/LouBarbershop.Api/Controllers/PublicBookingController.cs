@@ -38,6 +38,7 @@ public sealed class PublicBookingController(PublicBookingService bookings) : Con
     }
 
     [HttpPost("appointments")]
+    [EnableRateLimiting("public-booking-create")]
     public async Task<ActionResult<PublicBookingConfirmation>> CreateAsync(CreateRequest request, CancellationToken ct) =>
         Respond(await bookings.CreateAsync(new(request.ServiceId, request.BarberId, request.StartsAt,
             request.DisplayName, request.Phone, request.PrivacyAccepted), ct), 201);

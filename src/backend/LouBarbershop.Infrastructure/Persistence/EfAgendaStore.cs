@@ -35,6 +35,16 @@ public sealed class EfAgendaStore(AppDbContext db) : IAgendaStore
     public Task<Customer?> FindCustomerAsync(Guid id, CancellationToken ct) => db.Customers.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<Customer?> FindCustomerByIdentityAsync(string displayName, PhoneNumber phone, CancellationToken ct) =>
         db.Customers.FirstOrDefaultAsync(x => x.PhoneNumber == phone && x.DisplayName == displayName, ct);
+    public Task<int> CountActivePublicAppointmentsAsync(PhoneNumber phone, DateTimeOffset now, CancellationToken ct) =>
+        (from appointment in db.Appointments.AsNoTracking()
+         join customer in db.Customers.IgnoreQueryFilters().AsNoTracking() on appointment.CustomerId equals customer.Id
+         where customer.PhoneNumber == phone &&
+             appointment.Source == AppointmentSource.Public &&
+             appointment.Range.EndsAt > now &&
+             (appointment.Status == AppointmentStatus.Confirmed ||
+              appointment.Status == AppointmentStatus.CheckedIn ||
+              appointment.Status == AppointmentStatus.InService)
+         select appointment.Id).CountAsync(ct);
     public void Add(Customer customer) => db.Customers.Add(customer);
     public async Task<Guid?> FindOwnBarberAsync(Guid userId, CancellationToken ct) => await
         (from barber in db.BarberProfiles.AsNoTracking()

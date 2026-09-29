@@ -14,6 +14,7 @@ public interface IAgendaStore
     Task<IReadOnlyCollection<Customer>> SearchCustomersAsync(string query, PhoneNumber? phone, CancellationToken ct);
     Task<Customer?> FindCustomerAsync(Guid id, CancellationToken ct);
     Task<Customer?> FindCustomerByIdentityAsync(string displayName, PhoneNumber phone, CancellationToken ct);
+    Task<int> CountActivePublicAppointmentsAsync(PhoneNumber phone, DateTimeOffset now, CancellationToken ct);
     void Add(Customer customer);
     Task<Guid?> FindOwnBarberAsync(Guid userId, CancellationToken ct);
     Task<IReadOnlyCollection<AppointmentView>> ListAsync(DateTimeOffset startsAt, DateTimeOffset endsAt, Guid? barberId, CancellationToken ct);
