@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using LouBarbershop.Infrastructure.Identity;
 using LouBarbershop.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -121,6 +122,68 @@ public sealed class IdentityEndpointTests
         Assert.Contains(RoleNames.Barber, owner.Roles);
     }
 
+    [Fact]
+    public async Task UserCanChangePasswordAndProtectLoginWithAuthenticatorMfa()
+    {
+        using var ownerClient = _fixture.CreateClient();
+        await LoginAsync(ownerClient, IdentityApiFixture.OwnerUserName, IdentityApiFixture.OwnerPassword);
+        var suffix = Guid.NewGuid().ToString("N");
+        var userName = $"secure-{suffix}";
+        const string originalPassword = "Secure-start!8426";
+        const string changedPassword = "Secure-changed!8426";
+        using var created = await PostSecureAsync(ownerClient, "/api/v1/users", new
+        {
+            userName,
+            password = originalPassword,
+            roles = new[] { RoleNames.Barber },
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+
+        using var userClient = _fixture.CreateClient();
+        await LoginAsync(userClient, userName, originalPassword);
+        using var changed = await PostSecureAsync(userClient, "/api/v1/auth/change-password", new
+        {
+            currentPassword = originalPassword,
+            newPassword = changedPassword,
+        });
+        Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
+
+        using var oldPasswordClient = _fixture.CreateClient();
+        using var oldPassword = await LoginResponseAsync(oldPasswordClient, userName, originalPassword);
+        Assert.Equal(HttpStatusCode.Unauthorized, oldPassword.StatusCode);
+
+        using var setupResponse = await PostSecureAsync(userClient, "/api/v1/auth/mfa/setup", new
+        {
+            currentPassword = changedPassword,
+        });
+        Assert.Equal(HttpStatusCode.OK, setupResponse.StatusCode);
+        var setup = (await setupResponse.Content.ReadFromJsonAsync<MfaSetupResponse>())!;
+        Assert.StartsWith("otpauth://totp/", setup.AuthenticatorUri, StringComparison.Ordinal);
+        var code = Totp(setup.SharedKey, DateTimeOffset.UtcNow);
+
+        using var enabledResponse = await PostSecureAsync(userClient, "/api/v1/auth/mfa/enable", new
+        {
+            currentPassword = changedPassword,
+            code,
+        });
+        Assert.Equal(HttpStatusCode.OK, enabledResponse.StatusCode);
+        var enabled = (await enabledResponse.Content.ReadFromJsonAsync<MfaEnabledResponse>())!;
+        Assert.Equal(8, enabled.RecoveryCodes.Count);
+
+        using var logout = await PostSecureAsync(userClient, "/api/v1/auth/logout");
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        using var passwordOnlyClient = _fixture.CreateClient();
+        using var passwordOnly = await LoginResponseAsync(passwordOnlyClient, userName, changedPassword);
+        Assert.Equal(HttpStatusCode.Unauthorized, passwordOnly.StatusCode);
+        Assert.Contains("auth.two_factor_required", await passwordOnly.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+        using var mfaClient = _fixture.CreateClient();
+        using var authenticated = await LoginResponseAsync(mfaClient, userName, changedPassword, Totp(setup.SharedKey, DateTimeOffset.UtcNow));
+        Assert.Equal(HttpStatusCode.NoContent, authenticated.StatusCode);
+        var current = await mfaClient.GetFromJsonAsync<CurrentUserResponse>("/api/v1/auth/me");
+        Assert.True(current!.MfaEnabled);
+    }
+
     private static async Task LoginAsync(HttpClient client, string userName, string password)
     {
         using var response = await LoginResponseAsync(client, userName, password);
@@ -131,8 +194,45 @@ public sealed class IdentityEndpointTests
         Assert.Contains("samesite=lax", sessionCookie, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static Task<HttpResponseMessage> LoginResponseAsync(HttpClient client, string userName, string password) =>
-        PostSecureAsync(client, "/api/v1/auth/login", new { userName, password });
+    private static Task<HttpResponseMessage> LoginResponseAsync(HttpClient client, string userName, string password, string? twoFactorCode = null) =>
+        PostSecureAsync(client, "/api/v1/auth/login", new { userName, password, twoFactorCode });
+
+    private static string Totp(string sharedKey, DateTimeOffset at)
+    {
+        var key = DecodeBase32(sharedKey);
+        var counter = at.ToUnixTimeSeconds() / 30;
+        Span<byte> counterBytes = stackalloc byte[8];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt64BigEndian(counterBytes, counter);
+#pragma warning disable CA5350 // ASP.NET Core Identity authenticator tokens require RFC 6238 HMAC-SHA1 interoperability.
+        var hash = HMACSHA1.HashData(key, counterBytes);
+#pragma warning restore CA5350
+        var offset = hash[^1] & 0x0f;
+        var binary = ((hash[offset] & 0x7f) << 24) |
+            (hash[offset + 1] << 16) |
+            (hash[offset + 2] << 8) |
+            hash[offset + 3];
+        return (binary % 1_000_000).ToString("D6", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static byte[] DecodeBase32(string value)
+    {
+        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        var output = new List<byte>();
+        var buffer = 0;
+        var bits = 0;
+        foreach (var character in value.ToUpperInvariant().Where(x => x != '=' && !char.IsWhiteSpace(x)))
+        {
+            var index = alphabet.IndexOf(character);
+            Assert.True(index >= 0);
+            buffer = (buffer << 5) | index;
+            bits += 5;
+            if (bits < 8) continue;
+            bits -= 8;
+            output.Add((byte)(buffer >> bits));
+            buffer &= (1 << bits) - 1;
+        }
+        return output.ToArray();
+    }
 
     private static Task<HttpResponseMessage> PostSecureAsync(HttpClient client, string path, object? body = null) =>
         SendSecureAsync(client, HttpMethod.Post, path, body);
@@ -158,7 +258,9 @@ public sealed class IdentityEndpointTests
 
     private sealed record AntiforgeryResponse(string Token);
 
-    private sealed record CurrentUserResponse(Guid Id, string UserName, IReadOnlyCollection<string> Roles);
+    private sealed record CurrentUserResponse(Guid Id, string UserName, IReadOnlyCollection<string> Roles, bool MfaEnabled = false, bool MfaRequired = false);
+    private sealed record MfaSetupResponse(string SharedKey, string AuthenticatorUri);
+    private sealed record MfaEnabledResponse(IReadOnlyCollection<string> RecoveryCodes);
 
     private sealed record UserResponse(Guid Id, string UserName, bool Active, IReadOnlyCollection<string> Roles);
 }

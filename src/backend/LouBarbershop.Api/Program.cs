@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using LouBarbershop.Api.Authorization;
@@ -84,6 +85,12 @@ var cookieSecurePolicy = builder.Configuration.GetValue("Security:RequireSecureC
     ? CookieSecurePolicy.Always
     : CookieSecurePolicy.SameAsRequest;
 var secureCookieNames = cookieSecurePolicy == CookieSecurePolicy.Always;
+var sessionIdleMinutes = builder.Configuration.GetValue("Security:SessionIdleMinutes", 60);
+var sessionAbsoluteHours = builder.Configuration.GetValue("Security:SessionAbsoluteHours", 8);
+if (sessionIdleMinutes is < 15 or > 480 || sessionAbsoluteHours is < 1 or > 24)
+{
+    throw new InvalidOperationException("Security session limits are outside the supported range.");
+}
 builder.Services
     .AddAuthentication(IdentityConstants.ApplicationScheme)
     .AddCookie(IdentityConstants.ApplicationScheme, options =>
@@ -94,14 +101,22 @@ builder.Services
         options.Cookie.Path = "/";
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = cookieSecurePolicy;
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(sessionIdleMinutes);
         options.SlidingExpiration = true;
         options.Events.OnValidatePrincipal = async context =>
         {
             var signInManager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<AppUser>>();
             var user = await signInManager.ValidateSecurityStampAsync(context.Principal!);
 
-            if (user is null || !user.Active)
+            var sessionStarted = context.Principal?.FindFirst(SecurityClaims.SessionStartedAt)?.Value;
+            var absoluteExpired = !long.TryParse(
+                    sessionStarted,
+                    System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var startedAtSeconds) ||
+                DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds(startedAtSeconds) > TimeSpan.FromHours(sessionAbsoluteHours);
+
+            if (user is null || !user.Active || absoluteExpired)
             {
                 context.RejectPrincipal();
                 await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
@@ -135,9 +150,25 @@ builder.Services.AddControllersWithViews(options =>
 var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
 if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 {
-    builder.Services.AddDataProtection()
+    var dataProtection = builder.Services.AddDataProtection()
         .SetApplicationName("LouBarbershop")
         .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+    var certificateBase64 = builder.Configuration["DataProtection:CertificateBase64"];
+    if (!string.IsNullOrWhiteSpace(certificateBase64))
+    {
+        var certificatePassword = builder.Configuration["DataProtection:CertificatePassword"];
+        var certificate = X509CertificateLoader.LoadPkcs12(
+            Convert.FromBase64String(certificateBase64),
+            certificatePassword,
+            X509KeyStorageFlags.EphemeralKeySet);
+        dataProtection.ProtectKeysWithCertificate(certificate);
+    }
+    else if (!builder.Configuration.GetValue("DataProtection:AllowUnencryptedKeys", false))
+    {
+        throw new InvalidOperationException(
+            "Persisted Data Protection keys require DataProtection:CertificateBase64 in production. " +
+            "Use AllowUnencryptedKeys only for disposable local environments.");
+    }
 }
 builder.Services.AddExceptionHandler<PersistenceConflictExceptionHandler>();
 builder.Services.AddProblemDetails(options =>
@@ -161,6 +192,7 @@ builder.Services.AddRateLimiter(options =>
 {
     var loginPermitLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLimit", 5);
     var publicBookingPermitLimit = builder.Configuration.GetValue("RateLimiting:PublicBookingPermitLimit", 30);
+    var publicBookingCreatePermitLimit = builder.Configuration.GetValue("RateLimiting:PublicBookingCreatePermitLimit", 6);
     var globalPermitLimit = builder.Configuration.GetValue("RateLimiting:GlobalPermitLimit", 120);
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.OnRejected = async (context, cancellationToken) =>
@@ -205,6 +237,16 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true,
             }));
+    options.AddPolicy("public-booking-create", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = publicBookingCreatePermitLimit,
+                Window = TimeSpan.FromHours(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
 });
 builder.Services
     .AddHealthChecks()
@@ -213,6 +255,13 @@ builder.Services
 var trustForwardedHeaders = builder.Configuration.GetValue("Http:TrustForwardedHeaders", false);
 if (trustForwardedHeaders)
 {
+    var knownProxies = builder.Configuration.GetSection("Http:KnownProxies").Get<string[]>() ?? [];
+    var knownNetworks = builder.Configuration.GetSection("Http:KnownNetworks").Get<string[]>() ?? [];
+    if (knownProxies.Length == 0 && knownNetworks.Length == 0)
+    {
+        throw new InvalidOperationException(
+            "Http:TrustForwardedHeaders requires at least one exact KnownProxy or KnownNetwork.");
+    }
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -220,6 +269,14 @@ if (trustForwardedHeaders)
         options.RequireHeaderSymmetry = true;
         options.KnownIPNetworks.Clear();
         options.KnownProxies.Clear();
+        foreach (var proxy in knownProxies)
+        {
+            options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+        }
+        foreach (var network in knownNetworks)
+        {
+            options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+        }
     });
 }
 
@@ -248,6 +305,7 @@ if (app.Configuration.GetValue("Http:UseHttpsRedirection", true))
     app.UseHttpsRedirection();
 }
 app.UseAuthentication();
+app.UseMiddleware<AccountSecurityMiddleware>();
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())

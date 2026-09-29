@@ -63,6 +63,10 @@ public sealed class UsersController(InternalUserAdministration users) : Controll
         CancellationToken cancellationToken) =>
         ToMutationResponse(await users.ResetPasswordAsync(userId, request.NewPassword, cancellationToken));
 
+    [HttpPost("{userId:guid}/reset-mfa")]
+    public async Task<IActionResult> ResetMfaAsync(Guid userId, CancellationToken cancellationToken) =>
+        ToMutationResponse(await users.ResetMfaAsync(userId, cancellationToken));
+
     private IActionResult ToMutationResponse(UserAdministrationResult result) =>
         result.Status is UserAdministrationStatus.Success ? NoContent() : ToError(result).Result!;
 

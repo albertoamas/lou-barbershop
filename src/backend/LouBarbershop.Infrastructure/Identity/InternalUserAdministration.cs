@@ -184,6 +184,36 @@ public sealed class InternalUserAdministration(
         return UserAdministrationResult.Success(await ToViewAsync(user));
     }
 
+    public async Task<UserAdministrationResult> ResetMfaAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (currentActor.UserId == userId)
+        {
+            return UserAdministrationResult.SelfProtection();
+        }
+
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null) return UserAdministrationResult.NotFound();
+
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        var disabled = await userManager.SetTwoFactorEnabledAsync(user, false);
+        if (!disabled.Succeeded) return UserAdministrationResult.IdentityFailure(disabled.Errors);
+        var reset = await userManager.ResetAuthenticatorKeyAsync(user);
+        if (!reset.Succeeded)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return UserAdministrationResult.IdentityFailure(reset.Errors);
+        }
+        var revoke = await userManager.UpdateSecurityStampAsync(user);
+        if (!revoke.Succeeded)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return UserAdministrationResult.IdentityFailure(revoke.Errors);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return UserAdministrationResult.Success(await ToViewAsync(user));
+    }
+
     private async Task<InternalUserView> ToViewAsync(AppUser user) =>
         new(user.Id, user.UserName!, user.Active, (await userManager.GetRolesAsync(user)).ToArray());
 

@@ -48,6 +48,8 @@ public sealed class OwnerBootstrapper(
             var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
             var resetResult = await userManager.ResetPasswordAsync(user, resetToken, password);
             EnsureSuccess(resetResult, "No se pudo recuperar la contraseña del dueño.");
+            EnsureSuccess(await userManager.SetTwoFactorEnabledAsync(user, false), "No se pudo restablecer el segundo factor del dueño.");
+            EnsureSuccess(await userManager.ResetAuthenticatorKeyAsync(user), "No se pudo renovar el segundo factor del dueño.");
             user.Active = true;
             user.UpdatedAt = DateTimeOffset.UtcNow;
             EnsureSuccess(await userManager.UpdateAsync(user), "No se pudo reactivar el dueño.");
