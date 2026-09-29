@@ -20,8 +20,8 @@ public sealed class PhaseFiveAvailabilityTests
 
         var slots = AvailabilityEngine.Calculate(Monday, Monday, At(Monday, new TimeOnly(8, 0)), Bolivia, [terms], [schedule], [], [busy]);
 
-        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(9, 15) && LocalTime(x.EndsAt) == new TimeOnly(10, 0));
-        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(10, 45));
+        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(9, 0) && LocalTime(x.EndsAt) == new TimeOnly(9, 45));
+        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(11, 0));
         Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) >= new TimeOnly(9, 30) && LocalTime(x.StartsAt) < new TimeOnly(10, 45));
     }
 
@@ -36,7 +36,7 @@ public sealed class PhaseFiveAvailabilityTests
 
         var slots = AvailabilityEngine.Calculate(Monday, Monday, At(Monday, new TimeOnly(8, 0)), Bolivia, [Terms(barberId, Monday, 30)], [schedule], [unavailable, extra], []);
 
-        Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) >= new TimeOnly(9, 15) && LocalTime(x.StartsAt) < new TimeOnly(10, 30));
+        Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) >= new TimeOnly(9, 30) && LocalTime(x.StartsAt) < new TimeOnly(10, 30));
         Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(18, 0));
     }
 
@@ -51,7 +51,8 @@ public sealed class PhaseFiveAvailabilityTests
 
         Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) < new TimeOnly(10, 20));
         Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) == new TimeOnly(9, 0));
-        Assert.All(slots, x => Assert.Equal(0, LocalTime(x.StartsAt).Minute % 15));
+        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(10, 30));
+        Assert.All(slots, x => Assert.Equal(0, LocalTime(x.StartsAt).Minute % 30));
     }
 
     [Fact]
@@ -60,16 +61,16 @@ public sealed class PhaseFiveAvailabilityTests
         var zone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
         var date = new DateOnly(2026, 3, 8);
         var barberId = Guid.NewGuid();
-        var schedule = Schedule(barberId, 7, new TimeOnly(1, 30), new TimeOnly(4, 0), date);
+        var schedule = Schedule(barberId, 7, new TimeOnly(8, 0), new TimeOnly(10, 0), date);
 
         var slots = AvailabilityEngine.Calculate(date, date, new DateTimeOffset(2026, 3, 8, 0, 0, 0, TimeSpan.Zero), zone, [Terms(barberId, date, 30)], [schedule], [], []);
 
         Assert.NotEmpty(slots);
-        Assert.DoesNotContain(slots, x => TimeZoneInfo.ConvertTime(x.StartsAt, zone).Hour == 2);
+        Assert.All(slots, x => Assert.InRange(TimeZoneInfo.ConvertTime(x.StartsAt, zone).Hour, 8, 9));
     }
 
     [Fact]
-    public void OverrideAcrossMidnightIsCalculatedOnEachLocalDay()
+    public void OverrideOutsideShopHoursCannotCreateAvailability()
     {
         var barberId = Guid.NewGuid();
         var tuesday = Monday.AddDays(1);
@@ -78,8 +79,35 @@ public sealed class PhaseFiveAvailabilityTests
 
         var slots = AvailabilityEngine.Calculate(Monday, tuesday, At(Monday, new TimeOnly(22, 0)), Bolivia, [Terms(barberId, Monday, 30), Terms(barberId, tuesday, 30)], [], [extra], []);
 
-        Assert.Contains(slots, x => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(x.StartsAt, Bolivia).DateTime) == Monday && LocalTime(x.StartsAt) == new TimeOnly(23, 30));
-        Assert.Contains(slots, x => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(x.StartsAt, Bolivia).DateTime) == tuesday && LocalTime(x.StartsAt) == new TimeOnly(0, 0));
+        Assert.Empty(slots);
+    }
+
+    [Fact]
+    public void ServiceMustFitCompletelyWithinOneShopWindow()
+    {
+        var barberId = Guid.NewGuid();
+        var morning = Schedule(barberId, 1, new TimeOnly(8, 0), new TimeOnly(13, 0));
+        var afternoon = Schedule(barberId, 1, new TimeOnly(15, 0), new TimeOnly(21, 0));
+
+        var slots = AvailabilityEngine.Calculate(Monday, Monday, At(Monday, new TimeOnly(7, 0)), Bolivia, [Terms(barberId, Monday, 45)], [morning, afternoon], [], []);
+
+        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(12, 0));
+        Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) == new TimeOnly(12, 30));
+        Assert.Contains(slots, x => LocalTime(x.StartsAt) == new TimeOnly(20, 0));
+        Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) == new TimeOnly(20, 30));
+        Assert.DoesNotContain(slots, x => LocalTime(x.StartsAt) >= new TimeOnly(13, 0) && LocalTime(x.StartsAt) < new TimeOnly(15, 0));
+    }
+
+    [Theory]
+    [InlineData(7, 30, 9, 0)]
+    [InlineData(12, 0, 16, 0)]
+    [InlineData(20, 0, 22, 0)]
+    public void WorkingScheduleOutsideShopHoursIsRejected(int startHour, int startMinute, int endHour, int endMinute)
+    {
+        var result = WorkingSchedule.Create(Guid.NewGuid(), Guid.NewGuid(), 1, new TimeOnly(startHour, startMinute), new TimeOnly(endHour, endMinute), EffectivePeriod.Create(Monday, null).Value, DateTimeOffset.UtcNow);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("schedule.outside_shop_hours", result.Error!.Code);
     }
 
     [Fact]
@@ -90,7 +118,11 @@ public sealed class PhaseFiveAvailabilityTests
         for (var index = 0; index < 10; index++)
         {
             var barberId = Guid.NewGuid();
-            for (var weekday = 1; weekday <= 7; weekday++) schedules.Add(Schedule(barberId, weekday, new TimeOnly(8, 0), new TimeOnly(20, 0)));
+            for (var weekday = 1; weekday <= 7; weekday++)
+            {
+                schedules.Add(Schedule(barberId, weekday, new TimeOnly(8, 0), new TimeOnly(13, 0)));
+                schedules.Add(Schedule(barberId, weekday, new TimeOnly(15, 0), new TimeOnly(20, 0)));
+            }
             for (var date = Monday; date <= Monday.AddDays(30); date = date.AddDays(1)) terms.Add(Terms(barberId, date, 30));
         }
         var watch = Stopwatch.StartNew();

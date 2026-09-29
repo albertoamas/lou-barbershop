@@ -10,7 +10,11 @@ namespace LouBarbershop.Api.Controllers;
 public sealed class SchedulesController(SchedulingService scheduling) : SchedulingControllerBase
 {
     [HttpGet("schedules")]
-    public async Task<ActionResult<IReadOnlyCollection<ScheduleResponse>>> ListSchedulesAsync(Guid barberId, CancellationToken ct) => Ok((await scheduling.ListSchedulesAsync(barberId, ct)).Select(Map).ToArray());
+    public async Task<ActionResult<IReadOnlyCollection<ScheduleResponse>>> ListSchedulesAsync(Guid barberId, CancellationToken ct)
+    {
+        if (!await scheduling.CanViewBarberScheduleAsync(barberId, ct)) return Forbid();
+        return Ok((await scheduling.ListSchedulesAsync(barberId, ct)).Select(Map).ToArray());
+    }
 
     [HttpPost("schedules"), Authorize(Policy = AuthorizationPolicies.ManageScheduling)]
     public async Task<ActionResult<ScheduleChangeResponse>> CreateScheduleAsync(Guid barberId, ScheduleRequest request, CancellationToken ct) =>
@@ -21,7 +25,11 @@ public sealed class SchedulesController(SchedulingService scheduling) : Scheduli
         ToResponse(await scheduling.UpdateScheduleAsync(barberId, id, new(request.Weekday, request.StartLocalTime, request.EndLocalTime, request.ValidFrom, request.ValidTo, request.Active, request.Version), ct), (value, conflicts) => new ScheduleChangeResponse(Map(value), conflicts));
 
     [HttpGet("availability-exceptions")]
-    public async Task<ActionResult<IReadOnlyCollection<ExceptionResponse>>> ListExceptionsAsync(Guid barberId, CancellationToken ct) => Ok((await scheduling.ListExceptionsAsync(barberId, ct)).Select(Map).ToArray());
+    public async Task<ActionResult<IReadOnlyCollection<ExceptionResponse>>> ListExceptionsAsync(Guid barberId, CancellationToken ct)
+    {
+        if (!await scheduling.CanViewBarberScheduleAsync(barberId, ct)) return Forbid();
+        return Ok((await scheduling.ListExceptionsAsync(barberId, ct)).Select(Map).ToArray());
+    }
 
     [HttpPost("availability-exceptions"), Authorize(Policy = AuthorizationPolicies.ManageScheduling)]
     public async Task<ActionResult<ExceptionChangeResponse>> CreateExceptionAsync(Guid barberId, ExceptionRequest request, CancellationToken ct) =>

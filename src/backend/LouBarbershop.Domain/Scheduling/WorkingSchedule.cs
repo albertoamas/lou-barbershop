@@ -34,6 +34,8 @@ public sealed class WorkingSchedule
     {
         if (id == Guid.Empty || barberId == Guid.Empty || weekday is < 1 or > 7 || end <= start)
             return DomainResult.Failure<WorkingSchedule>(DomainErrors.InvalidSchedule);
+        if (!ShopOperatingHours.Contains(start, end))
+            return DomainResult.Failure<WorkingSchedule>(DomainErrors.ScheduleOutsideShopHours);
 
         return DomainResult.Success(new WorkingSchedule(id, barberId, weekday, start, end, period, at.ToUniversalTime()));
     }
@@ -42,6 +44,8 @@ public sealed class WorkingSchedule
     {
         if (weekday is < 1 or > 7 || end <= start)
             return DomainResult.Failure<WorkingSchedule>(DomainErrors.InvalidSchedule);
+        if (active && !ShopOperatingHours.Contains(start, end))
+            return DomainResult.Failure<WorkingSchedule>(DomainErrors.ScheduleOutsideShopHours);
 
         Weekday = weekday;
         StartLocalTime = start;

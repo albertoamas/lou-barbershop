@@ -15,7 +15,8 @@ foreach ($item in @(@{ user = 'acceptance-alex'; name = 'Alex QA' }, @{ user = '
     $barber = Send-Acceptance 'barbers' @{ staffProfileId = $staff.id; employmentType = 'CONTRACTOR'; settlementFrequency = 'BIWEEKLY' }
     $barbers += $barber
     foreach ($day in 1..7) {
-        Send-Acceptance "barbers/$($barber.id)/schedules" @{ weekday = $day; startLocalTime = '09:00'; endLocalTime = '18:00'; validFrom = '2026-09-01' } | Out-Null
+        Send-Acceptance "barbers/$($barber.id)/schedules" @{ weekday = $day; startLocalTime = '09:00'; endLocalTime = '13:00'; validFrom = '2026-09-01' } | Out-Null
+        Send-Acceptance "barbers/$($barber.id)/schedules" @{ weekday = $day; startLocalTime = '15:00'; endLocalTime = '18:00'; validFrom = '2026-09-01' } | Out-Null
     }
     Send-Acceptance "barbers/$($barber.id)/commission-rules" @{ kind = 'SERVICE'; rateBasisPoints = 5000; validFrom = '2026-09-01' } | Out-Null
 }

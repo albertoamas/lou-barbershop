@@ -10,6 +10,11 @@ public sealed class SchedulingService(ISchedulingStore store, IConfigurationStor
     private const int MaximumSearchDays = 31;
     private static readonly TimeZoneInfo BusinessTimeZone = TimeZoneInfo.FindSystemTimeZoneById("America/La_Paz");
 
+    public async Task<bool> CanViewBarberScheduleAsync(Guid barberId, CancellationToken ct) =>
+        actor.IsInRole("OWNER") || actor.IsInRole("ADMIN") ||
+        (actor.IsInRole("BARBER") && actor.UserId is Guid userId &&
+         await store.FindOwnBarberAsync(userId, ct) == barberId);
+
     public Task<IReadOnlyCollection<WorkingSchedule>> ListSchedulesAsync(Guid barberId, CancellationToken ct) => store.ListSchedulesAsync(barberId, ct);
     public Task<IReadOnlyCollection<AvailabilityExceptionRule>> ListExceptionsAsync(Guid barberId, CancellationToken ct) => store.ListExceptionsAsync(barberId, ct);
 
@@ -29,10 +34,10 @@ public sealed class SchedulingService(ISchedulingStore store, IConfigurationStor
         if (barber is null || !barber.Active) return SchedulingResults.Missing<WorkingSchedule>();
         var period = EffectivePeriod.Create(input.ValidFrom, input.ValidTo);
         if (!period.IsSuccess) return Invalid<WorkingSchedule>(period.Error!);
-        if (await store.ScheduleOverlapsAsync(barberId, input.Weekday, input.StartLocalTime, input.EndLocalTime, input.ValidFrom, input.ValidTo, null, ct))
-            return SchedulingResults.Conflict<WorkingSchedule>("schedule.overlap", "Ya existe un turno activo que se solapa para ese día y vigencia.");
         var created = WorkingSchedule.Create(ids.Create(), barberId, input.Weekday, input.StartLocalTime, input.EndLocalTime, period.Value, clock.UtcNow);
         if (!created.IsSuccess) return Invalid<WorkingSchedule>(created.Error!);
+        if (await store.ScheduleOverlapsAsync(barberId, input.Weekday, input.StartLocalTime, input.EndLocalTime, input.ValidFrom, input.ValidTo, null, ct))
+            return SchedulingResults.Conflict<WorkingSchedule>("schedule.overlap", "Ya existe un turno activo que se solapa para ese día y vigencia.");
         store.Add(created.Value);
         await store.SaveChangesAsync(ct);
         return SchedulingResults.Success(created.Value);
@@ -45,6 +50,8 @@ public sealed class SchedulingService(ISchedulingStore store, IConfigurationStor
         if (schedule.Version != input.Version) return VersionConflict<WorkingSchedule>();
         var period = EffectivePeriod.Create(input.ValidFrom, input.ValidTo);
         if (!period.IsSuccess) return Invalid<WorkingSchedule>(period.Error!);
+        if (input.Active && !ShopOperatingHours.Contains(input.StartLocalTime, input.EndLocalTime))
+            return Invalid<WorkingSchedule>(DomainErrors.ScheduleOutsideShopHours);
         if (input.Active && await store.ScheduleOverlapsAsync(barberId, input.Weekday, input.StartLocalTime, input.EndLocalTime, input.ValidFrom, input.ValidTo, id, ct))
             return SchedulingResults.Conflict<WorkingSchedule>("schedule.overlap", "Ya existe un turno activo que se solapa para ese día y vigencia.");
         var updated = schedule.Update(input.Weekday, input.StartLocalTime, input.EndLocalTime, period.Value, input.Active, clock.UtcNow);
@@ -60,6 +67,8 @@ public sealed class SchedulingService(ISchedulingStore store, IConfigurationStor
         if (actor.UserId is not Guid actorId) return SchedulingResults.Invalid<AvailabilityExceptionRule>("actor.required", "Se requiere un actor autenticado.");
         var range = TimeRange.Create(input.StartsAt, input.EndsAt);
         if (!range.IsSuccess) return Invalid<AvailabilityExceptionRule>(range.Error!);
+        if (input.Kind is AvailabilityExceptionKind.AvailableOverride && !ShopOperatingHours.Contains(range.Value, BusinessTimeZone))
+            return Invalid<AvailabilityExceptionRule>(DomainErrors.AvailabilityExceptionOutsideShopHours);
         var created = AvailabilityExceptionRule.Create(ids.Create(), barberId, range.Value, input.Kind, input.Reason, actorId, clock.UtcNow);
         if (!created.IsSuccess) return Invalid<AvailabilityExceptionRule>(created.Error!);
         store.Add(created.Value);

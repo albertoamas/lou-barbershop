@@ -111,6 +111,33 @@ function Ensure-Schedule {
     }
 }
 
+function Disable-OutOfHoursSchedules {
+    param([object]$Barber)
+
+    $morningStart = [TimeSpan]::Parse('08:00:00')
+    $morningEnd = [TimeSpan]::Parse('13:00:00')
+    $afternoonStart = [TimeSpan]::Parse('15:00:00')
+    $afternoonEnd = [TimeSpan]::Parse('21:00:00')
+    $schedules = Invoke-DemoApi GET "barbers/$($Barber.id)/schedules"
+    foreach ($schedule in $schedules.Where({ $_.active })) {
+        $start = [TimeSpan]::Parse($schedule.startLocalTime)
+        $end = [TimeSpan]::Parse($schedule.endLocalTime)
+        $insideMorning = $start -ge $morningStart -and $end -le $morningEnd
+        $insideAfternoon = $start -ge $afternoonStart -and $end -le $afternoonEnd
+        if (-not ($insideMorning -or $insideAfternoon)) {
+            Invoke-DemoApi PATCH "barbers/$($Barber.id)/schedules/$($schedule.id)" @{
+                weekday = $schedule.weekday
+                startLocalTime = $schedule.startLocalTime
+                endLocalTime = $schedule.endLocalTime
+                validFrom = $schedule.validFrom
+                validTo = $schedule.validTo
+                active = $false
+                version = $schedule.version
+            } | Out-Null
+        }
+    }
+}
+
 function Ensure-Offering {
     param([object]$Barber, [object]$Service, [int]$DurationMinutes, [long]$PriceCents)
 
@@ -152,8 +179,16 @@ $mateoUser = Ensure-DemoUser 'barber.mateo' @('BARBER')
 $diego = Ensure-Barber (Ensure-Staff $diegoUser 'Diego Demo') '#36454F'
 $mateo = Ensure-Barber (Ensure-Staff $mateoUser 'Mateo Demo') '#7A1F2B'
 
-foreach ($day in 2..6) { Ensure-Schedule $diego $day '10:00:00' '19:00:00' }
-foreach ($day in @(1, 3, 5)) { Ensure-Schedule $mateo $day '09:00:00' '17:00:00' }
+Disable-OutOfHoursSchedules $diego
+Disable-OutOfHoursSchedules $mateo
+foreach ($day in 2..6) {
+    Ensure-Schedule $diego $day '10:00:00' '13:00:00'
+    Ensure-Schedule $diego $day '15:00:00' '19:00:00'
+}
+foreach ($day in @(1, 3, 5)) {
+    Ensure-Schedule $mateo $day '09:00:00' '13:00:00'
+    Ensure-Schedule $mateo $day '15:00:00' '17:00:00'
+}
 
 $services = @(
     Ensure-Service 'Corte clásico demo' 'Corte tradicional con terminación limpia.' 45 6000

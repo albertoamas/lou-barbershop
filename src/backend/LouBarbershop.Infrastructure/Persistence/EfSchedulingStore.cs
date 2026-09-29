@@ -7,6 +7,12 @@ namespace LouBarbershop.Infrastructure.Persistence;
 
 public sealed class EfSchedulingStore(AppDbContext dbContext) : ISchedulingStore
 {
+    public async Task<Guid?> FindOwnBarberAsync(Guid userId, CancellationToken ct) => await
+        (from barber in dbContext.BarberProfiles.AsNoTracking()
+         join staff in dbContext.StaffProfiles.AsNoTracking() on barber.StaffProfileId equals staff.Id
+         where staff.UserId == userId && staff.Active && barber.Active
+         select (Guid?)barber.Id).SingleOrDefaultAsync(ct);
+
     public async Task<IReadOnlyCollection<WorkingSchedule>> ListSchedulesAsync(Guid barberId, CancellationToken ct) => await dbContext.WorkingSchedules.AsNoTracking().Where(x => x.BarberId == barberId).OrderBy(x => x.Weekday).ThenBy(x => x.StartLocalTime).ToArrayAsync(ct);
     public Task<WorkingSchedule?> FindScheduleAsync(Guid id, CancellationToken ct) => dbContext.WorkingSchedules.SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<bool> ScheduleOverlapsAsync(Guid barberId, int weekday, TimeOnly startsAt, TimeOnly endsAt, DateOnly validFrom, DateOnly? validTo, Guid? exceptId, CancellationToken ct) => dbContext.WorkingSchedules.AnyAsync(x => x.Active && x.BarberId == barberId && x.Weekday == weekday && (!exceptId.HasValue || x.Id != exceptId.Value) && x.StartLocalTime < endsAt && startsAt < x.EndLocalTime && (!x.Period.ValidTo.HasValue || validFrom <= x.Period.ValidTo.Value) && (!validTo.HasValue || x.Period.ValidFrom <= validTo.Value), ct);

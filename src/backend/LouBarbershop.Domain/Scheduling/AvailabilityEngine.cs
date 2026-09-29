@@ -8,7 +8,7 @@ public sealed record AvailabilitySlot(Guid BarberId, Guid ServiceId, DateTimeOff
 
 public static class AvailabilityEngine
 {
-    public const int StepMinutes = 15;
+    public const int StepMinutes = ShopOperatingHours.ReservationStartIntervalMinutes;
 
     public static IReadOnlyCollection<AvailabilitySlot> Calculate(
         DateOnly dateFrom,
@@ -42,7 +42,7 @@ public static class AvailabilityEngine
                 .Where(x => x.HasValue)
                 .Select(x => x!.Value));
 
-            foreach (var window in available)
+            foreach (var window in IntersectWithShopHours(available, date, timeZone))
             {
                 foreach (var slot in GenerateSlots(item, window, now, timeZone))
                 {
@@ -65,6 +65,7 @@ public static class AvailabilityEngine
         var windows = schedules.Where(x => x.BarberId == barberId && x.Active && x.Weekday == weekday && x.Period.Contains(date))
             .Select(x => ToUtcRange(date, x.StartLocalTime, x.EndLocalTime, timeZone)).Where(x => x.HasValue).Select(x => x!.Value).ToList();
         windows.AddRange(exceptions.Where(x => x.BarberId == barberId && x.Active && x.Kind is AvailabilityExceptionKind.AvailableOverride).Select(x => x.Range));
+        windows = IntersectWithShopHours(windows, date, timeZone).ToList();
         var blocked = exceptions.Any(x => x.BarberId == barberId && x.Active && x.Kind is AvailabilityExceptionKind.Unavailable && x.Range.Overlaps(appointment));
         return !blocked && windows.Any(x => x.StartsAt <= appointment.StartsAt && x.EndsAt >= appointment.EndsAt);
     }
@@ -104,6 +105,25 @@ public static class AvailabilityEngine
             ? timeZone.GetAmbiguousTimeOffsets(local).Max()
             : timeZone.GetUtcOffset(local);
         return new DateTimeOffset(local, offset).ToUniversalTime();
+    }
+
+    private static IEnumerable<TimeRange> IntersectWithShopHours(IEnumerable<TimeRange> ranges, DateOnly date, TimeZoneInfo timeZone)
+    {
+        var openingRanges = ShopOperatingHours.GetWindows()
+            .Select(window => ToUtcRange(date, window.StartsAt, window.EndsAt, timeZone))
+            .Where(window => window.HasValue)
+            .Select(window => window!.Value)
+            .ToArray();
+
+        foreach (var range in ranges)
+        {
+            foreach (var openingRange in openingRanges)
+            {
+                var startsAt = range.StartsAt > openingRange.StartsAt ? range.StartsAt : openingRange.StartsAt;
+                var endsAt = range.EndsAt < openingRange.EndsAt ? range.EndsAt : openingRange.EndsAt;
+                if (endsAt > startsAt) yield return TimeRange.Create(startsAt, endsAt).Value;
+            }
+        }
     }
 
     private static bool IsOnLocalDate(TimeRange range, DateOnly date, TimeZoneInfo timeZone)
