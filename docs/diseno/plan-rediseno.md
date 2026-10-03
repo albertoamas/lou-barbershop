@@ -1,7 +1,7 @@
 # Plan de rediseño visual de Lou Barbershop
 
 **Fecha:** 3 de octubre de 2026  
-**Estado:** vigente. La fase 0 está cerrada y la fase 1 (dirección visual) está pendiente.
+**Estado:** vigente. Las fases 0 y 1 están cerradas y la fase 2 (fundaciones) está en curso.
 
 Este documento fija las reglas que debe cumplir el rediseño completo de la aplicación. No dice qué cambiar en cada pantalla. Eso se decide cuando se trabaja cada una, con el análisis de la sección 12. Aquí está el marco común: para quién se diseña, en qué dispositivos, con qué marca, con qué reglas visuales, técnicas y de calidad, y el inventario de lo que hay que rediseñar.
 
@@ -53,7 +53,7 @@ El logo oficial es `docs/assets/brand/lou-logo.jpg` (1080×1080): dos navajas cr
 
 - La base es el **blanco y negro del logo**. Cualquier color adicional se decide en la fase 1 y debe justificarse desde el oficio (navaja, acero, sillón, poste) y no por moda.
 - Los colores de estado (éxito, aviso, error, información) son semánticos y nunca se usan como decoración.
-- La personalidad se concentra en un solo recurso gráfico memorable, decidido en la fase 1 (por ejemplo, el rayado grabado de los mangos de las navajas). El resto se mantiene sobrio.
+- La personalidad se concentra en un solo recurso gráfico memorable, decidido en la fase 1 (sección 3.4). El resto se mantiene sobrio.
 
 ### 3.3 Fotos
 
@@ -65,6 +65,62 @@ No hay fotos de la barbería todavía. El diseño deja **espacios reservados** q
 - formato AVIF o WebP con respaldo JPG, `loading="lazy"` salvo en la portada, `width` y `height` declarados para evitar saltos de layout, y texto alternativo descriptivo;
 - la foto de cada barbero en la reserva pública y en la agenda es opcional; sin foto se muestran sus iniciales.
 
+### 3.4 Dirección aprobada (fase 1)
+
+Se aprobó el 3 de octubre de 2026 sobre el lienzo de direcciones visuales (fila "Lou"). Combina la base de "Navaja", las franjas de "Poste" en blanco y negro y las esquinas de "Sillón", con un acento cálido y colores de estado. Estos valores son la fuente de los tokens de la fase 2.
+
+**Carácter:** blanco y negro como el logo, amigable y con vida. La app no se siente rígida: textos cercanos, avatares, esquinas suaves en lo que flota y color con significado.
+
+**Paleta base**
+
+| Token | Valor | Uso |
+|---|---|---|
+| Tinta | `#000000` | Texto principal, superficies de marca (barra lateral, portada), estado "En atención" |
+| Papel | `#FFFFFF` | Tarjetas, paneles, campos |
+| Acero 50 | `#F6F7F8` | Fondo de la app |
+| Acero 100 | `#EEF1F3` | Superficies secundarias, separadores suaves |
+| Acero 200 | `#DDE2E6` | Avatares neutros, rellenos |
+| Acero 300 | `#C3C9CF` | Separadores decorativos, texto sobre tinta (12,6:1) |
+| Acero 400 | `#858D95` | Bordes de campos y controles (3,4:1 sobre blanco) |
+| Acero 600 | `#5F676F` | Texto auxiliar (5,7:1 sobre blanco) |
+| Acero 800 | `#2E3338` | Texto secundario, botones secundarios sobre tinta |
+| Latón | `#C9A24C` (texto encima: tinta, 8,8:1) | Acento de marca como relleno |
+| Latón oscuro | `#8F6E22` | Acento como línea, borde o texto sobre claro (4,8:1) |
+| Latón suave | `#F6EED9` | Fondo tenue del acento |
+
+**Colores de estado**
+
+| Estado | Fuerte | Suave (fondo) | Texto sobre suave | Significa |
+|---|---|---|---|---|
+| Éxito | `#1E7A46` (texto blanco) | `#E3F4EA` | `#145C33` | Dinero que entra, trabajo terminado, disponibilidad |
+| Información | `#1E4FA8` | `#E6EEFB` | `#1E4FA8` | Requiere atención sin urgencia (cliente esperando) |
+| Advertencia | `#B45309` | `#FDF1DC` | `#8A4B00` | Stock bajo, comisión pendiente, acción a revisar |
+| Peligro | `#A42A1C` | `#FCE8E5` | `#A42A1C` | No asistió, cancelar, reversos, errores |
+
+**Reglas de color**
+
+- El latón como relleno solo lleva texto en tinta. Sobre fondos claros, toda línea, borde o texto del acento usa latón oscuro, porque el latón da 2,4:1 contra blanco.
+- El latón marca navegación activa, acciones principales que no son de dinero ("Reservar cita", "Nueva cita", "Cliente llegó"), la selección y la hora actual en la agenda.
+- El verde fuerte se usa en acciones que registran dinero ("Cobrar", "Registrar pago").
+- Los estados usan el fondo suave con texto oscuro. El color fuerte se limita a una acción por pantalla y a puntos o chips pequeños.
+- El color nunca va solo: siempre lo acompaña texto, un ícono o un patrón.
+- Los estados de cita: Confirmada (contorno de tinta), Llegó (información), En atención (tinta con franjas), Completada (éxito con check), No asistió (peligro con borde punteado).
+
+**Tipografía**
+
+- Display: **Bricolage Grotesque** al 75 % de ancho, peso 800, para títulos, cifras grandes e importes destacados.
+- Texto e interfaz: **Public Sans**, pesos 400 a 700.
+- Se sirven con `@fontsource-variable/bricolage-grotesque` y `@fontsource-variable/public-sans`.
+
+**Forma**
+
+- Superficies ancladas al borde (barra lateral, cabecera de la portada, barras de navegación): sin redondeo.
+- Lo que flota: controles 12 px; tarjetas y paneles 18 px; hojas y paneles de detalle 22 px; etiquetas y chips en píldora.
+
+**Recurso gráfico**
+
+Franjas del poste de barbero en blanco y negro (diagonal a -45°). Se usan solo en: estado "En atención", espacios de foto y una banda de marca del sitio público.
+
 ## 4. Proceso de trabajo
 
 ### 4.1 Fases
@@ -72,7 +128,7 @@ No hay fotos de la barbería todavía. El diseño deja **espacios reservados** q
 | Fase | Contenido | Cierre |
 |---|---|---|
 | **0. Plan** | Este documento | ✔ Aprobado |
-| **1. Dirección visual** | Dos o tres direcciones aplicadas a contenido real de Lou: portada en celular, agenda en tablet horizontal y cobro en celular. Se presentan como página navegable antes de tocar la app | El dueño elige una dirección |
+| **1. Dirección visual** | Dos o tres direcciones aplicadas a contenido real de Lou: portada en celular, agenda en tablet horizontal y cobro en celular. Se presentan como página navegable antes de tocar la app | ✔ Aprobada (sección 3.4) |
 | **2. Fundaciones** | Tokens (color, tipo, espaciado, radios, sombras, movimiento), logo oficial, iconos PWA, shell y navegación por dispositivo, y los componentes base de la sección 11.1 con sus historias de Storybook | Aprobación del sistema en Storybook y en el shell real |
 | **3. Operación diaria** | Inicio por rol, Agenda, Atender y cobrar | Aprobación por pantalla |
 | **4. Sitio público** | Portada, Reservar, Mi cita, Privacidad | Aprobación por pantalla |
@@ -145,14 +201,14 @@ Se permite el guion corto normal (`-`) solo donde la gramática lo pide, y los p
 ### 5.3 Color
 
 - Los tokens viven en `@theme` de `src/frontend/src/index.css` con nombres semánticos (`--color-surface`, `--color-text-muted`, `--color-state-danger`…), no nombres de pigmento en los componentes.
-- La paleta base es de 4 a 6 colores con nombre más los cuatro de estado. Se define en la fase 1 y no se añaden colores sueltos en pantallas.
+- La paleta base y los cuatro colores de estado están en la sección 3.4. No se añaden colores sueltos en pantallas.
 - Contraste mínimo WCAG 2.2 AA: 4,5:1 en texto normal, 3:1 en texto grande (≥ 24 px, o ≥ 18,66 px en negrita), en bordes de controles y en el indicador de foco.
 - La recepción puede tener mucha luz o reflejo en la tablet: el texto secundario no baja de 4,5:1 aunque sea "suave".
 - Modo oscuro: no forma parte de este rediseño. Si la dirección elegida usa fondo oscuro, se diseña como el único tema, no como alternativa.
 
 ### 5.4 Tipografía
 
-- Máximo dos familias, claramente distintas: una de display, que puede seguir siendo una condensada coherente con "BARBERSHOP" del logo, y una de lectura y UI. Inter queda en revisión porque es la elección por defecto de demasiadas apps. La decisión es de la fase 1.
+- Máximo dos familias, claramente distintas: una de display, que puede seguir siendo una condensada coherente con "BARBERSHOP" del logo, y una de lectura y UI. La elección está en la sección 3.4; Inter y Barlow Condensed se retiran.
 - Las fuentes se sirven localmente con `@fontsource`, sin Google Fonts en runtime, y solo con los pesos usados.
 - Escala modular definida en tokens; ningún tamaño suelto fuera de la escala.
 - Mínimos: cuerpo 16 px en celular y tablet; texto auxiliar 14 px; nada interactivo por debajo de 14 px. Los campos de formulario usan 16 px como mínimo, porque iOS hace zoom en campos con texto menor.
@@ -349,8 +405,8 @@ Se completa al empezar cada pantalla, en el PR o en un comentario de la tarea; n
 
 | Decisión | Fase | Responsable |
 |---|---|---|
-| Dirección visual, color de acento y recurso gráfico | 1 | Dueño |
-| Tipografías definitivas | 1 | Dueño, con propuesta |
+| ~~Dirección visual, color de acento y recurso gráfico~~ | 1 | Resuelta en la sección 3.4 |
+| ~~Tipografías definitivas~~ | 1 | Resuelta en la sección 3.4 |
 | Logo en vector (SVG o PDF) | Antes de la fase 2 | Pedir a la barbería o a quien diseñó el logo |
 | Fotos del local, cortes y equipo | Cuando estén disponibles | Barbería |
 | Navegación de tablet: lateral compacta o completa | 2 | Dueño, con propuesta |
