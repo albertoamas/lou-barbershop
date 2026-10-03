@@ -2,7 +2,7 @@
 
 ## Fuente de verdad
 
-Leer primero `docs/README.md` y `docs/17-plan-maestro-fases.md`. No implementar una fase cuya puerta de dependencia no esté aprobada.
+Leer primero `docs/README.md` y `docs/ESTADO-ACTUAL.md`. Las fases de construcción del MVP están cerradas; el trabajo actual sigue los próximos pasos de `ESTADO-ACTUAL.md`.
 
 ## Arquitectura
 
@@ -33,6 +33,6 @@ Leer primero `docs/README.md` y `docs/17-plan-maestro-fases.md`. No implementar 
 - Usar `apply_patch` para ediciones manuales.
 - Agregar pruebas al cambiar comportamiento.
 - Ejecutar formato, analyzers/lint, arquitectura, pruebas y build antes de cerrar trabajo.
-- Actualizar ADR, OpenAPI, migraciones, docs y trazabilidad cuando corresponda.
+- Actualizar ADR, OpenAPI, migraciones y docs cuando corresponda.
 - Seguir `docs/19-convenciones-trabajo.md`.
 

@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Lou Barbershop is a PWA for a single-branch barbershop: agenda, service operations, checkout, inventory, commissions and settlements. `AGENTS.md` holds the binding repo rules. Read it along with `docs/README.md`, `docs/ESTADO-ACTUAL.md` (current status) and `docs/17-plan-maestro-fases.md` (phases and dependency gates) before starting work. Don't implement a phase whose gate isn't approved. Business docs are in Spanish. Code, identifiers, commits and API contracts are in English. UI text is in Spanish. `AGENTS.md` says to use `apply_patch`. That instruction is for Codex, so use the Edit tool here.
+Lou Barbershop is a PWA for a single-branch barbershop: agenda, service operations, checkout, inventory, commissions and settlements. `AGENTS.md` holds the binding repo rules. Read it along with `docs/README.md` and `docs/ESTADO-ACTUAL.md` (current status and next steps) before starting work. The MVP build phases are closed. Business docs are in Spanish. Code, identifiers, commits and API contracts are in English. UI text is in Spanish. `AGENTS.md` says to use `apply_patch`. That instruction is for Codex, so use the Edit tool here.
 
 ## Commands
 
@@ -92,6 +92,6 @@ Operational scripts in `deploy/` need a healthy stack. They include `verify-back
 
 - Follow `docs/19-convenciones-trabajo.md`. C# uses file-scoped namespaces and `sealed` by default. Use records for contracts, entities with private setters, and `CancellationToken` plus the `Async` suffix on I/O.
 - Use Conventional Commits with scopes `agenda|sales|inventory|commissions|auth|pwa|infra`, and one intent per commit or PR. The PR template is in `.github/PULL_REQUEST_TEMPLATE.md`.
-- A behavior change needs tests. A bug fix adds a test that failed before the fix. Update ADRs (`docs/adr/`), OpenAPI, migrations and traceability (`docs/producto/13-trazabilidad.md`) when they're affected.
+- A behavior change needs tests. A bug fix adds a test that failed before the fix. Update ADRs (`docs/adr/`), OpenAPI, migrations and docs when they're affected.
 - New infrastructure (queues, Redis, microservices, Kubernetes) needs an approved ADR first.
-- `docs/archivo/` is historical. Don't edit it to describe current state.
+- Completed phase records and old plans were removed from `docs/`. Recover them from git history if needed instead of recreating them.

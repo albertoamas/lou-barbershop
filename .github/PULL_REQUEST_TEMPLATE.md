@@ -2,11 +2,10 @@
 
 Describe el problema y el resultado observable.
 
-## Trazabilidad
+## Contexto
 
-- Fase/puerta:
-- HU/RF/RN/ADR:
-- Entregable/criterio de aceptación:
+- Regla de negocio/ADR relacionado:
+- Criterio de aceptación:
 
 ## Cambios
 

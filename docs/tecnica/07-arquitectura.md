@@ -40,7 +40,7 @@ flowchart TB
     Jobs --> App
 ```
 
-Los módulos son límites de código y negocio, no servicios desplegados independientemente. La regla de dependencia completa está en [14-clean-architecture-y-solid.md](14-clean-architecture-y-solid.md).
+Los módulos son límites de código y negocio, no servicios desplegados independientemente.
 
 ## 2. Stack definido
 
@@ -151,7 +151,7 @@ Las decisiones posteriores se mantienen como archivos individuales:
 
 ## 6. Estructura de código sugerida
 
-La estructura concreta del monorepo se define en [15-stack-pwa-y-docker.md](15-stack-pwa-y-docker.md) y los límites internos en [14-clean-architecture-y-solid.md](14-clean-architecture-y-solid.md). Cada módulo mantiene dominio, aplicación, adaptadores y delivery sin duplicar ceremonias innecesarias.
+La estructura concreta del monorepo se define en [15-stack-pwa-y-docker.md](15-stack-pwa-y-docker.md) y los límites internos los verifica `LouBarbershop.Architecture.Tests`. Cada módulo mantiene dominio, aplicación, adaptadores y delivery sin duplicar ceremonias innecesarias.
 
 ## 7. Manejo de errores
 

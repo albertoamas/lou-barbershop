@@ -30,8 +30,6 @@
 | Imágenes API/web | 0 críticas y 0 altas |
 | Dependencias | NuGet y npm sin vulnerabilidades conocidas reportadas |
 
-Detalle: [validación integral](operacion/52-validacion-integral-seguridad-y-operacion-2026-09-19.md).
-
 ## Qué puede probarse
 
 - `/`: sitio público;
@@ -44,9 +42,16 @@ Detalle: [validación integral](operacion/52-validacion-integral-seguridad-y-ope
 
 Consulta [páginas, secciones y roles](diseno/53-guia-paginas-secciones-y-roles.md) para el propósito de cada pantalla.
 
+## Próximos pasos
+
+1. segunda ronda de mejora visual ([plan por pantalla](diseno/56-segunda-ronda-pulido-visual.md));
+2. cargar datos reales de la barbería: servicios, precios, barberos, horarios y comisiones;
+3. desplegar en un servidor (VPS recomendado: Compose y Caddy ya cubren HTTPS) con backups externos;
+4. piloto de dos semanas en paralelo al sistema actual, conciliando la caja diaria.
+
 ## Qué falta antes de producción
 
-1. crear servicios reales en Railway y configurar dominio/HTTPS;
+1. contratar el servidor y configurar dominio/HTTPS;
 2. generar secretos productivos nuevos, `AllowedHosts` exacto y activar MFA obligatorio del dueño;
 3. configurar proxy confiable y claves Data Protection cifradas/persistentes;
 4. automatizar backups cifrados fuera del servicio;
@@ -55,9 +60,9 @@ Consulta [páginas, secciones y roles](diseno/53-guia-paginas-secciones-y-roles.
 7. probar la PWA en Android, iOS y tablet físicos;
 8. ejecutar piloto con datos y responsables aprobados.
 
-El código local y sus controles de seguridad ejecutables están cerrados en [el informe de preproducción](tecnica/54-cierre-seguridad-preproduccion.md). Los ocho puntos anteriores necesitan el entorno o una decisión real; no se resuelven inventando secretos, dominio o proveedores.
+Los ocho puntos anteriores necesitan el entorno o una decisión real; no se resuelven inventando secretos, dominio o proveedores.
 
-No hay datos productivos ni variables reales de Railway en el repositorio. El `.env` local está ignorado y no debe reutilizarse fuera del equipo.
+No hay datos productivos ni variables reales de producción en el repositorio. El `.env` local está ignorado y no debe reutilizarse fuera del equipo.
 
 ## Stack vigente
 
@@ -74,6 +79,5 @@ No hay datos productivos ni variables reales de Railway en el repositorio. El `.
 - arquitectura: [tecnica/07-arquitectura.md](tecnica/07-arquitectura.md) y [ADR](adr/README.md);
 - API: [tecnica/08-api.md](tecnica/08-api.md);
 - seguridad: [tecnica/09-seguridad-roles-y-auditoria.md](tecnica/09-seguridad-roles-y-auditoria.md);
-- fases: [17-plan-maestro-fases.md](17-plan-maestro-fases.md);
 - operación: [operacion/42-runbooks-operacion-y-recuperacion.md](operacion/42-runbooks-operacion-y-recuperacion.md);
 - forma de trabajo: [19-convenciones-trabajo.md](19-convenciones-trabajo.md).
