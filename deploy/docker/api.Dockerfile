@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.400 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 WORKDIR /source
 
 COPY global.json dotnet-tools.json Directory.Build.props .editorconfig LouBarbershop.slnx ./
