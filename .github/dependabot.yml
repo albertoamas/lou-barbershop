@@ -19,10 +19,22 @@ updates:
       # Node runtime is pinned to 24 (engines, Docker, CI); keep its types on the same major.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # typescript-eslint supports TypeScript <6.1; revisit when it adds TS 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # eslint-plugin-jsx-a11y and eslint-plugin-import do not support ESLint 10 yet.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directories: [/deploy/docker]
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
+    ignore:
+      # Node runtime is pinned to 24; move majors deliberately with engines and CI.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker-compose
     directories: [/, /deploy]
     schedule: { interval: weekly }
