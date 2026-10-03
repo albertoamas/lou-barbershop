@@ -44,7 +44,7 @@ Consulta [páginas, secciones y roles](diseno/paginas-y-roles.md) para el propó
 
 ## Próximos pasos
 
-1. segunda ronda de mejora visual ([plan por pantalla](diseno/plan-mejora-visual.md));
+1. mejora visual completa de la app (plan propio por definir);
 2. cargar datos reales de la barbería: servicios, precios, barberos, horarios y comisiones;
 3. desplegar en un servidor (VPS recomendado: Compose y Caddy ya cubren HTTPS) con backups externos;
 4. piloto de dos semanas en paralelo al sistema actual, conciliando la caja diaria.

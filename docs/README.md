@@ -32,7 +32,6 @@ Solo se conserva documentación vigente. Las actas de fases, planes cumplidos y 
 
 - [Componentes](diseno/componentes.md): identidad, componentes y accesibilidad.
 - [Páginas y roles](diseno/paginas-y-roles.md)
-- [Plan de mejora visual](diseno/plan-mejora-visual.md): ronda en curso, pantalla por pantalla.
 
 ## Operación — `operacion/`
 
