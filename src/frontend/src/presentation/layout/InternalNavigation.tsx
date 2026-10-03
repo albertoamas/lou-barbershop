@@ -27,7 +27,7 @@ const desktopLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[0.68rem] font-semibold text-white/55 transition-colors duration-150',
+    'relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-semibold text-white/65 transition-colors duration-150',
     isActive && 'text-white',
   )
 
@@ -68,7 +68,14 @@ const MobileLink = ({ item, onNavigate }: { item: NavigationItem; onNavigate?: (
             className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-white"
           />
         )}
-        <AppIcon name={item.icon} size={21} />
+        <span
+          className={cn(
+            'grid size-8 place-items-center rounded-lg transition-[background-color,scale] duration-200',
+            isActive && 'scale-105 bg-white/15',
+          )}
+        >
+          <AppIcon name={item.icon} size={21} />
+        </span>
         <span>{item.shortLabel ?? item.label}</span>
       </>
     )}
@@ -163,7 +170,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
       </aside>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 flex min-h-16 border-t border-white/10 bg-lou-ink/95 px-1 text-white shadow-[0_-12px_32px_rgb(8_8_8/0.18)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 flex min-h-16 border-t border-white/10 bg-lou-ink/95 px-1 pb-[env(safe-area-inset-bottom)] text-white shadow-[0_-12px_32px_rgb(8_8_8/0.18)] backdrop-blur-xl md:hidden"
         aria-label="Navegación principal móvil"
       >
         {primaryItems.map((item) => (
@@ -174,13 +181,20 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
           aria-expanded={moreOpen}
           aria-controls="mobile-more-menu"
           className={cn(
-            'relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[0.68rem] font-semibold text-white/55 transition-colors',
+            'relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-semibold text-white/65 transition-colors',
             moreOpen && 'text-white',
           )}
           type="button"
           onClick={() => setMoreOpen((value) => !value)}
         >
-          <AppIcon name="more" size={21} />
+          <span
+            className={cn(
+              'grid size-8 place-items-center rounded-lg transition-[background-color,scale] duration-200',
+              moreOpen && 'scale-105 bg-white/15',
+            )}
+          >
+            <AppIcon name="more" size={21} />
+          </span>
           <span>Más</span>
         </button>
       </nav>
@@ -188,7 +202,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
       <AnimatePresence>
         {moreOpen && (
           <m.div
-            className="fixed inset-0 z-60 flex items-end bg-black/55 p-3 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-60 flex items-end bg-black/55 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

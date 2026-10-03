@@ -81,7 +81,7 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
       <AnimatePresence mode="wait" initial={false}>
         <m.div
           key={location.pathname}
-          className="min-w-0 pb-24 md:pb-0"
+          className="min-w-0 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0"
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -3 }}
