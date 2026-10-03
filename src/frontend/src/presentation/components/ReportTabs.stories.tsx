@@ -7,7 +7,7 @@ const meta = {
   args: { active: 'operation', onChange: () => undefined },
   decorators: [
     (Story) => (
-      <div style={{ background: '#f5f3ee', padding: '24px' }}>
+      <div style={{ background: 'var(--color-canvas)', padding: '24px' }}>
         <Story />
       </div>
     ),

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Lou Barbershop">
-  <rect width="512" height="512" rx="104" fill="#080808"/>
-  <path d="M156 112v282h205v-62H225V112z" fill="#fff"/>
-  <path d="m111 142 287 224M398 142 111 366" fill="none" stroke="#a7a7a7" stroke-width="18" stroke-linecap="round"/>
-  <circle cx="111" cy="142" r="22" fill="#080808" stroke="#fff" stroke-width="10"/>
-  <circle cx="398" cy="142" r="22" fill="#080808" stroke="#fff" stroke-width="10"/>
-</svg>

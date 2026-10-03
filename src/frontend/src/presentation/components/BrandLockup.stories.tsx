@@ -7,7 +7,9 @@ const meta = {
   args: { linked: false },
   decorators: [
     (Story) => (
-      <div style={{ background: '#080808', color: '#fff', padding: '24px' }}>
+      <div
+        style={{ background: 'var(--color-ink)', color: 'var(--color-on-ink)', padding: '24px' }}
+      >
         <Story />
       </div>
     ),
