@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore } from 'react'
 import { serviceWorkerUpdateSource } from '../../infrastructure/pwa/serviceWorkerUpdateSource'
+import { Button } from './Button'
 
 export const ServiceWorkerUpdateBanner = () => {
   const [deferred, setDeferred] = useState(false)
@@ -24,7 +25,7 @@ export const ServiceWorkerUpdateBanner = () => {
   }
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-3 border-b border-lou-steel/30 bg-white px-4 py-2.5 text-sm text-lou-ink"
+      className="flex flex-wrap items-center justify-center gap-3 bg-accent-soft px-4 py-2.5 text-sm font-semibold text-ink"
       role="status"
     >
       <span>
@@ -32,22 +33,24 @@ export const ServiceWorkerUpdateBanner = () => {
           ? 'No se pudo actualizar. Intenta de nuevo cuando tengas conexión.'
           : 'Hay una versión nueva. Termina lo que estás haciendo antes de actualizar.'}
       </span>
-      <button
-        className="min-h-11 rounded-lg bg-lou-ink px-4 py-2 font-bold text-white transition-colors duration-300 hover:bg-lou-charcoal disabled:opacity-50"
+      <Button
+        size="sm"
+        variant="ink"
         type="button"
         disabled={applying}
         onClick={() => void apply()}
       >
-        {applying ? 'Actualizando…' : 'Actualizar ahora'}
-      </button>
-      <button
-        className="min-h-11 rounded-lg px-4 py-2 font-bold text-lou-graphite/70 hover:bg-lou-paper hover:text-lou-ink"
+        {applying ? 'Actualizando...' : 'Actualizar ahora'}
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
         type="button"
         disabled={applying}
         onClick={() => setDeferred(true)}
       >
         Más tarde
-      </button>
+      </Button>
     </div>
   )
 }

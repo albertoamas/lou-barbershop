@@ -1,17 +1,25 @@
 import { cva } from 'class-variance-authority'
 
+// Variants follow the color rules of plan section 3.4:
+// primary (brass) for brand actions, money (green) for actions that record money,
+// danger for destructive confirmations and dangerSoft for secondary destructive ones.
 export const buttonStyles = cva(
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold tracking-tight transition-[translate,scale,background-color,border-color,color,box-shadow] duration-300 ease-lou focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-sky-700 disabled:pointer-events-none disabled:opacity-55 active:scale-[0.98]',
+  'inline-flex items-center justify-center gap-2 rounded-control border font-bold transition-[background-color,border-color,color,scale] duration-150 ease-lou active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        primary:
-          'border-lou-ink bg-lou-ink text-white shadow-lou-sm hover:-translate-y-px hover:bg-lou-charcoal',
-        secondary:
-          'border-lou-steel bg-white text-lou-ink shadow-lou-sm hover:-translate-y-px hover:bg-lou-paper',
-        ghost: 'border-transparent bg-transparent text-lou-ink hover:bg-black/5',
-        danger:
-          'border-lou-danger bg-lou-danger text-white hover:-translate-y-px hover:bg-[#651d27]',
+        primary: 'border-accent bg-accent text-on-accent hover:border-accent-strong',
+        money: 'border-success bg-success text-on-ink hover:bg-success-ink',
+        ink: 'border-ink bg-ink text-on-ink hover:bg-ink-soft',
+        secondary: 'border-line-control bg-surface text-ink hover:bg-surface-muted',
+        ghost: 'border-transparent bg-transparent text-ink hover:bg-surface-muted',
+        danger: 'border-danger bg-danger text-on-ink hover:bg-danger-ink',
+        dangerSoft: 'border-transparent bg-danger-soft text-danger-ink hover:border-danger',
+      },
+      size: {
+        sm: 'min-h-11 px-4 text-sm',
+        md: 'min-h-12 px-5 text-base',
+        lg: 'min-h-14 px-6 text-lg',
       },
       width: {
         auto: 'w-auto',
@@ -20,6 +28,7 @@ export const buttonStyles = cva(
     },
     defaultVariants: {
       variant: 'primary',
+      size: 'md',
       width: 'auto',
     },
   },

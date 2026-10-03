@@ -22,12 +22,14 @@ export const SystemStateCard = ({
       fullHeight ? 'min-h-dvh' : 'min-h-[65dvh]',
     )}
   >
-    <section className="w-full max-w-xl rounded-3xl border border-lou-fog bg-white p-7 shadow-lou-lg sm:p-10">
-      <p className="text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">{eyebrow}</p>
-      <h1 className="mt-4 font-display text-5xl leading-[0.94] font-bold sm:text-6xl">{title}</h1>
-      <p className="mt-4 max-w-md text-sm leading-6 text-lou-graphite/65">{message}</p>
+    <section className="w-full max-w-xl rounded-sheet bg-surface p-7 shadow-floating sm:p-10">
+      <p className="text-sm font-semibold text-ink-muted">{eyebrow}</p>
+      <h1 className="mt-3 font-display text-5xl leading-[0.94] font-extrabold sm:text-6xl">
+        {title}
+      </h1>
+      <p className="mt-4 max-w-md leading-6 text-ink-soft">{message}</p>
       {requestId && (
-        <p className="mt-4 break-all rounded-xl bg-lou-paper p-3 text-xs text-lou-graphite/60">
+        <p className="mt-4 rounded-control bg-surface-muted p-3 text-sm break-all text-ink-muted">
           Identificador de solicitud: <code>{requestId}</code>
         </p>
       )}

@@ -11,7 +11,7 @@ export const ConnectivityBanner = ({ connectivity }: ConnectivityBannerProps) =>
 
   return (
     <div
-      className="border-b border-amber-800/20 bg-amber-100 px-4 py-2.5 text-center text-sm font-medium text-amber-950"
+      className="bg-warning-soft px-4 py-3 text-center text-sm font-semibold text-warning-ink"
       role="status"
     >
       Sin conexión. Lo que ya ves puede estar desactualizado; no puedes reservar ni guardar cambios

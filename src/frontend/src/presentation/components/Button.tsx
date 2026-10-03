@@ -5,6 +5,6 @@ import { buttonStyles } from './buttonStyles'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonStyles>
 
-export const Button = ({ className, variant, width, ...props }: ButtonProps) => (
-  <button className={cn(buttonStyles({ variant, width }), className)} {...props} />
+export const Button = ({ className, variant, size, width, ...props }: ButtonProps) => (
+  <button className={cn(buttonStyles({ variant, size, width }), className)} {...props} />
 )
