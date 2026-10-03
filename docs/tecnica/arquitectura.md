@@ -50,7 +50,7 @@ Los módulos son límites de código y negocio, no servicios desplegados indepen
 - Pruebas: xUnit, Testcontainers, Vitest, Testing Library y Playwright.
 - Operación: Docker/Compose, OpenTelemetry y Sentry.
 
-Las versiones, estrategia PWA, contenedores y CI/CD se detallan en [15-stack-pwa-y-docker.md](15-stack-pwa-y-docker.md). Elegir estas tecnologías no cambia la dirección de dependencias: solo los adaptadores conocen el stack.
+Las versiones, estrategia PWA, contenedores y CI/CD se detallan en [stack-y-docker.md](stack-y-docker.md). Elegir estas tecnologías no cambia la dirección de dependencias: solo los adaptadores conocen el stack.
 
 ## 3. Módulos
 
@@ -151,7 +151,7 @@ Las decisiones posteriores se mantienen como archivos individuales:
 
 ## 6. Estructura de código sugerida
 
-La estructura concreta del monorepo se define en [15-stack-pwa-y-docker.md](15-stack-pwa-y-docker.md) y los límites internos los verifica `LouBarbershop.Architecture.Tests`. Cada módulo mantiene dominio, aplicación, adaptadores y delivery sin duplicar ceremonias innecesarias.
+La estructura concreta del monorepo se define en [stack-y-docker.md](stack-y-docker.md) y los límites internos los verifica `LouBarbershop.Architecture.Tests`. Cada módulo mantiene dominio, aplicación, adaptadores y delivery sin duplicar ceremonias innecesarias.
 
 ## 7. Manejo de errores
 

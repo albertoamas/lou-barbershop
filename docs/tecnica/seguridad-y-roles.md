@@ -159,4 +159,4 @@ Actor, fecha, acción, entidad, identificador, valores relevantes antes/después
 - Cada acción de controller debe declarar autorización o anonimato explícito; una prueba de arquitectura hace fallar CI si se omite.
 - GitHub Actions está fijado por SHA y CodeQL analiza C# y TypeScript además de auditorías de dependencias, imágenes y SBOM.
 
-El análisis completo, incluyendo límites de confianza y abusos priorizados, está en [Peluqueria-threat-model.md](Peluqueria-threat-model.md).
+El análisis completo, incluyendo límites de confianza y abusos priorizados, está en [modelo-de-amenazas.md](modelo-de-amenazas.md).

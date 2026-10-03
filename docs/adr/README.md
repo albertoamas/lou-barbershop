@@ -16,4 +16,4 @@ Los ADR capturan decisiones costosas de cambiar, sus razones y consecuencias. Un
 | [ADR-018](ADR-018-token-publico-en-fragmento-y-cabecera.md) | Token público fuera de URL HTTP y sin persistencia en claro | Accepted |
 | [ADR-019](ADR-019-observabilidad-y-borde-productivo.md) | Observabilidad reemplazable y borde público único | Accepted |
 
-Los ADR-001–009 permanecen en [07-arquitectura.md](../tecnica/07-arquitectura.md). Desde ADR-010 se utiliza un archivo por decisión.
+Los ADR-001–009 permanecen en [arquitectura.md](../tecnica/arquitectura.md). Desde ADR-010 se utiliza un archivo por decisión.

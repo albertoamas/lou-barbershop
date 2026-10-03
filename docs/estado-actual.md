@@ -40,11 +40,11 @@
 - `/app`: inicio según rol;
 - `/app/agenda`, `/app/atenciones`, `/app/comisiones`, `/app/inventario`, `/app/disponibilidad`, `/app/reportes`, `/app/configuracion` y `/app/seguridad`.
 
-Consulta [páginas, secciones y roles](diseno/53-guia-paginas-secciones-y-roles.md) para el propósito de cada pantalla.
+Consulta [páginas, secciones y roles](diseno/paginas-y-roles.md) para el propósito de cada pantalla.
 
 ## Próximos pasos
 
-1. segunda ronda de mejora visual ([plan por pantalla](diseno/56-segunda-ronda-pulido-visual.md));
+1. segunda ronda de mejora visual ([plan por pantalla](diseno/plan-mejora-visual.md));
 2. cargar datos reales de la barbería: servicios, precios, barberos, horarios y comisiones;
 3. desplegar en un servidor (VPS recomendado: Compose y Caddy ya cubren HTTPS) con backups externos;
 4. piloto de dos semanas en paralelo al sistema actual, conciliando la caja diaria.
@@ -75,9 +75,9 @@ No hay datos productivos ni variables reales de producción en el repositorio. E
 
 ## Fuentes de verdad
 
-- reglas: [producto/02-reglas-negocio-y-estados.md](producto/02-reglas-negocio-y-estados.md);
-- arquitectura: [tecnica/07-arquitectura.md](tecnica/07-arquitectura.md) y [ADR](adr/README.md);
-- API: [tecnica/08-api.md](tecnica/08-api.md);
-- seguridad: [tecnica/09-seguridad-roles-y-auditoria.md](tecnica/09-seguridad-roles-y-auditoria.md);
-- operación: [operacion/42-runbooks-operacion-y-recuperacion.md](operacion/42-runbooks-operacion-y-recuperacion.md);
-- forma de trabajo: [19-convenciones-trabajo.md](19-convenciones-trabajo.md).
+- reglas: [producto/reglas-de-negocio.md](producto/reglas-de-negocio.md);
+- arquitectura: [tecnica/arquitectura.md](tecnica/arquitectura.md) y [ADR](adr/README.md);
+- API: [tecnica/api.md](tecnica/api.md);
+- seguridad: [tecnica/seguridad-y-roles.md](tecnica/seguridad-y-roles.md);
+- operación: [operacion/runbooks.md](operacion/runbooks.md);
+- forma de trabajo: [convenciones.md](convenciones.md).

@@ -2,7 +2,7 @@
 
 ## Fuente de verdad
 
-Leer primero `docs/README.md` y `docs/ESTADO-ACTUAL.md`. Las fases de construcción del MVP están cerradas; el trabajo actual sigue los próximos pasos de `ESTADO-ACTUAL.md`.
+Leer primero `docs/README.md` y `docs/estado-actual.md`. Las fases de construcción del MVP están cerradas; el trabajo actual sigue los próximos pasos de `estado-actual.md`.
 
 ## Arquitectura
 
@@ -34,5 +34,5 @@ Leer primero `docs/README.md` y `docs/ESTADO-ACTUAL.md`. Las fases de construcci
 - Agregar pruebas al cambiar comportamiento.
 - Ejecutar formato, analyzers/lint, arquitectura, pruebas y build antes de cerrar trabajo.
 - Actualizar ADR, OpenAPI, migraciones y docs cuando corresponda.
-- Seguir `docs/19-convenciones-trabajo.md`.
+- Seguir `docs/convenciones.md`.
 

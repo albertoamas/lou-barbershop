@@ -2,7 +2,7 @@
 
 **Estado:** EN_CURSO — C00 en revisión, C01–C14 pendientes.  
 **Alcance:** presentación de las rutas públicas e internas existentes.  
-**Base:** checkpoints 00–14 aprobados en `48-plan-rediseño-tailwind-y-movimiento.md`.
+**Base:** primera ronda de rediseño (checkpoints 00–14) ya aprobada e implementada; su plan está en el historial de git.
 
 Esta ronda responde a una nueva solicitud de mejora. Conserva la identidad aprobada de Lou, las reglas de negocio, los permisos y los contratos de la API. El dueño revisa cada pantalla antes de avanzar a la siguiente, como en la primera ronda. Una mejora compartida se vuelve a comprobar en las pantallas ya aceptadas.
 

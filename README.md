@@ -11,7 +11,7 @@ PWA para una barbería de una sola sucursal. Integra agenda, atención, cobro, i
 - Docker, 17 migraciones y restauración de backup verificados;
 - despliegue productivo, dominio, TLS, secretos y backups externos todavía pendientes.
 
-El resumen vigente está en [docs/ESTADO-ACTUAL.md](docs/ESTADO-ACTUAL.md). La documentación completa comienza en [docs/README.md](docs/README.md).
+El resumen vigente está en [docs/estado-actual.md](docs/estado-actual.md). La documentación completa comienza en [docs/README.md](docs/README.md).
 
 ## Ejecutar localmente
 
@@ -25,7 +25,7 @@ Abrir:
 - reserva: `http://localhost:8088/reservar`;
 - acceso del equipo: `http://localhost:8088/app/login`.
 
-Las credenciales de demostración permanecen sólo en el `.env` local ignorado. Consulta la [guía de desarrollo local](docs/operacion/23-guia-desarrollo-local.md) para migraciones, datos ficticios y diagnóstico.
+Las credenciales de demostración permanecen sólo en el `.env` local ignorado. Consulta la [guía de desarrollo local](docs/operacion/desarrollo-local.md) para migraciones, datos ficticios y diagnóstico.
 
 ## Estructura
 

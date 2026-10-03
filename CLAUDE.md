@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Lou Barbershop is a PWA for a single-branch barbershop: agenda, service operations, checkout, inventory, commissions and settlements. `AGENTS.md` holds the binding repo rules. Read it along with `docs/README.md` and `docs/ESTADO-ACTUAL.md` (current status and next steps) before starting work. The MVP build phases are closed. Business docs are in Spanish. Code, identifiers, commits and API contracts are in English. UI text is in Spanish. `AGENTS.md` says to use `apply_patch`. That instruction is for Codex, so use the Edit tool here.
+Lou Barbershop is a PWA for a single-branch barbershop: agenda, service operations, checkout, inventory, commissions and settlements. `AGENTS.md` holds the binding repo rules. Read it along with `docs/README.md` and `docs/estado-actual.md` (current status and next steps) before starting work. The MVP build phases are closed. Business docs are in Spanish. Code, identifiers, commits and API contracts are in English. UI text is in Spanish. `AGENTS.md` says to use `apply_patch`. That instruction is for Codex, so use the Edit tool here.
 
 ## Commands
 
@@ -56,7 +56,7 @@ To fix formatting instead of only checking it, run `dotnet format LouBarbershop.
 
 `Directory.Build.props` sets `TreatWarningsAsErrors`, `latest-recommended` analyzers and `EnforceCodeStyleInBuild`, so analyzer or style violations break the build.
 
-Operational scripts in `deploy/` need a healthy stack. They include `verify-backup-restore.ps1`, `verify-application-rollback.ps1`, `benchmark-100k.ps1`, `seed-local-demo.ps1` and `backup.ps1`. Acceptance testing runs on a disposable stack at `http://127.0.0.1:8091` (`deploy/compose.acceptance.yaml`). Run `seed-acceptance.ps1` first, then `test-acceptance-runtime.ps1`. Demo credentials live only in the git-ignored `.env`. Migrations, demo data and troubleshooting are covered in `docs/operacion/23-guia-desarrollo-local.md`.
+Operational scripts in `deploy/` need a healthy stack. They include `verify-backup-restore.ps1`, `verify-application-rollback.ps1`, `benchmark-100k.ps1`, `seed-local-demo.ps1` and `backup.ps1`. Acceptance testing runs on a disposable stack at `http://127.0.0.1:8091` (`deploy/compose.acceptance.yaml`). Run `seed-acceptance.ps1` first, then `test-acceptance-runtime.ps1`. Demo credentials live only in the git-ignored `.env`. Migrations, demo data and troubleshooting are covered in `docs/operacion/desarrollo-local.md`.
 
 ## Architecture
 
@@ -90,7 +90,7 @@ Operational scripts in `deploy/` need a healthy stack. They include `verify-back
 
 ## Conventions
 
-- Follow `docs/19-convenciones-trabajo.md`. C# uses file-scoped namespaces and `sealed` by default. Use records for contracts, entities with private setters, and `CancellationToken` plus the `Async` suffix on I/O.
+- Follow `docs/convenciones.md`. C# uses file-scoped namespaces and `sealed` by default. Use records for contracts, entities with private setters, and `CancellationToken` plus the `Async` suffix on I/O.
 - Use Conventional Commits with scopes `agenda|sales|inventory|commissions|auth|pwa|infra`, and one intent per commit or PR. The PR template is in `.github/PULL_REQUEST_TEMPLATE.md`.
 - A behavior change needs tests. A bug fix adds a test that failed before the fix. Update ADRs (`docs/adr/`), OpenAPI, migrations and docs when they're affected.
 - New infrastructure (queues, Redis, microservices, Kubernetes) needs an approved ADR first.
