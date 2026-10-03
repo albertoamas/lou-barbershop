@@ -13,6 +13,8 @@ ENV VITE_SOCIAL_FACEBOOK_URL=${VITE_SOCIAL_FACEBOOK_URL} \
     VITE_SOCIAL_TIKTOK_URL=${VITE_SOCIAL_TIKTOK_URL}
 RUN npm run build
 
+# Build Caddy (standard modules only) with a current Go toolchain. The official caddy
+# image lags on Go patches and fails the Trivy HIGH gate on its Go stdlib.
 FROM golang:1.27.1-alpine3.24 AS caddy-build
 ARG CADDY_VERSION=v2.11.4
 WORKDIR /build
