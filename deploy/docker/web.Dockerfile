@@ -13,7 +13,7 @@ ENV VITE_SOCIAL_FACEBOOK_URL=${VITE_SOCIAL_FACEBOOK_URL} \
     VITE_SOCIAL_TIKTOK_URL=${VITE_SOCIAL_TIKTOK_URL}
 RUN npm run build
 
-FROM golang:1.26.7-alpine3.24 AS caddy-build
+FROM golang:1.27.1-alpine3.24 AS caddy-build
 ARG CADDY_VERSION=v2.11.4
 WORKDIR /build
 COPY deploy/docker/caddy/main.go ./
