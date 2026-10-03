@@ -13,7 +13,7 @@ Lou Barbershop es una PWA monolítica de una sola sucursal. Sus riesgos principa
 - El único borde público previsto es Caddy; API y PostgreSQL deben permanecer en red privada. Confiar en cabeceras reenviadas sólo es seguro bajo esa condición.
 - Fuera de alcance actual: infraestructura concreta de Railway, proveedor de backups, dominio/TLS definitivo, mensajería, pagos electrónicos, dispositivos del usuario y seguridad física.
 
-Preguntas abiertas que pueden cambiar el riesgo: dominio y topología final de Railway; ubicación/retención legal exigida para backups y PII; proveedor final de Sentry/OTLP y personas que recibirán alertas. Estas decisiones quedan explícitamente diferidas al despliegue.
+Preguntas abiertas que pueden cambiar el riesgo: dominio y topología final de Railway; ubicación/retención legal exigida para backups y PII; proyecto de Sentry y personas que recibirán alertas. Estas decisiones quedan explícitamente diferidas al despliegue.
 
 ## System model
 
@@ -32,7 +32,7 @@ Preguntas abiertas que pueden cambiar el riesgo: dominio y topología final de R
 - Caddy → API: HTTP privado con JSON/cookies/cabeceras; API valida host, antiforgery, esquema, rol/propiedad, límite de solicitudes y tiempo. `Http:TrustForwardedHeaders` sólo se habilita si API no es pública.
 - API → Application/Domain: DTOs normalizados y actor autenticado; el servidor recalcula precio, inventario, permisos, disponibilidad, comisiones y totales.
 - Infrastructure → PostgreSQL: Npgsql/EF Core sobre red privada; transacciones, concurrencia, restricciones e historial auditable protegen integridad.
-- API → Sentry/OTLP opcional: eventos, métricas y trazas sin PII por configuración; el endpoint y DSN serán secretos de plataforma.
+- API → Sentry opcional: errores y trazas muestreadas sin PII por configuración; el DSN será secreto de plataforma.
 - Operador → Docker/backup: comandos locales privilegiados producen un dump cifrable fuera del contenedor y restauran sólo en destino aislado durante la prueba.
 - GitHub → registries/actions: código y manifests obtienen paquetes/imágenes; versiones, auditoría, Trivy, Dependabot y SBOM reducen riesgo de cadena de suministro.
 
@@ -45,7 +45,7 @@ flowchart LR
   A --> C["Application y Domain"]
   C --> I["Infrastructure"]
   I -->|Npgsql| D["PostgreSQL"]
-  A -->|telemetria opcional| O["Sentry y OTLP"]
+  A -->|telemetria opcional| O["Sentry"]
   P["Operador autorizado"] -->|Docker| D
   G["GitHub Actions"] -->|artefactos| W
   G -->|artefactos| A
@@ -133,7 +133,7 @@ flowchart LR
 
 | Path | Why it matters | Related Threat IDs |
 |---|---|---|
-| `src/backend/LouBarbershop.Api/Program.cs` | Pipeline, cookies, sesión, claves, proxy, límites, Sentry/OTLP | TM-003, TM-007–009, TM-011 |
+| `src/backend/LouBarbershop.Api/Program.cs` | Pipeline, cookies, sesión, claves, proxy, límites, Sentry | TM-003, TM-007–009, TM-011 |
 | `src/backend/LouBarbershop.Api/Controllers` | Frontera de autenticación/autorización y binding | TM-001, TM-003–005 |
 | `src/backend/LouBarbershop.Application/Sales/SalesService.cs` | Cobro, propiedad, idempotencia y efectos atómicos | TM-001, TM-004–005 |
 | `src/backend/LouBarbershop.Application/Agenda/AgendaService.cs` | Propiedad y doble reserva | TM-001, TM-005 |

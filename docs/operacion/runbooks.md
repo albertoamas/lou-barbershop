@@ -11,7 +11,7 @@
 
 1. CI verde: formato, build, pruebas, arquitectura, audit, imágenes y SBOM.
 2. Imagen identificada por SHA/digest, no sólo por tag mutable.
-3. Variables obligatorias desde secretos: conexión PostgreSQL, claves persistentes, dominio/hosts; DSN/OTLP si se habilitan.
+3. Variables obligatorias desde secretos: conexión PostgreSQL, claves persistentes, dominio/hosts; DSN de Sentry si se habilita.
 4. `Security__RequireSecureCookies=true`, redirección HTTPS activa, `AllowedHosts` exacto y `Http__TrustForwardedHeaders=true` sólo si API es privada tras un único proxy.
 5. Backup reciente verificado antes de migración; revisar si la migración es compatible con la versión anterior.
 6. Ejecutar migración una vez, comprobar `/health/ready`, desplegar web/API y realizar smoke de login, agenda, cobro y reserva pública.

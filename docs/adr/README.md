@@ -14,6 +14,7 @@ Los ADR capturan decisiones costosas de cambiar, sus razones y consecuencias. Un
 | [ADR-016](ADR-016-ledger-comisiones-y-liquidaciones-inmutables.md) | Ledger de comisiones y liquidaciones inmutables | Accepted |
 | [ADR-017](ADR-017-reportes-derivados-y-reconciliables.md) | Reportes derivados, separados y reconciliables | Accepted |
 | [ADR-018](ADR-018-token-publico-en-fragmento-y-cabecera.md) | Token público fuera de URL HTTP y sin persistencia en claro | Accepted |
-| [ADR-019](ADR-019-observabilidad-y-borde-productivo.md) | Observabilidad reemplazable y borde público único | Accepted |
+| [ADR-019](ADR-019-observabilidad-y-borde-productivo.md) | Observabilidad reemplazable y borde público único | Accepted; OTLP reemplazado por ADR-020 |
+| [ADR-020](ADR-020-sentry-como-unica-observabilidad.md) | Sentry como única herramienta de observabilidad | Accepted |
 
 Los ADR-001–009 permanecen en [arquitectura.md](../tecnica/arquitectura.md). Desde ADR-010 se utiliza un archivo por decisión.

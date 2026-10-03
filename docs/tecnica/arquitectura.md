@@ -48,7 +48,7 @@ Los módulos son límites de código y negocio, no servicios desplegados indepen
 - Frontend: TypeScript, React 19.2, Vite y Workbox como PWA.
 - Datos: PostgreSQL 18 mediante Npgsql.
 - Pruebas: xUnit, Testcontainers, Vitest, Testing Library y Playwright.
-- Operación: Docker/Compose, OpenTelemetry y Sentry.
+- Operación: Docker/Compose y Sentry.
 
 Las versiones, estrategia PWA, contenedores y CI/CD se detallan en [stack-y-docker.md](stack-y-docker.md). Elegir estas tecnologías no cambia la dirección de dependencias: solo los adaptadores conocen el stack.
 

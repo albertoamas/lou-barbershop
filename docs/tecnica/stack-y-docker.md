@@ -12,7 +12,7 @@
 - **Base de datos:** PostgreSQL 18, fijando parche e imagen por digest en producción.
 - **Validación de entrada:** validadores en el borde; reglas de dominio dentro del núcleo.
 - **Pruebas:** xUnit, biblioteca de aserciones acordada, Testcontainers para PostgreSQL y pruebas de arquitectura.
-- **Observabilidad:** logging estructurado, OpenTelemetry y Sentry como adaptadores.
+- **Observabilidad:** logging JSON estructurado y Sentry opcional (ADR-020).
 
 ### Frontend/PWA
 

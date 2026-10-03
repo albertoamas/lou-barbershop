@@ -19,7 +19,7 @@ Este documento separa lo ya terminado de las decisiones que requieren al dueño,
 - [ ] Programar backup diario cifrado fuera de Railway.
 - [ ] Alertar si el backup falla o supera la antigüedad acordada.
 - [ ] Restaurar una copia de staging en una base aislada y guardar la evidencia.
-- [ ] Configurar Sentry/OTLP sin PII y enviar un error controlado de prueba.
+- [ ] Configurar Sentry sin PII y enviar un error controlado de prueba.
 - [ ] Crear alertas de indisponibilidad, errores 5xx, latencia y fallo de migración/job.
 - [ ] Ensayar rollback de web/API sin revertir destructivamente la base.
 

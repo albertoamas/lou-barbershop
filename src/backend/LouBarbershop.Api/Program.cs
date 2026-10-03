@@ -17,9 +17,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,29 +53,6 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
         });
     });
 }
-
-var serviceName = builder.Configuration.GetValue("Observability:ServiceName", "lou-barbershop-api");
-var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? builder.Configuration["Otlp:Endpoint"];
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(serviceName))
-    .WithTracing(tracing =>
-    {
-        tracing.AddAspNetCoreInstrumentation(options =>
-            options.Filter = context => !context.Request.Path.StartsWithSegments("/health/live"));
-        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
-        {
-            tracing.AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint));
-        }
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics.AddAspNetCoreInstrumentation();
-        metrics.AddRuntimeInstrumentation();
-        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
-        {
-            metrics.AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint));
-        }
-    });
 
 builder.Services.AddInfrastructure(builder.Configuration);
 var cookieSecurePolicy = builder.Configuration.GetValue("Security:RequireSecureCookies", true)

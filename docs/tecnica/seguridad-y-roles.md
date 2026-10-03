@@ -155,7 +155,7 @@ Actor, fecha, acción, entidad, identificador, valores relevantes antes/después
 - API y proxy aplican límites de 1 MiB, cabeceras defensivas y `no-store` en sesión, errores y salud; catálogo/disponibilidad públicos conservan caché controlada.
 - `AllowedHosts` es restrictivo en local y debe sustituirse por el dominio exacto. `X-Forwarded-*` permanece desactivado salvo detrás de proxy privado confiable; activarlo sin `Http:KnownProxies` o `Http:KnownNetworks` hace fallar el arranque.
 - Cookies productivas usan prefijo `__Host-`; la excepción HTTP sólo existe en Compose local.
-- Sentry y OTLP son adaptadores opcionales. Sentry mantiene PII desactivada y elimina `Cookie`, `X-CSRF-TOKEN` y `X-Management-Token`; las métricas no etiquetan datos personales.
+- Sentry es el único adaptador de observabilidad y es opcional. Mantiene PII desactivada y elimina `Cookie`, `X-CSRF-TOKEN` y `X-Management-Token`; las métricas no etiquetan datos personales.
 - Cada acción de controller debe declarar autorización o anonimato explícito; una prueba de arquitectura hace fallar CI si se omite.
 - GitHub Actions está fijado por SHA y CodeQL analiza C# y TypeScript además de auditorías de dependencias, imágenes y SBOM.
 

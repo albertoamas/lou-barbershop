@@ -1,6 +1,6 @@
 # ADR-019 — Observabilidad opcional y borde productivo único
 
-**Estado:** Accepted  
+**Estado:** Accepted; la parte de OpenTelemetry/OTLP fue reemplazada por [ADR-020](ADR-020-sentry-como-unica-observabilidad.md)  
 **Fecha:** 9 de septiembre de 2026
 
 ## Contexto
