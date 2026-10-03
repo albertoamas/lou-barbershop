@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Lou Barbershop is a PWA for a single-branch barbershop: agenda, service operations, checkout, inventory, commissions and settlements. `AGENTS.md` holds the binding repo rules. Read it along with `docs/README.md`, `docs/ESTADO-ACTUAL.md` (current status) and `docs/17-plan-maestro-fases.md` (phases and dependency gates) before starting work. Don't implement a phase whose gate isn't approved. Business docs are in Spanish. Code, identifiers, commits and API contracts are in English. UI text is in Spanish.
+Lou Barbershop is a PWA for a single-branch barbershop: agenda, service operations, checkout, inventory, commissions and settlements. `AGENTS.md` holds the binding repo rules. Read it along with `docs/README.md`, `docs/ESTADO-ACTUAL.md` (current status) and `docs/17-plan-maestro-fases.md` (phases and dependency gates) before starting work. Don't implement a phase whose gate isn't approved. Business docs are in Spanish. Code, identifiers, commits and API contracts are in English. UI text is in Spanish. `AGENTS.md` says to use `apply_patch`. That instruction is for Codex, so use the Edit tool here.
 
 ## Commands
 
@@ -52,9 +52,11 @@ dotnet test LouBarbershop.slnx --configuration Release
 # then in src/frontend: npm run format:check; npm run lint; npm run test; npm run build
 ```
 
+To fix formatting instead of only checking it, run `dotnet format LouBarbershop.slnx` and, in `src/frontend`, `npx prettier --write src`.
+
 `Directory.Build.props` sets `TreatWarningsAsErrors`, `latest-recommended` analyzers and `EnforceCodeStyleInBuild`, so analyzer or style violations break the build.
 
-Operational scripts in `deploy/` need a healthy stack. They include `verify-backup-restore.ps1`, `verify-application-rollback.ps1`, `benchmark-100k.ps1`, `seed-local-demo.ps1` and `backup.ps1`.
+Operational scripts in `deploy/` need a healthy stack. They include `verify-backup-restore.ps1`, `verify-application-rollback.ps1`, `benchmark-100k.ps1`, `seed-local-demo.ps1` and `backup.ps1`. Acceptance testing runs on a disposable stack at `http://127.0.0.1:8091` (`deploy/compose.acceptance.yaml`). Run `seed-acceptance.ps1` first, then `test-acceptance-runtime.ps1`. Demo credentials live only in the git-ignored `.env`. Migrations, demo data and troubleshooting are covered in `docs/operacion/23-guia-desarrollo-local.md`.
 
 ## Architecture
 

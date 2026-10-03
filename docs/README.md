@@ -48,6 +48,7 @@ Con esos cinco documentos se entiende el estado general. Los siguientes son refe
 - [Plan visual aprobado](diseno/48-plan-rediseño-tailwind-y-movimiento.md)
 - [Componentes, accesibilidad y pulido](diseno/51-guia-componentes-accesibilidad-y-pulido.md)
 - [Páginas, secciones y roles](diseno/53-guia-paginas-secciones-y-roles.md)
+- [Segunda ronda de mejora visual por pantalla](diseno/56-segunda-ronda-pulido-visual.md)
 
 ## Operación — `operacion/`
 
