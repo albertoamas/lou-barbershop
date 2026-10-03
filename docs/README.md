@@ -30,7 +30,7 @@ Solo se conserva documentación vigente. Las actas de fases, planes cumplidos y 
 
 ## Diseño — `diseno/`
 
-- [Componentes](diseno/componentes.md): identidad, componentes y accesibilidad.
+- [Plan de rediseño](diseno/plan-rediseno.md): reglas visuales, dispositivos, marca, proceso e inventario de pantallas.
 - [Páginas y roles](diseno/paginas-y-roles.md)
 
 ## Operación — `operacion/`
