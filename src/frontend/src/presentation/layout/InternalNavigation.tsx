@@ -2,6 +2,7 @@ import { AnimatePresence, m } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AppIcon, type IconName } from '../components/AppIcon'
+import { Avatar } from '../components/Avatar'
 import { BrandLockup } from '../components/BrandLockup'
 import { cn } from '../styles/cn'
 
@@ -19,59 +20,39 @@ interface NavigationItem {
   end?: boolean
 }
 
-const desktopLinkClass = ({ isActive }: { isActive: boolean }) =>
+// Tablet rail (md) shows icon over label; desktop sidebar (xl) shows them in a row.
+const sideLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'group relative flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-white/65 transition-colors duration-150 hover:bg-white/8 hover:text-white',
-    isActive && 'bg-white text-lou-ink shadow-lg hover:bg-white hover:text-lou-ink',
+    'flex min-h-16 flex-col items-center justify-center gap-1 rounded-control px-1 text-center text-sm font-semibold text-on-ink-muted transition-colors duration-150 hover:bg-ink-soft hover:text-on-ink',
+    'xl:min-h-12 xl:flex-row xl:justify-start xl:gap-3 xl:px-3 xl:text-left',
+    isActive && 'bg-accent text-on-accent hover:bg-accent hover:text-on-accent',
   )
 
-const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
-  cn(
-    'relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-semibold text-white/65 transition-colors duration-150',
-    isActive && 'text-white',
-  )
-
-const DesktopLink = ({ item }: { item: NavigationItem }) => (
-  <NavLink
-    aria-label={item.label}
-    className={desktopLinkClass}
-    to={item.to}
-    end={item.end === true}
-  >
-    {({ isActive }) => (
-      <>
-        {isActive && (
-          <m.span
-            layoutId="desktop-navigation-indicator"
-            className="absolute inset-y-2 -left-1 w-1 rounded-full bg-lou-ink"
-          />
-        )}
-        <AppIcon name={item.icon} />
-        <span className="hidden lg:inline">{item.label}</span>
-      </>
-    )}
+const SideLink = ({ item }: { item: NavigationItem }) => (
+  <NavLink aria-label={item.label} className={sideLinkClass} to={item.to} end={item.end === true}>
+    <AppIcon name={item.icon} />
+    <span className="leading-tight xl:hidden">{item.shortLabel ?? item.label}</span>
+    <span className="hidden xl:inline">{item.label}</span>
   </NavLink>
 )
 
-const MobileLink = ({ item, onNavigate }: { item: NavigationItem; onNavigate?: () => void }) => (
+const MobileLink = ({ item }: { item: NavigationItem }) => (
   <NavLink
-    className={mobileLinkClass}
+    className={({ isActive }) =>
+      cn(
+        'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-sm font-semibold text-on-ink-muted transition-colors duration-150',
+        isActive && 'text-on-ink',
+      )
+    }
     to={item.to}
     end={item.end === true}
-    onClick={() => onNavigate?.()}
   >
     {({ isActive }) => (
       <>
-        {isActive && (
-          <m.span
-            layoutId="mobile-navigation-indicator"
-            className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-white"
-          />
-        )}
         <span
           className={cn(
-            'grid size-8 place-items-center rounded-lg transition-[background-color,scale] duration-200',
-            isActive && 'scale-105 bg-white/15',
+            'grid h-8 w-12 place-items-center rounded-full transition-colors duration-150',
+            isActive && 'bg-accent text-on-accent',
           )}
         >
           <AppIcon name={item.icon} size={21} />
@@ -137,40 +118,41 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
   return (
     <>
       <aside
-        className="sticky top-0 hidden h-screen flex-col border-r border-white/10 bg-lou-ink px-3 py-5 text-white md:flex lg:px-4"
+        className="sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-ink px-2 py-4 text-on-ink md:flex xl:px-4 xl:py-5"
         aria-label="Navegación principal"
       >
-        <BrandLockup compact className="mx-auto lg:hidden" to="/app" useViewTransition={false} />
-        <BrandLockup className="hidden px-2 lg:inline-flex" to="/app" useViewTransition={false} />
-        <nav className="mt-8 grid gap-1.5">
+        <BrandLockup compact className="mx-auto xl:hidden" to="/app" useViewTransition={false} />
+        <BrandLockup className="hidden px-2 xl:inline-flex" to="/app" useViewTransition={false} />
+        <nav className="mt-6 grid gap-1">
           {primaryItems.map((item) => (
-            <DesktopLink key={item.to} item={item} />
+            <SideLink key={item.to} item={item} />
           ))}
-          {secondaryItems.length > 0 && <div className="my-2 h-px bg-white/10" />}
+          {secondaryItems.length > 0 && <div className="mx-2 my-2 h-px bg-ink-soft" />}
           {secondaryItems.map((item) => (
-            <DesktopLink key={item.to} item={item} />
+            <SideLink key={item.to} item={item} />
           ))}
         </nav>
-        <div className="mt-auto border-t border-white/10 pt-4">
-          <div className="hidden px-3 lg:block">
-            <span className="block text-[0.65rem] font-bold tracking-[0.16em] text-white/40 uppercase">
-              Sesión activa
+        <div className="mt-auto pt-4">
+          <div className="hidden items-center gap-3 px-2 xl:flex">
+            <Avatar name={userName} tone="onInk" />
+            <span className="min-w-0">
+              <span className="block text-sm text-on-ink-muted">Sesión activa</span>
+              <strong className="block truncate">{userName}</strong>
             </span>
-            <strong className="mt-1 block truncate text-sm">{userName}</strong>
           </div>
           <button
-            className="mt-2 flex min-h-11 w-full items-center justify-center gap-3 rounded-xl px-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/8 hover:text-white lg:justify-start"
+            className="mt-3 flex min-h-12 w-full flex-col items-center justify-center gap-1 rounded-control px-1 text-sm font-semibold text-on-ink-muted transition-colors hover:bg-ink-soft hover:text-on-ink xl:flex-row xl:justify-start xl:gap-3 xl:px-3"
             type="button"
             onClick={() => void onLogout()}
           >
             <AppIcon name="logout" />
-            <span className="hidden lg:inline">Cerrar sesión</span>
+            Cerrar sesión
           </button>
         </div>
       </aside>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 flex min-h-16 border-t border-white/10 bg-lou-ink/95 px-1 pb-[env(safe-area-inset-bottom)] text-white shadow-[0_-12px_32px_rgb(8_8_8/0.18)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 flex min-h-16 bg-ink px-1 pb-[env(safe-area-inset-bottom)] text-on-ink md:hidden"
         aria-label="Navegación principal móvil"
       >
         {primaryItems.map((item) => (
@@ -181,16 +163,16 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
           aria-expanded={moreOpen}
           aria-controls="mobile-more-menu"
           className={cn(
-            'relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-semibold text-white/65 transition-colors',
-            moreOpen && 'text-white',
+            'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-sm font-semibold text-on-ink-muted transition-colors',
+            moreOpen && 'text-on-ink',
           )}
           type="button"
           onClick={() => setMoreOpen((value) => !value)}
         >
           <span
             className={cn(
-              'grid size-8 place-items-center rounded-lg transition-[background-color,scale] duration-200',
-              moreOpen && 'scale-105 bg-white/15',
+              'grid h-8 w-12 place-items-center rounded-full transition-colors duration-150',
+              moreOpen && 'bg-accent text-on-accent',
             )}
           >
             <AppIcon name="more" size={21} />
@@ -202,7 +184,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
       <AnimatePresence>
         {moreOpen && (
           <m.div
-            className="fixed inset-0 z-60 flex items-end bg-black/55 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-60 flex items-end bg-ink/55 md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -236,21 +218,24 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
               role="dialog"
               aria-modal="true"
               aria-label="Más opciones del equipo"
-              className="max-h-[80vh] w-full overflow-y-auto rounded-2xl bg-white p-4 text-lou-ink shadow-lou-lg"
+              className="max-h-[85dvh] w-full overflow-y-auto rounded-t-sheet bg-surface px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] text-ink shadow-overlay"
               initial={{ y: 32, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 24, opacity: 0 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="flex items-start justify-between gap-4 border-b border-lou-fog pb-4">
-                <span>
-                  <small className="block text-[0.65rem] font-bold tracking-[0.16em] text-lou-graphite/50 uppercase">
-                    Sesión activa
-                  </small>
-                  <strong className="mt-1 block">{userName}</strong>
+              <span aria-hidden="true" className="mx-auto block h-1 w-10 rounded-full bg-line" />
+              <div className="mt-3 flex items-center justify-between gap-4 border-b border-surface-muted pb-4">
+                <span className="flex min-w-0 items-center gap-3">
+                  <Avatar name={userName} tone="ink" />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-ink-muted">Sesión activa</span>
+                    <strong className="block truncate">{userName}</strong>
+                  </span>
                 </span>
                 <button
                   ref={closeButtonRef}
-                  className="grid size-11 place-items-center rounded-xl bg-black/5 text-2xl"
+                  className="grid size-12 shrink-0 place-items-center rounded-full bg-surface-muted"
                   type="button"
                   aria-label="Cerrar menú"
                   onClick={() => setMoreOpen(false)}
@@ -264,8 +249,8 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
                     key={item.to}
                     className={({ isActive }) =>
                       cn(
-                        'flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-lou-graphite/70 transition-colors hover:bg-black/5',
-                        isActive && 'bg-lou-ink text-white',
+                        'flex min-h-14 items-center gap-3 rounded-control px-3 font-semibold text-ink-soft transition-colors hover:bg-surface-muted',
+                        isActive && 'bg-accent text-on-accent hover:bg-accent',
                       )
                     }
                     to={item.to}
@@ -277,7 +262,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
                 ))}
               </nav>
               <button
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-lou-danger/25 bg-red-50 font-bold text-lou-danger"
+                className="flex min-h-14 w-full items-center justify-center gap-2 rounded-control bg-danger-soft font-bold text-danger-ink"
                 type="button"
                 onClick={() => void onLogout()}
               >

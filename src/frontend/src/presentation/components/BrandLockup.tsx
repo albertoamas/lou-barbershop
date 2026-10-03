@@ -19,16 +19,16 @@ export const BrandLockup = ({
   const content = (
     <>
       <img
-        className="size-12 shrink-0 rounded-xl border border-white/20 object-cover shadow-lg"
-        src="/brand/lou-logo.jpg"
+        className={cn('shrink-0 rounded-control object-cover', compact ? 'size-16' : 'size-12')}
+        src="/icons/icon-192.png"
         alt=""
+        width={64}
+        height={64}
       />
       {!compact && (
         <span className="leading-none">
-          <strong className="block font-display text-2xl tracking-tight">Lou</strong>
-          <small className="mt-0.5 block font-display text-[0.68rem] font-semibold tracking-[0.2em] text-current/65 uppercase">
-            Barbershop
-          </small>
+          <strong className="block font-display text-2xl font-extrabold">Lou</strong>
+          <span className="mt-1 block text-sm text-current/70">Barbershop</span>
         </span>
       )}
     </>
@@ -37,7 +37,7 @@ export const BrandLockup = ({
   return linked ? (
     <Link
       className={cn(
-        'inline-flex items-center gap-3 rounded-xl text-inherit no-underline transition-opacity duration-150 hover:opacity-80',
+        'inline-flex items-center gap-3 rounded-control text-inherit no-underline transition-opacity duration-150 hover:opacity-80',
         className,
       )}
       to={to}

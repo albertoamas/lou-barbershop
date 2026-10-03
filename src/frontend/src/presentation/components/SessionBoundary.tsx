@@ -25,8 +25,8 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   if (session.isPending) {
     return (
       <main className="grid min-h-[70vh] place-items-center px-4" aria-busy="true">
-        <div className="flex items-center gap-3 text-sm font-semibold text-lou-graphite/70">
-          <span className="size-2 animate-pulse rounded-full bg-lou-ink" />
+        <div className="flex items-center gap-3 text-sm font-semibold text-ink-muted">
+          <span className="size-2 animate-pulse rounded-full bg-accent" />
           Verificando sesión…
         </div>
       </main>
@@ -43,9 +43,9 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   if (session.isError && !session.data) {
     return (
       <main className="grid min-h-[65dvh] place-items-center px-4 py-10">
-        <section className="w-full max-w-lg rounded-2xl border border-lou-fog bg-white p-7 shadow-lou-sm">
-          <h1 className="font-display text-3xl font-bold">No pudimos verificar tu sesión</h1>
-          <p className="mt-3 text-sm leading-6 text-lou-graphite/65">
+        <section className="w-full max-w-lg rounded-panel bg-surface p-7 shadow-raised">
+          <h1 className="font-display text-3xl font-extrabold">No pudimos verificar tu sesión</h1>
+          <p className="mt-3 leading-6 text-ink-muted">
             Revisa tu conexión y vuelve a intentarlo. No se enviará ninguna operación mientras no
             podamos confirmar el acceso.
           </p>
@@ -72,7 +72,7 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   }
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+    <div className="min-h-dvh bg-canvas md:grid md:grid-cols-[8rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)]">
       <InternalNavigation
         roles={session.data.roles}
         userName={session.data.userName}
