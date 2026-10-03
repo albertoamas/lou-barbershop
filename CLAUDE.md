@@ -95,3 +95,16 @@ Operational scripts in `deploy/` need a healthy stack. They include `verify-back
 - A behavior change needs tests. A bug fix adds a test that failed before the fix. Update ADRs (`docs/adr/`), OpenAPI, migrations and docs when they're affected.
 - New infrastructure (queues, Redis, microservices, Kubernetes) needs an approved ADR first.
 - Completed phase records and old plans were removed from `docs/`. Recover them from git history if needed instead of recreating them.
+
+## Agent skills
+
+Project skills live in `.claude/skills/` and are committed, so a clone already has them. The official `skills` CLI installs them, and `skills-lock.json` records each one's source and hash. Don't hand-edit skill files. Install or update a skill by re-running `add`, which overwrites it in place with the latest version:
+
+```powershell
+npx skills@1.7.0 add <owner/repo> -s <skill> -a claude-code -y
+npx skills@1.7.0 remove <skill> -a claude-code -y
+```
+
+Don't use `skills update` or `skills experimental_install`. In CLI 1.7.0 they write to `.agents/skills/` instead of `.claude/skills/`, and `.agents/` is git-ignored.
+
+Sources are `dotnet/skills` (dotnet-webapi, optimizing-ef-core-queries), `vercel-labs/agent-skills` (vercel-react-best-practices, vercel-composition-patterns, web-design-guidelines) and `anthropics/skills` (frontend-design). Skills are general guidance. When one conflicts with this file, `AGENTS.md` or an ADR, the repo rules win. For example, keep controllers and the `*ControllerBase.Respond()` error mapping even if a skill suggests minimal APIs or other middleware. Next.js and server-component rules in `vercel-react-best-practices` don't apply to this Vite SPA. `web-design-guidelines` fetches its rules from the vercel-labs/web-interface-guidelines repo at review time.
