@@ -53,7 +53,10 @@ jobs:
       - run: npm run test
       - run: npm run build
       - run: npm run build-storybook
-      - run: npm audit --audit-level=high
+      # Shipped dependencies must be free of high findings. Dev-only tooling fails
+      # only on critical ones, since some lint transitive deps have no fix upstream.
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=critical
       - name: Generate frontend CycloneDX SBOM
         run: |
           mkdir -p ../../artifacts/sbom
