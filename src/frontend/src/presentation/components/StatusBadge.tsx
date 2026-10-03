@@ -32,7 +32,7 @@ type StatusBadgeProps = VariantProps<typeof badgeStyles> & {
 
 export const StatusBadge = ({ tone, icon, children, className }: StatusBadgeProps) => (
   <span className={cn(badgeStyles({ tone }), className)}>
-    {tone === 'inService' && <Stripes className="size-4 rounded-full" />}
+    {tone === 'inService' && <Stripes density="fine" className="size-4 rounded-full" />}
     {icon}
     {children}
   </span>
