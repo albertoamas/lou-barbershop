@@ -23,7 +23,7 @@ Este documento fija las reglas que debe cumplir el rediseño completo de la apli
 | Persona | Rol en la app | Dispositivo principal | Secundario | Contexto de uso |
 |---|---|---|---|---|
 | Recepcionista | Administrador | **Tablet** en el mostrador (horizontal y vertical) | **PC** | Agenda del día, llegadas, cobros y ventas; muchas consultas rápidas mientras atiende a clientes en persona y por teléfono |
-| Barbero | Barbero | **Celular** (vertical, una mano) | — | Entre clientes, con poco tiempo: su día, su próxima cita, iniciar o terminar una atención y ver sus comisiones |
+| Barbero | Barbero | **Celular** (vertical, una mano) | Ninguno | Entre clientes, con poco tiempo: su día, su próxima cita, iniciar o terminar una atención y ver sus comisiones |
 | Dueño | Dueño | **Celular** | **PC** | Revisar el negocio en cualquier momento; en PC hace las tareas largas: reportes, configuración y liquidaciones |
 | Cliente | Público | **Celular** (llega desde Instagram o WhatsApp) | PC | Ver servicios, reservar, consultar o cambiar su cita |
 
@@ -128,6 +128,20 @@ Hacen que la interfaz parezca plantilla y no aportan información:
 - negros "teñidos" (`#0B0B0B`, `#111`) en lugar de una decisión explícita de color;
 - textos que describen el sistema en lugar de ayudar al usuario (zonas horarias técnicas, "los cobros continúan separados", etc.).
 
+### 5.2.1 Símbolos prohibidos en textos de la interfaz
+
+Ningún texto visible de la app (títulos, botones, etiquetas, mensajes, ayudas) usa estos símbolos, que delatan texto generado y no aportan nada:
+
+| Prohibido | En su lugar |
+|---|---|
+| Flechas como texto: `→ ← ↑ ↓ ⇒ ➜ ›  »` | La palabra de la acción ("Ver reportes"). Si hace falta dirección, un ícono de `AppIcon` con nombre accesible, nunca un carácter |
+| Raya larga `—` y guion medio `–` | Punto, coma, dos puntos o paréntesis. Rangos con palabras: "08:00 a 13:00", "lunes a sábado" |
+| Punto medio `·` y viñetas sueltas `•` como separador | Frases separadas, una lista real o espacio |
+| Emojis y adornos (`✓ ✨ ★ ✦ ⚡`) | Ícono de `AppIcon` cuando comunica un estado; nada si es decoración |
+| Comillas tipográficas decorativas o texto en cursiva para "dar estilo" | Texto normal |
+
+Se permite el guion corto normal (`-`) solo donde la gramática lo pide, y los puntos suspensivos solo en estados en curso ("Guardando..."). Esta regla se verifica en cada pantalla como parte de la definición de terminado.
+
 ### 5.3 Color
 
 - Los tokens viven en `@theme` de `src/frontend/src/index.css` con nombres semánticos (`--color-surface`, `--color-text-muted`, `--color-state-danger`…), no nombres de pigmento en los componentes.
@@ -164,9 +178,9 @@ Se mantienen los tiempos vigentes:
 
 | Tipo | Duración |
 |---|---|
-| Microinteracción (pulsar, alternar) | 100–160 ms |
-| Pestaña, menú, acordeón | 160–220 ms |
-| Navegación, panel, hoja inferior | 200–280 ms |
+| Microinteracción (pulsar, alternar) | 100 a 160 ms |
+| Pestaña, menú, acordeón | 160 a 220 ms |
+| Navegación, panel, hoja inferior | 200 a 280 ms |
 
 - Se animan opacidad y transformación, no layout.
 - Ninguna persistencia (guardar, cobrar, reservar) espera a que termine una animación.
@@ -247,7 +261,7 @@ Se mantienen las reglas vigentes y se amplían:
 - [ ] Probada en tablet en ambas orientaciones, rotando con un formulario o selección activa.
 - [ ] Flujo principal recorrido solo con teclado, y con lector de pantalla en sus acciones clave.
 - [ ] Estados cubiertos: carga, vacío, error, sin conexión, sin permiso y éxito.
-- [ ] Ningún patrón prohibido de la sección 5.2.
+- [ ] Ningún patrón prohibido de la sección 5.2 ni símbolo prohibido de la 5.2.1.
 - [ ] Revisión con `web-design-guidelines` sin hallazgos pendientes.
 - [ ] `npm run format:check`, `npm run lint`, `npm run test`, `npm run build` y `npm run build-storybook` en verde. CI en verde.
 - [ ] Capturas antes y después adjuntas al PR.
@@ -284,33 +298,33 @@ Lista de lo que se rediseña. Sirve como punto de partida del análisis de cada 
 | Pantalla | Ruta | Dispositivo principal | Secciones y componentes | Modales y estados |
 |---|---|---|---|---|
 | Portada | `/` | Celular | Cabecera con logo y "Reservar"; portada principal; Servicios (catálogo con precio y duración); Cómo funciona; Ubicación con mapa de Google; pie con redes | Carga de servicios; servicios no disponibles |
-| Reservar | `/reservar` | Celular | Progreso de reserva (servicio → profesional → fecha y hora → datos → confirmar); resumen de reserva desplegable; lista de servicios; lista de barberos o "cualquiera"; calendario y horarios por mañana/tarde; formulario del cliente; confirmación "Te esperamos" con enlace para gestionar | Sin horarios; horario tomado por otra persona (conflicto); sin conexión; error de validación |
+| Reservar | `/reservar` | Celular | Progreso de reserva en 5 pasos (servicio, profesional, fecha y hora, datos, confirmar); resumen de reserva desplegable; lista de servicios; lista de barberos o "cualquiera"; calendario y horarios por mañana/tarde; formulario del cliente; confirmación "Te esperamos" con enlace para gestionar | Sin horarios; horario tomado por otra persona (conflicto); sin conexión; error de validación |
 | Mi cita | `/mi-cita#token` | Celular | Apertura del enlace privado; tarjeta de la cita; reprogramar (nuevo horario por mañana/tarde); cancelar | `ConfirmDialog` "¿Cancelar la cita?"; enlace inválido o vencido; cita cancelada; conflicto; sin conexión |
-| Privacidad | `/privacidad` | Celular | Texto legal por secciones | — |
-| 404 pública | `*` | Celular | `SystemStateCard` | — |
+| Privacidad | `/privacidad` | Celular | Texto legal por secciones | Ninguno |
+| 404 pública | `*` | Celular | `SystemStateCard` | Ninguno |
 
 ### 11.3 Acceso y estados del sistema
 
 | Pantalla | Ruta | Secciones y componentes | Estados |
 |---|---|---|---|
 | Login | `/app/login` | `BrandLockup`; usuario; contraseña con mostrar/ocultar; código de verificación en dos pasos (cuando aplica); botón "Ingresar" | Credenciales inválidas; demasiados intentos; código de verificación requerido; verificando |
-| Sesión expirada | `/app/sesion-expirada` | `SystemStateCard` | — |
-| Acceso denegado | `/app/acceso-denegado` | `SystemStateCard` | — |
-| 404 interna | `/app/*` | `SystemStateCard` dentro del shell | — |
+| Sesión expirada | `/app/sesion-expirada` | `SystemStateCard` | Ninguno |
+| Acceso denegado | `/app/acceso-denegado` | `SystemStateCard` | Ninguno |
+| 404 interna | `/app/*` | `SystemStateCard` dentro del shell | Ninguno |
 
 ### 11.4 App interna
 
 | Pantalla | Ruta | Roles | Dispositivo principal | Secciones y componentes | Modales y paneles |
 |---|---|---|---|---|---|
-| Inicio | `/app` | Dueño, Administrador, Barbero (contenido distinto por rol) | Celular (dueño, barbero) y tablet (recepción) | Resumen del día: ventas, efectivo, QR y comisión pendiente (dueño); próxima cita; alertas de stock; accesos rápidos; "Mi día" del barbero; indicador de conexión | — |
+| Inicio | `/app` | Dueño, Administrador, Barbero (contenido distinto por rol) | Celular (dueño, barbero) y tablet (recepción) | Resumen del día: ventas, efectivo, QR y comisión pendiente (dueño); próxima cita; alertas de stock; accesos rápidos; "Mi día" del barbero; indicador de conexión | Ninguno |
 | Agenda | `/app/agenda` | Todos (barbero: solo la suya) | Tablet horizontal | Controles: día anterior/hoy/siguiente, ir a fecha, filtro por barbero, vista Día / 7 días; leyenda de estados; agenda diaria por barbero; agenda semanal; tarjetas de cita; botón "Nueva cita" | Detalle de cita (`AppointmentDetails` en `AgendaDialog`) con acciones de estado (llegó, iniciar, no asistió, cancelar, reprogramar); editor de cita (`AppointmentEditor` + `CustomerPicker`) para crear y reprogramar |
 | Atender y cobrar | `/app/atenciones` | Dueño, Administrador, Barbero | Tablet (recepción) y celular (barbero) | Progreso de atención en 5 etapas; abrir llegada directa (buscar o registrar cliente, barbero); atención actual; "¿Qué se realizó y vendió?" (servicios, productos, cantidades); ajuste autorizado (descuento o cortesía); "¿Cómo pagó?" (efectivo, QR o mixto); cobro confirmado; operación revertida; resumen del día | Registro de cliente nuevo (desplegable "El cliente no está registrado"); no tiene diálogos propios |
 | Comisiones | `/app/comisiones` | Dueño (todas), Barbero (las suyas) | Celular y PC (dueño) | Filtros; resumen de comisiones; saldo de comisión; preparar liquidación; lista de liquidaciones con estado | Detalle de liquidación (`AgendaDialog`): revisar borrador, operaciones incluidas, ajustes autorizados, registrar pago completo; crear liquidación |
 | Inventario y gastos | `/app/inventario` | Dueño, Administrador | Tablet | Pestañas: Existencias (productos, alertas de stock), Compras (compras de reventa, productos recibidos), Gastos (gastos pagados), Caja de hoy | Panel lateral de registro (`AgendaDialog`) para compra, ajuste de stock y gasto |
 | Disponibilidad | `/app/disponibilidad` | Dueño, Administrador (barbero: la suya) | Tablet y PC | Pestañas: Semana (horarios registrados, navegación semanal), Buscar espacios (espacios disponibles), Excepciones (próximas e historial) | Panel de horario; panel de nueva excepción (`AgendaDialog`) |
-| Reportes | `/app/reportes` | Dueño | PC y celular | Período del reporte (selector y rango); pestañas (`ReportTabs`): Operación, Caja, Comisiones, Equipo, Auditoría; secciones (`ReportSections`) con cifras y tablas; exportar CSV | — |
+| Reportes | `/app/reportes` | Dueño | PC y celular | Período del reporte (selector y rango); pestañas (`ReportTabs`): Operación, Caja, Comisiones, Equipo, Auditoría; secciones (`ReportSections`) con cifras y tablas; exportar CSV | Ninguno |
 | Configuración | `/app/configuracion` | Dueño (algunas secciones Administrador) | PC | Secciones: Equipo, Servicios, Ofertas (precio y duración por barbero), Productos, Comisiones (tasas y vigencia), Gastos (categorías), Usuarios (roles, activación, restablecer contraseña y MFA); lista y detalle por sección | Editor (`ConfigurationEditor`); `ConfirmDialog` para desactivar o restablecer |
-| Seguridad | `/app/seguridad` | Todos | Celular y PC | Cambiar contraseña; verificación en dos pasos (activar con QR, desactivar); códigos de recuperación | — |
+| Seguridad | `/app/seguridad` | Todos | Celular y PC | Cambiar contraseña; verificación en dos pasos (activar con QR, desactivar); códigos de recuperación | Ninguno |
 
 ### 11.5 Transversales a revisar en todas las pantallas internas
 
