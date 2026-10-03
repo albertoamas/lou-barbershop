@@ -36,7 +36,7 @@ npm ci
 npm run dev                          # Vite on :5173, proxies /api and /health to :8080
 npm run test                         # vitest run
 npx vitest run src/core/mutations/canExecuteCriticalMutation.test.ts   # single file
-npm run lint                         # eslint --max-warnings 0 + oxlint
+npm run lint                         # eslint --max-warnings 0 (boundaries, a11y, react-hooks)
 npm run format:check                 # prettier
 npm run build                        # tsc -b && vite build
 npm run storybook
