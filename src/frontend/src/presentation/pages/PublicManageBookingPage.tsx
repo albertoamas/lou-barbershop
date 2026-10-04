@@ -185,10 +185,7 @@ export const PublicManageBookingPage = () => {
 
         {data && (
           <m.section
-            className={cn(
-              'rounded-sheet bg-surface p-6 shadow-raised sm:p-8',
-              data.status === 'CANCELLED' && 'opacity-80',
-            )}
+            className="rounded-sheet bg-surface p-6 shadow-raised sm:p-8"
             aria-labelledby="appointment-day"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
