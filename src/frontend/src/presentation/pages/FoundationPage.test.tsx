@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { authApi } from '../../infrastructure/http/authApi'
@@ -56,8 +56,18 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const pendingOperations = {
+  date: '2026-09-13',
+  draftCount: 1,
+  paidCount: 0,
+  totalCents: 0,
+  cashCents: 0,
+  qrCents: 0,
+  operations: [{ status: 'DRAFT' }, { status: 'READY_TO_PAY' }, { status: 'PAID' }] as never,
+}
+
 describe('FoundationPage', () => {
-  it('shows the owner view when the owner also has the barber role', async () => {
+  it('leads the owner with what was charged and links each figure to its screen', async () => {
     vi.mocked(authApi.current).mockResolvedValue({
       id: 'owner',
       userName: 'owner.demo',
@@ -74,18 +84,26 @@ describe('FoundationPage', () => {
       appointments: [],
       operations: [],
     })
+    vi.mocked(salesApi.daily).mockResolvedValueOnce(pendingOperations)
 
     renderPage()
 
-    expect(await screen.findByRole('heading', { name: 'Lou, hoy.' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Ver reportes/ })).toHaveAttribute(
+    const charged = await screen.findByRole('link', { name: /Cobrado hoy/ })
+    expect(charged).toHaveAttribute('href', '/app/reportes')
+    await waitFor(() => expect(charged).toHaveTextContent(/Bs\s*150,00/))
+    expect(charged).toHaveTextContent('2 atenciones pagadas')
+    // Open and ready attentions both count as pending, as on the charge screen.
+    expect(await screen.findByRole('link', { name: /Por cobrar\s*2/ })).toHaveAttribute(
       'href',
-      '/app/reportes',
+      '/app/atenciones',
     )
-    expect(salesApi.daily).not.toHaveBeenCalled()
+    expect(screen.getByRole('link', { name: /Por liquidar/ })).toHaveAttribute(
+      'href',
+      '/app/comisiones',
+    )
   })
 
-  it('gives the administrator a direct new-appointment action', async () => {
+  it('gives reception who is in the shop and both ways to start', async () => {
     vi.mocked(authApi.current).mockResolvedValue({
       id: 'admin',
       userName: 'admin.demo',
@@ -94,10 +112,14 @@ describe('FoundationPage', () => {
 
     renderPage()
 
-    expect(
-      await screen.findByRole('heading', { name: 'Todo listo para atender.' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'En el local' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Próximas llegadas' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Nueva cita/ })).toHaveAttribute('href', '/app/agenda')
+    expect(screen.getByRole('link', { name: /Llegada sin cita/ })).toHaveAttribute(
+      'href',
+      '/app/atenciones',
+    )
+    expect(screen.getByRole('navigation', { name: 'Ahora en el local' })).toBeInTheDocument()
   })
 
   it('keeps the barber home personal and hides inventory data', async () => {
@@ -109,11 +131,13 @@ describe('FoundationPage', () => {
 
     renderPage()
 
-    expect(await screen.findByRole('heading', { name: 'Tu jornada, clara.' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Atender llegada directa/ })).toHaveAttribute(
+    expect(await screen.findByRole('heading', { name: 'Mi día' })).toBeInTheDocument()
+    expect(await screen.findByText('No tienes más citas hoy')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Llegada sin cita/ })).toHaveAttribute(
       'href',
       '/app/atenciones',
     )
+    expect(screen.queryByRole('link', { name: /Nueva cita/ })).not.toBeInTheDocument()
     expect(inventoryApi.inventory).not.toHaveBeenCalled()
   })
 })
