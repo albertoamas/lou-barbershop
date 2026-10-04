@@ -23,6 +23,11 @@ export type IconName =
   | 'minus'
   | 'qr'
   | 'cash'
+  | 'razor'
+  | 'beard'
+  | 'eyebrow'
+  | 'kid'
+  | 'clipper'
 
 interface AppIconProps {
   name: IconName
@@ -96,6 +101,41 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <path d="M4 4h6v6H4ZM14 4h6v6h-6ZM4 14h6v6H4Z" />
       <path d="M14 14h2v2h-2ZM18 14h2M14 20h6M20 17v3M17 17v1" />
+    </>
+  ),
+  // Service icons for the public catalog.
+  razor: (
+    <>
+      <path d="M3.5 14.5 14 4a2.1 2.1 0 0 1 3 3L6.5 17.5Z" />
+      <path d="m10 14 6.6 6.4a1.6 1.6 0 0 0 2.3-2.2L12.3 11.7" />
+    </>
+  ),
+  beard: (
+    <>
+      <path d="M5 6v4.5a7 7 0 0 0 14 0V6" />
+      <path d="M5 9c2.5 1.5 4.5 1.2 7-.8 2.5 2 4.5 2.3 7 .8" />
+      <path d="M9.5 14.5c1.5 1 3.5 1 5 0" />
+    </>
+  ),
+  eyebrow: (
+    <>
+      <path d="M3.5 9.5c4.5-4 12.5-4 17 0" />
+      <path d="M4 15.5c4.5 4 11.5 4 16 0-4.5-4-11.5-4-16 0Z" />
+      <circle cx="12" cy="15.5" r="2" />
+    </>
+  ),
+  kid: (
+    <>
+      <circle cx="12" cy="13" r="7.5" />
+      <path d="M12 5.5c0-2 1.5-3 3-2.5" />
+      <path d="M9 15c1.6 1.6 4.4 1.6 6 0" />
+      <path d="M9.5 11.5h.01M14.5 11.5h.01" />
+    </>
+  ),
+  clipper: (
+    <>
+      <rect x="7.5" y="8" width="9" height="13" rx="3" />
+      <path d="M7.5 8V5.5h9V8M10 5.5V3M12 5.5V3M14 5.5V3M10 13h4" />
     </>
   ),
   cash: (

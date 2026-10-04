@@ -84,3 +84,15 @@ export const managementTokenFromInput = (input: string): string => {
     return ''
   }
 }
+
+export type ServiceGroup = 'CUTS' | 'BEARD' | 'DETAILS'
+
+// Groups the public catalog for the home by what each service is about, read from its
+// name: haircuts, beard and razor work, and finishing details.
+export const serviceGroupOf = (name: string): ServiceGroup => {
+  const value = name.toLocaleLowerCase('es')
+  if (value.includes('corte')) return 'CUTS'
+  if (value.includes('barba') || value.includes('afeitado') || value.includes('navaja'))
+    return 'BEARD'
+  return 'DETAILS'
+}
