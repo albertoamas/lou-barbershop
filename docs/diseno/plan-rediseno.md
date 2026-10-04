@@ -146,8 +146,8 @@ Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) ante
 | 3 | Inicio (por rol) | 3 | Resume lo que producen la agenda y el cobro; conviene hacerla cuando esos patrones ya existen | ✔ Cerrada |
 | 4 | Portada | 4 | La vitrina pública y la entrada de los clientes | ✔ Cerrada |
 | 5 | Reservar | 4 | El flujo público más importante; reutiliza la selección de horarios | ✔ Cerrada |
-| 6 | Mi cita | 4 | Consultar, reprogramar o cancelar; reutiliza piezas de Reservar | En revisión |
-| 7 | Privacidad | 4 | Solo texto; rápida | Pendiente |
+| 6 | Mi cita | 4 | Consultar, reprogramar o cancelar; reutiliza piezas de Reservar | ✔ Cerrada |
+| 7 | Privacidad | 4 | Solo texto; rápida | En revisión |
 | 8 | Disponibilidad | 5 | Horarios y excepciones que alimentan la agenda; la usa recepción | Pendiente |
 | 9 | Inventario y gastos | 5 | Uso diario de recepción en tablet | Pendiente |
 | 10 | Comisiones | 5 | Dueño y barberos; liquidaciones | Pendiente |

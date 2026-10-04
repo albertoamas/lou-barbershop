@@ -11,9 +11,11 @@ describe('PrivacyPage', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Tus datos, sólo para gestionar tu visita.',
-    )
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacidad' })).toBeInTheDocument()
+    expect(screen.getByText(/solo una huella que no permite reconstruirlo/)).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '¿Quieres corregir tus datos o tienes dudas?' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Qué datos usamos' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Cómo protegemos tu cita' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Reservar una cita' })).toHaveAttribute(
