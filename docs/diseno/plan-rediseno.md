@@ -1,7 +1,7 @@
 # Plan de rediseño visual de Lou Barbershop
 
 **Fecha:** 3 de octubre de 2026  
-**Estado:** vigente. Las fases 0 y 1 están cerradas y la fase 2 (fundaciones) está en curso.
+**Estado:** vigente. Las fases 0 y 1 están cerradas y la fase 2 (fundaciones) espera aprobación.
 
 Este documento fija las reglas que debe cumplir el rediseño completo de la aplicación. No dice qué cambiar en cada pantalla. Eso se decide cuando se trabaja cada una, con el análisis de la sección 12. Aquí está el marco común: para quién se diseña, en qué dispositivos, con qué marca, con qué reglas visuales, técnicas y de calidad, y el inventario de lo que hay que rediseñar.
 
@@ -133,6 +133,28 @@ Franjas del poste de barbero en blanco y negro (diagonal a -45°). Se usan solo 
 | **6. Cierre** | Revisión global con `web-design-guidelines`, accesibilidad, rendimiento, pruebas E2E de flujos críticos con Playwright y decisión final sobre Storybook | Listo para despliegue |
 
 Se respeta el orden. Una pantalla no empieza hasta que las fundaciones están aprobadas, porque los componentes base cambian todas las pantallas a la vez.
+
+### 4.1.1 Orden de las pantallas
+
+Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) antes de empezar la siguiente. El orden sigue tres criterios: primero lo que más se usa cada día, después lo que define componentes que otras pantallas reutilizan, y al final lo que se usa poco.
+
+| N.º | Pantalla | Fase | Por qué en este lugar | Estado |
+|---|---|---|---|---|
+| 1 | Agenda | 3 | La más usada en recepción. Define la línea de tiempo, el detalle de cita y el editor de citas, que luego reutilizan otras pantallas | Pendiente |
+| 2 | Atender y cobrar | 3 | El flujo del dinero. Define el resumen de cobro, los medios de pago y el buscador de clientes | Pendiente |
+| 3 | Inicio (por rol) | 3 | Resume lo que producen la agenda y el cobro; conviene hacerla cuando esos patrones ya existen | Pendiente |
+| 4 | Portada | 4 | La vitrina pública y la entrada de los clientes | Pendiente |
+| 5 | Reservar | 4 | El flujo público más importante; reutiliza la selección de horarios | Pendiente |
+| 6 | Mi cita | 4 | Consultar, reprogramar o cancelar; reutiliza piezas de Reservar | Pendiente |
+| 7 | Privacidad | 4 | Solo texto; rápida | Pendiente |
+| 8 | Disponibilidad | 5 | Horarios y excepciones que alimentan la agenda; la usa recepción | Pendiente |
+| 9 | Inventario y gastos | 5 | Uso diario de recepción en tablet | Pendiente |
+| 10 | Comisiones | 5 | Dueño y barberos; liquidaciones | Pendiente |
+| 11 | Reportes | 5 | Dueño; cifras y gráficos | Pendiente |
+| 12 | Configuración | 5 | Dueño; se usa solo cuando cambia algo | Pendiente |
+| 13 | Login | 5 | Una pantalla simple; usa la marca y los campos ya hechos | Pendiente |
+| 14 | Seguridad | 5 | Contraseña y verificación en dos pasos | Pendiente |
+| 15 | Estados del sistema | 5 | Sesión expirada, acceso denegado, página no encontrada y error | Pendiente |
 
 ### 4.2 Ciclo por pantalla
 
