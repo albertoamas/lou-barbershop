@@ -12,6 +12,8 @@
 
   /* Surfaces */
   --color-canvas: #f6f7f8;
+  /* Warm paper for the public site, closer to a barbershop than the app grey. */
+  --color-paper-warm: #f6f1e8;
   --color-surface: #ffffff;
   --color-surface-muted: #eef1f3;
   --color-surface-strong: #dde2e6;

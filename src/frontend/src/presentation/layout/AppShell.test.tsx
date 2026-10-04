@@ -20,7 +20,7 @@ describe('AppShell', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('link', { name: 'Servicios' })).toHaveAttribute('href', '#servicios')
+    expect(screen.getByRole('link', { name: 'Servicios' })).toHaveAttribute('href', '/servicios')
     expect(screen.getByRole('link', { name: 'Equipo' })).toHaveAttribute('href', '#equipo')
     expect(screen.getByRole('link', { name: 'Horario' })).toHaveAttribute('href', '#ubicacion')
     expect(screen.getByRole('banner')).toHaveAttribute('data-landing-header', 'transparent')
@@ -43,7 +43,9 @@ describe('AppShell', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.queryByRole('link', { name: 'Servicios' })).not.toBeInTheDocument()
+    // The services page is reachable from every public screen; the in-page anchors are not.
+    expect(screen.getByRole('link', { name: 'Servicios' })).toHaveAttribute('href', '/servicios')
+    expect(screen.queryByRole('link', { name: 'Equipo' })).not.toBeInTheDocument()
     expect(screen.getByRole('banner')).not.toHaveAttribute('data-landing-header')
     expect(screen.getByRole('status').parentElement).not.toHaveAttribute('data-public-notices')
   })

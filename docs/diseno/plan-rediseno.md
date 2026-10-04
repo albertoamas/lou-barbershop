@@ -78,6 +78,7 @@ Se aprobó el 3 de octubre de 2026 sobre el lienzo de direcciones visuales (fila
 | Tinta | `#000000` | Texto principal, superficies de marca (barra lateral, portada), estado "En atención" |
 | Papel | `#FFFFFF` | Tarjetas, paneles, campos |
 | Acero 50 | `#F6F7F8` | Fondo de la app |
+| Papel cálido | `#F6F1E8` | Aprobado el 4 de octubre de 2026. Fondo del sitio público y color cálido preferido para las demás pantallas: al rediseñar cada una se evalúa usarlo en lugar de Acero 50 (token `paper-warm`) |
 | Acero 100 | `#EEF1F3` | Superficies secundarias, separadores suaves |
 | Acero 200 | `#DDE2E6` | Avatares neutros, rellenos |
 | Acero 300 | `#C3C9CF` | Separadores decorativos, texto sobre tinta (12,6:1) |
@@ -372,7 +373,8 @@ Lista de lo que se rediseña. Sirve como punto de partida del análisis de cada 
 
 | Pantalla | Ruta | Dispositivo principal | Secciones y componentes | Modales y estados |
 |---|---|---|---|---|
-| Portada | `/` | Celular | Cabecera con logo y "Reservar"; portada principal; Servicios (catálogo con precio y duración); Cómo funciona; Ubicación con mapa de Google; pie con redes | Carga de servicios; servicios no disponibles |
+| Portada | `/` | Celular | Cabecera con logo y "Reservar"; bienvenida con estado "Abierto ahora"; servicios recomendados y "Ver todos los servicios"; Nuestro equipo con espacio para fotos; Trabajos (marcos para fotos); Horario y ubicación con mapa siempre visible; pie con redes | Carga de servicios; servicios no disponibles |
+| Servicios | `/servicios` | Celular | Catálogo completo: recomendados destacados y grupos Cortes, Barba y navaja, Detalles, con ícono, duración, precio y reserva directa; ayuda "¿No sabes cuál elegir?" | Carga de servicios; servicios no disponibles |
 | Reservar | `/reservar` | Celular | Progreso de reserva en 5 pasos (servicio, profesional, fecha y hora, datos, confirmar); resumen de reserva desplegable; lista de servicios; lista de barberos o "cualquiera"; calendario y horarios por mañana/tarde; formulario del cliente; confirmación "Te esperamos" con enlace para gestionar | Sin horarios; horario tomado por otra persona (conflicto); sin conexión; error de validación |
 | Mi cita | `/mi-cita#token` | Celular | Apertura del enlace privado; tarjeta de la cita; reprogramar (nuevo horario por mañana/tarde); cancelar | `ConfirmDialog` "¿Cancelar la cita?"; enlace inválido o vencido; cita cancelada; conflicto; sin conexión |
 | Privacidad | `/privacidad` | Celular | Texto legal por secciones | Ninguno |

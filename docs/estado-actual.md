@@ -67,7 +67,8 @@ Se completan sin tocar diseño, en `src/frontend/src/presentation/content/public
 
 - dirección escrita del local (hoy la portada muestra "Lou Barbershop, Tarija" y "Cómo llegar");
 - enlaces de redes y WhatsApp (`VITE_SOCIAL_*`); sin el de WhatsApp, la portada no muestra "Escribir por WhatsApp";
-- fotos del local, trabajos y barberos en `public/media/` (sin fotos, esas secciones no aparecen).
+- fotos del local, trabajos y barberos en `public/media/` (mientras falten, la portada muestra marcos de marca listos para ellas);
+- servicios destacados como "Recomendado" (`featuredServices`, hoy "Corte y barba" y "Corte clásico").
 
 ## Qué falta antes de producción
 

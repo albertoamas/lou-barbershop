@@ -75,9 +75,11 @@ export const AppShell = ({ children }: AppShellProps) => {
           <div className="mx-auto flex min-h-18 max-w-360 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
             <BrandLockup />
             <nav className="flex items-center gap-1 sm:gap-2" aria-label="Navegación pública">
+              <Link className={headerLinkClassName} to="/servicios" viewTransition>
+                Servicios
+              </Link>
               {landingScreen &&
                 [
-                  ['#servicios', 'Servicios'],
                   ['#equipo', 'Equipo'],
                   ['#ubicacion', 'Horario'],
                 ].map(([href, label]) => (
@@ -137,6 +139,9 @@ export const AppShell = ({ children }: AppShellProps) => {
             <nav className="grid content-start" aria-label="Enlaces del pie">
               <Link className={footerLinkClassName} to="/reservar" viewTransition>
                 Reservar una cita
+              </Link>
+              <Link className={footerLinkClassName} to="/servicios" viewTransition>
+                Servicios y precios
               </Link>
               <Link className={footerLinkClassName} to="/mi-cita" viewTransition>
                 Gestionar mi cita

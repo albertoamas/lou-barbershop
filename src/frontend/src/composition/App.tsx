@@ -61,6 +61,11 @@ const PublicManageBookingPage = lazy(() =>
     default: module.PublicManageBookingPage,
   })),
 )
+const ServicesPage = lazy(() =>
+  import('../presentation/pages/ServicesPage').then((module) => ({
+    default: module.ServicesPage,
+  })),
+)
 const PrivacyPage = lazy(() =>
   import('../presentation/pages/PrivacyPage').then((module) => ({ default: module.PrivacyPage })),
 )
@@ -93,13 +98,14 @@ export const App = () => (
               fallback={
                 <main className="grid min-h-[55dvh] place-items-center px-4" aria-busy="true">
                   <span className="text-sm font-semibold text-lou-graphite/65">
-                    Cargando pantalla…
+                    Cargando pantalla
                   </span>
                 </main>
               }
             >
               <Routes>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/servicios" element={<ServicesPage />} />
                 <Route path="/reservar" element={<PublicBookingPage />} />
                 <Route path="/mi-cita" element={<PublicManageBookingPage />} />
                 <Route path="/privacidad" element={<PrivacyPage />} />

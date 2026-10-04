@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { m, type MotionProps } from 'motion/react'
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { centsToBolivianos } from '../../core/configuration/Configuration'
-import { openingHoursText, openingStatus, openingStatusText } from '../../core/shop/OpeningHours'
+import { openingHoursText } from '../../core/shop/OpeningHours'
 import { publicBookingApi } from '../../infrastructure/http/publicBookingApi'
 import { AppIcon } from '../components/AppIcon'
-import { Avatar } from '../components/Avatar'
 import { Button } from '../components/Button'
 import { buttonStyles } from '../components/buttonStyles'
 import { Stripes } from '../components/Stripes'
+import { MediaFrame } from '../components/public/MediaFrame'
+import { OpenStatus } from '../components/public/OpenStatus'
+import { ServiceCatalog } from '../components/public/ServiceCatalog'
+import { initialsOf } from '../components/initials'
 import { publicSite } from '../content/publicSite'
 import { useMinuteClock } from '../hooks/useMinuteClock'
 import { cn } from '../styles/cn'
@@ -26,19 +27,33 @@ const reveal: MotionProps = {
 const sectionClassName =
   'mx-auto w-full max-w-360 scroll-mt-24 px-4 py-14 sm:px-6 lg:px-10 lg:py-20'
 
-const SectionTitle = ({ id, children, lead }: { id: string; children: string; lead?: string }) => (
+const SectionTitle = ({
+  id,
+  children,
+  lead,
+  inverse = false,
+}: {
+  id: string
+  children: string
+  lead?: string
+  inverse?: boolean
+}) => (
   <div className="mb-6 max-w-2xl">
     <h2 id={id} className="font-display text-4xl leading-none font-extrabold sm:text-5xl">
       {children}
     </h2>
-    {lead && <p className="mt-3 text-lg text-pretty text-ink-soft">{lead}</p>}
+    {lead && (
+      <p
+        className={cn('mt-3 text-lg text-pretty', inverse ? 'text-on-ink-muted' : 'text-ink-soft')}
+      >
+        {lead}
+      </p>
+    )}
   </div>
 )
 
 export const LandingPage = () => {
   const now = useMinuteClock()
-  const status = openingStatus(now)
-  const [showMap, setShowMap] = useState(false)
   const catalog = useQuery({
     queryKey: ['public-booking', 'catalog'],
     queryFn: publicBookingApi.catalog,
@@ -47,7 +62,7 @@ export const LandingPage = () => {
   const { photos } = publicSite
 
   return (
-    <main className="bg-canvas">
+    <main className="bg-paper-warm">
       <section
         className="relative isolate overflow-hidden bg-ink px-4 pt-28 pb-12 text-on-ink [--color-focus:var(--color-on-ink)] sm:px-6 lg:px-10 lg:pt-36 lg:pb-20"
         aria-labelledby="landing-title"
@@ -68,10 +83,9 @@ export const LandingPage = () => {
               Cortes, barba y navaja en {publicSite.city}. Reserva en un minuto, sin crear una
               cuenta.
             </p>
-            <p className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full bg-on-ink/10 px-4 font-semibold">
-              <AppIcon name="clock" size={18} />
-              {openingStatusText(status)}
-            </p>
+            <div className="mt-5">
+              <OpenStatus now={now} onDark />
+            </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 className={buttonStyles({ variant: 'inverse', size: 'lg' })}
@@ -135,7 +149,10 @@ export const LandingPage = () => {
         aria-labelledby="services-title"
         {...reveal}
       >
-        <SectionTitle id="services-title" lead="Precio y duración de cada servicio.">
+        <SectionTitle
+          id="services-title"
+          lead="Nuestros recomendados. Toca uno para reservarlo directo."
+        >
           Servicios
         </SectionTitle>
         {catalog.isPending && (
@@ -157,40 +174,11 @@ export const LandingPage = () => {
           </div>
         )}
         {catalog.data && (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {catalog.data.services.map((service) => (
-              <li
-                key={service.id}
-                className="grid gap-1 rounded-panel bg-surface p-5 shadow-raised"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="font-display text-2xl leading-tight font-extrabold">
-                    {service.name}
-                  </h3>
-                  <strong className="shrink-0 font-display text-2xl font-extrabold tabular-nums">
-                    {centsToBolivianos(service.priceCents)}
-                  </strong>
-                </div>
-                {service.description && (
-                  <p className="text-pretty text-ink-soft">{service.description}</p>
-                )}
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <span className="inline-flex items-center gap-1.5 text-ink-soft">
-                    <AppIcon name="clock" size={16} />
-                    {service.durationMinutes} min
-                  </span>
-                  <Link
-                    className={buttonStyles({ variant: 'secondary', size: 'sm' })}
-                    to={`/reservar?servicio=${service.id}`}
-                    aria-label={`Reservar ${service.name}`}
-                    viewTransition
-                  >
-                    Reservar
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <ServiceCatalog
+            services={catalog.data.services}
+            featured={publicSite.featuredServices}
+            preview
+          />
         )}
       </m.section>
 
@@ -204,69 +192,56 @@ export const LandingPage = () => {
           <SectionTitle id="team-title" lead="Elige con quién quieres atenderte.">
             Nuestro equipo
           </SectionTitle>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-3">
-            {catalog.data.barbers.map((barber) => {
-              const photo = photos.barbers[barber.displayName]
-              return (
-                <li
-                  key={barber.id}
-                  className="flex items-center gap-4 rounded-panel bg-surface p-4 shadow-raised"
-                >
-                  {photo ? (
-                    <img
-                      className="size-16 shrink-0 rounded-full object-cover"
-                      src={photo.src}
-                      alt={photo.alt}
-                      width={photo.width}
-                      height={photo.height}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <Avatar name={barber.displayName} size="lg" tone="ink" className="size-16" />
-                  )}
-                  <div className="min-w-0">
-                    <h3 className="truncate font-display text-2xl font-extrabold">
-                      {barber.displayName}
-                    </h3>
-                    <Link
-                      className="-ml-1 inline-flex min-h-11 items-center px-1 font-semibold underline underline-offset-4 hover:no-underline"
-                      to={`/reservar?barbero=${barber.id}`}
-                      viewTransition
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+            {catalog.data.barbers.map((barber) => (
+              <li key={barber.id} className="rounded-sheet bg-surface p-3 shadow-raised">
+                <div className="relative">
+                  <MediaFrame photo={photos.barbers[barber.displayName]} ratio="4 / 5" />
+                  {!photos.barbers[barber.displayName] && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-3 left-3 grid size-14 place-items-center rounded-full bg-surface font-display text-2xl font-extrabold text-ink"
                     >
-                      Reservar con {barber.displayName.split(' ')[0]}
-                    </Link>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </m.section>
-      )}
-
-      {photos.gallery.length > 0 && (
-        <m.section
-          id="trabajos"
-          className={sectionClassName}
-          aria-labelledby="work-title"
-          {...reveal}
-        >
-          <SectionTitle id="work-title">Trabajos recientes</SectionTitle>
-          <ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {photos.gallery.map((photo) => (
-              <li key={photo.src}>
-                <img
-                  className="aspect-square w-full rounded-panel object-cover"
-                  src={photo.src}
-                  alt={photo.alt}
-                  width={photo.width}
-                  height={photo.height}
-                  loading="lazy"
-                />
+                      {initialsOf(barber.displayName)}
+                    </span>
+                  )}
+                </div>
+                <div className="px-2 pt-3 pb-1">
+                  <h3 className="font-display text-2xl leading-none font-extrabold sm:text-3xl">
+                    {barber.displayName}
+                  </h3>
+                  <Link
+                    className={cn(buttonStyles({ variant: 'primary', size: 'sm' }), 'mt-3 w-full')}
+                    to={`/reservar?barbero=${barber.id}`}
+                    aria-label={`Reservar con ${barber.displayName}`}
+                    viewTransition
+                  >
+                    Reservar
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>
         </m.section>
       )}
+
+      <section className="bg-ink py-14 text-on-ink lg:py-20" aria-labelledby="work-title">
+        <m.div className="mx-auto w-full max-w-360 px-4 sm:px-6 lg:px-10" {...reveal}>
+          <SectionTitle id="work-title" inverse lead="Algunos de nuestros cortes.">
+            Trabajos
+          </SectionTitle>
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {(photos.gallery.length > 0
+              ? photos.gallery
+              : Array.from({ length: photos.galleryFrames }, () => undefined)
+            ).map((photo, index) => (
+              <li key={photo?.src ?? `frame-${index}`}>
+                <MediaFrame photo={photo} className="ring-1 ring-on-ink/15" />
+              </li>
+            ))}
+          </ul>
+        </m.div>
+      </section>
 
       <m.section
         id="ubicacion"
@@ -275,28 +250,31 @@ export const LandingPage = () => {
         {...reveal}
       >
         <SectionTitle id="location-title">Horario y ubicación</SectionTitle>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-panel bg-surface p-5 shadow-raised">
-            <h3 className="font-display text-2xl font-extrabold">Horario</h3>
-            <p className="mt-2 text-lg">Todos los días, de {openingHoursText()}.</p>
-            <p
-              className={cn(
-                'mt-3 inline-flex min-h-10 items-center gap-2 rounded-full px-4 font-semibold',
-                status.open ? 'bg-success-soft text-success-ink' : 'bg-surface-muted text-ink-soft',
-              )}
-            >
-              <AppIcon name="clock" size={18} />
-              {openingStatusText(status)}
-            </p>
-          </div>
-          <div className="rounded-panel bg-surface p-5 shadow-raised">
-            <h3 className="font-display text-2xl font-extrabold">Dónde estamos</h3>
-            <p className="mt-2 text-lg">
-              {publicSite.address ?? `Lou Barbershop, ${publicSite.city}.`}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          <div className="grid content-start gap-6 rounded-sheet bg-surface p-6 shadow-raised">
+            <div>
+              <h3 className="flex items-center gap-2 font-semibold text-ink-soft">
+                <AppIcon name="clock" size={20} />
+                Horario
+              </h3>
+              <p className="mt-2 font-display text-3xl leading-tight font-extrabold">
+                Lunes a domingo
+              </p>
+              <p className="mt-1 text-xl">{openingHoursText()}</p>
+              <div className="mt-3">
+                <OpenStatus now={now} />
+              </div>
+            </div>
+            <div className="border-t border-surface-strong pt-6">
+              <h3 className="flex items-center gap-2 font-semibold text-ink-soft">
+                <AppIcon name="map-pin" size={20} />
+                Dónde estamos
+              </h3>
+              <p className="mt-2 font-display text-3xl leading-tight font-extrabold">
+                {publicSite.address ?? `Lou Barbershop, ${publicSite.city}`}
+              </p>
               <a
-                className={buttonStyles({ variant: 'primary' })}
+                className={cn(buttonStyles({ variant: 'primary' }), 'mt-4 max-sm:w-full')}
                 href={publicSite.mapsUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -304,28 +282,15 @@ export const LandingPage = () => {
                 <AppIcon name="map-pin" size={20} />
                 Cómo llegar
               </a>
-              <Button
-                variant="secondary"
-                aria-expanded={showMap}
-                aria-controls="landing-map"
-                onClick={() => setShowMap((value) => !value)}
-              >
-                {showMap ? 'Ocultar mapa' : 'Ver mapa'}
-              </Button>
             </div>
           </div>
-        </div>
-        {/* The map loads Google only when asked for, keeping the page light and private. */}
-        <div id="landing-map">
-          {showMap && (
-            <iframe
-              className="mt-3 aspect-[4/3] w-full rounded-panel border-0 shadow-raised sm:aspect-[16/7]"
-              src={publicSite.mapEmbedUrl}
-              title="Mapa de la ubicación de Lou Barbershop"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          )}
+          <iframe
+            className="aspect-[4/3] h-full min-h-72 w-full rounded-sheet border-0 bg-surface-muted shadow-raised"
+            src={publicSite.mapEmbedUrl}
+            title="Mapa de la ubicación de Lou Barbershop"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
         </div>
       </m.section>
     </main>
