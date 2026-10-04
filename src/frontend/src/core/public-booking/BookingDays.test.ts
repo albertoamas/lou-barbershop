@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AvailabilitySlot } from '../scheduling/Scheduling'
 import {
+  appointmentCountdown,
   calendarEvent,
   datesWithSlots,
   daySlots,
@@ -79,5 +80,14 @@ describe('calendar event', () => {
     expect(file).toContain('DTEND:20261006T124500Z')
     expect(file).toContain('LOCATION:Lou Barbershop\\, Tarija')
     expect(file.startsWith('BEGIN:VCALENDAR')).toBe(true)
+  })
+})
+
+describe('appointment countdown', () => {
+  it('speaks in days until the appointment', () => {
+    expect(appointmentCountdown('2026-10-04', '2026-10-04')).toBe('Es hoy')
+    expect(appointmentCountdown('2026-10-04', '2026-10-05')).toBe('Es mañana')
+    expect(appointmentCountdown('2026-10-04', '2026-11-01')).toBe('Faltan 28 días')
+    expect(appointmentCountdown('2026-10-04', '2026-10-01')).toBeUndefined()
   })
 })

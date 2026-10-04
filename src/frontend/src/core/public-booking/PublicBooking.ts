@@ -50,7 +50,6 @@ export interface PublicBookingInput {
 }
 export interface PublicBookingPort {
   catalog(): Promise<PublicCatalog>
-  availability(serviceId: string, barberId: string, date: string): Promise<AvailabilitySlot[]>
   // Free times over a range of business dates, inclusive.
   availabilityRange(
     serviceId: string,
@@ -196,4 +195,15 @@ export const calendarEvent = (input: {
     'END:VEVENT',
     'END:VCALENDAR',
   ].join('\r\n')
+}
+
+// A friendly countdown to the appointment day, in business dates.
+export const appointmentCountdown = (today: string, date: string) => {
+  const days = Math.round(
+    (Date.parse(`${date}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000,
+  )
+  if (days < 0) return undefined
+  if (days === 0) return 'Es hoy'
+  if (days === 1) return 'Es mañana'
+  return `Faltan ${days} días`
 }

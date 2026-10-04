@@ -3,10 +3,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, m } from 'motion/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { agendaTime } from '../../core/agenda/Agenda'
+import { centsToBolivianos } from '../../core/configuration/Configuration'
 import {
+  appointmentCountdown,
   appointmentStatusLabel,
+  datesWithSlots,
+  daySlots,
   managementTokenFromHash,
   managementTokenFromInput,
+  monthOf,
+  monthRange,
+  shiftMonth,
+  slotDate,
+  type PublicAppointment,
+  type PublicAppointmentStatus,
   type PublicBookingConfirmation,
 } from '../../core/public-booking/PublicBooking'
 import { todayInBusinessTime, type AvailabilitySlot } from '../../core/scheduling/Scheduling'
@@ -15,30 +25,56 @@ import { publicBookingApi } from '../../infrastructure/http/publicBookingApi'
 import { AppIcon } from '../components/AppIcon'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import {
+  BarberPicker,
+  MonthCalendar,
+  ServicePicker,
+  SlotPicker,
+} from '../components/booking/BookingSteps'
+import { calendarFileHref } from '../components/booking/calendarLink'
 import { buttonStyles } from '../components/buttonStyles'
+import { publicSite } from '../content/publicSite'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { cn } from '../styles/cn'
-import { AppointmentSummary } from '../components/booking/AppointmentSummary'
+import {
+  errorClassName,
+  fieldClassName,
+  labelClassName,
+  successClassName,
+  warningClassName,
+} from '../styles/formStyles'
 
-const fieldClassName =
-  'min-h-12 w-full rounded-xl border border-lou-steel/60 bg-white px-4 text-base shadow-sm outline-none transition-[border-color,box-shadow] focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'
-const labelClassName = 'grid gap-2 text-sm font-bold text-lou-ink'
+const monthsAhead = 3
+
+const longDate = (date: string) =>
+  new Intl.DateTimeFormat('es-BO', {
+    timeZone: 'UTC',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date(`${date}T12:00:00Z`))
+
+const statusTone: Record<PublicAppointmentStatus, string> = {
+  CONFIRMED: 'bg-ink text-on-ink',
+  CHECKED_IN: 'bg-info-soft text-info-ink',
+  IN_SERVICE: 'bg-ink text-on-ink',
+  COMPLETED: 'bg-success-soft text-success-ink',
+  CANCELLED: 'bg-danger-soft text-danger-ink',
+  NO_SHOW: 'bg-danger-soft text-danger-ink',
+}
 
 export const PublicManageBookingPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const token = managementTokenFromHash(location.hash)
+  const online = useConnectivity() === 'online'
+  const client = useQueryClient()
+  const today = todayInBusinessTime()
   const [editing, setEditing] = useState(false)
-  const [serviceId, setServiceId] = useState('')
-  const [barberId, setBarberId] = useState('any')
-  const [date, setDate] = useState(todayInBusinessTime())
-  const [search, setSearch] = useState<{ serviceId: string; barberId: string; date: string }>()
-  const [slot, setSlot] = useState<AvailabilitySlot>()
   const [notice, setNotice] = useState('')
+  const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmingCancel, setConfirmingCancel] = useState(false)
-  const connectivity = useConnectivity()
-  const client = useQueryClient()
 
   const appointment = useQuery({
     queryKey: ['public-booking', 'manage', token],
@@ -47,28 +83,6 @@ export const PublicManageBookingPage = () => {
     retry: false,
     networkMode: 'always',
   })
-  const catalog = useQuery({
-    queryKey: ['public-booking', 'catalog'],
-    queryFn: publicBookingApi.catalog,
-    enabled: editing,
-    networkMode: 'always',
-  })
-  const slots = useQuery({
-    queryKey: ['public-booking', 'manage-availability', search],
-    queryFn: () =>
-      search
-        ? publicBookingApi.availability(search.serviceId, search.barberId, search.date)
-        : Promise.resolve([]),
-    enabled: Boolean(search),
-    retry: false,
-    networkMode: 'always',
-  })
-
-  const find = (event: FormEvent) => {
-    event.preventDefault()
-    setSlot(undefined)
-    setSearch({ serviceId, barberId, date })
-  }
 
   const openManagementLink = (input: string) => {
     const nextToken = managementTokenFromInput(input)
@@ -78,409 +92,442 @@ export const PublicManageBookingPage = () => {
     return true
   }
 
-  const reschedule = async () => {
-    if (!appointment.data || !slot || connectivity !== 'online') return
+  const reschedule = async (current: PublicAppointment, slot: AvailabilitySlot) => {
+    if (!online) return
     setBusy(true)
-    setNotice('')
+    setError('')
     try {
       const changed: PublicBookingConfirmation = await publicBookingApi.reschedule(
         token,
-        appointment.data,
+        current,
         slot,
       )
-      void navigate(changed.managementPath, { replace: true })
       client.setQueryData(
         ['public-booking', 'manage', changed.managementToken],
         changed.appointment,
       )
+      void navigate(changed.managementPath, { replace: true })
       setEditing(false)
-      setSlot(undefined)
-      setSearch(undefined)
-      setNotice('Cita reprogramada. Tu enlace privado fue renovado; guarda esta página.')
-    } catch (error) {
-      setNotice(
-        error instanceof ApiError
-          ? (error.problem.detail ?? error.message)
-          : 'No pudimos cambiar la cita.',
+      setNotice('Listo, cambiamos tu cita. Tu enlace privado se renovó: guarda esta página.')
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError
+          ? (caught.problem.detail ?? caught.message)
+          : 'No pudimos cambiar la cita. Revisa tu conexión e inténtalo de nuevo.',
       )
-      setSlot(undefined)
-      await slots.refetch()
     } finally {
       setBusy(false)
     }
   }
 
-  const cancel = async () => {
-    if (!appointment.data || connectivity !== 'online') return
+  const cancel = async (current: PublicAppointment) => {
+    if (!online) return
     setBusy(true)
-    setNotice('')
+    setError('')
     try {
-      const cancelled = await publicBookingApi.cancel(token, appointment.data)
+      const cancelled = await publicBookingApi.cancel(token, current)
       client.setQueryData(['public-booking', 'manage', token], cancelled)
-      setNotice('La cita fue cancelada. Ese horario volvió a quedar disponible.')
-      void navigate('/mi-cita', { replace: true })
-    } catch (error) {
-      setNotice(
-        error instanceof ApiError
-          ? (error.problem.detail ?? error.message)
-          : 'No pudimos cancelar la cita.',
+      setNotice('')
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError
+          ? (caught.problem.detail ?? caught.message)
+          : 'No pudimos cancelar la cita. Revisa tu conexión e inténtalo de nuevo.',
       )
     } finally {
       setBusy(false)
+      setConfirmingCancel(false)
     }
   }
 
-  if (!token) return <ManagementAccess notice={notice} onOpen={openManagementLink} />
+  if (!token) return <ManagementAccess onOpen={openManagementLink} />
   if (appointment.isError) return <ManagementAccess invalidLink onOpen={openManagementLink} />
 
+  const data = appointment.data
+  const managementUrl = new URL(`/mi-cita#${token}`, window.location.origin).toString()
+
   return (
-    <main className="bg-lou-paper px-4 py-10 sm:px-6 lg:py-16">
-      <div className="mx-auto w-full max-w-5xl">
-        <header className="grid items-end gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div>
-            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
-              Gestión de reserva
-            </p>
-            <h1 className="m-0 max-w-3xl font-display text-5xl leading-[0.9] font-bold sm:text-7xl">
-              Tu cita, bajo control.
-            </h1>
-          </div>
-          <p className="max-w-md text-sm leading-6 text-lou-graphite/60 lg:pb-1">
-            Consulta los detalles y cambia el horario sólo si lo necesitas. Tu enlace permanece
-            privado.
-          </p>
+    <main className="bg-paper-warm px-4 pt-6 pb-10 sm:px-6 lg:pt-10">
+      <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-5">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-5xl leading-none font-extrabold sm:text-6xl">Mi cita</h1>
+          {data && (
+            <span
+              className={cn(
+                'inline-flex min-h-9 items-center gap-1.5 rounded-full px-4 font-semibold',
+                statusTone[data.status],
+              )}
+            >
+              {data.status === 'CONFIRMED' && <AppIcon name="check" size={16} />}
+              {appointmentStatusLabel[data.status]}
+            </span>
+          )}
         </header>
 
-        {appointment.isPending && (
-          <section
-            className="mt-8 rounded-2xl border border-lou-fog bg-white p-8 shadow-lou-sm"
-            role="status"
-          >
-            <span className="inline-flex items-center gap-3 font-semibold text-lou-graphite/65">
-              <span className="size-3 animate-pulse rounded-full bg-lou-ink" />
-              Cargando tu reserva…
-            </span>
-          </section>
-        )}
-
-        {appointment.data && (
-          <m.section
-            className="mt-8 rounded-2xl border border-lou-fog bg-white p-5 shadow-lou-md sm:p-8"
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="inline-flex items-center gap-2 rounded-full bg-lou-ink px-3 py-1.5 text-xs font-bold text-white">
-                <AppIcon name="check" size={15} />
-                {appointmentStatusLabel[appointment.data.status]}
-              </p>
-              <p className="text-xs font-semibold text-lou-graphite/45">
-                Enlace privado de gestión
-              </p>
-            </div>
-            <AppointmentSummary appointment={appointment.data} />
-
-            {appointment.data.status === 'CONFIRMED' && !editing && (
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <Button
-                  disabled={connectivity !== 'online' || busy}
-                  onClick={() => {
-                    setEditing(true)
-                    setServiceId(appointment.data.serviceId)
-                    setBarberId(appointment.data.barberId)
-                    setDate(appointment.data.startsAt.slice(0, 10))
-                  }}
-                >
-                  <AppIcon name="calendar" size={18} />
-                  Cambiar horario
-                </Button>
-                <Button
-                  variant="danger"
-                  disabled={connectivity !== 'online' || busy}
-                  onClick={() => setConfirmingCancel(true)}
-                >
-                  <AppIcon name="close" size={18} />
-                  Cancelar cita
-                </Button>
-              </div>
-            )}
-
-            <AnimatePresence initial={false}>
-              {editing && (
-                <m.div
-                  className="overflow-hidden"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.28 }}
-                >
-                  <div className="mt-7 border-t border-lou-fog pt-7">
-                    <h2 className="m-0 font-display text-4xl font-bold">Nuevo horario</h2>
-                    <p className="mt-2 text-sm leading-6 text-lou-graphite/60">
-                      Tu cita actual se conserva hasta que confirmes una alternativa.
-                    </p>
-                    <form
-                      className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_0.8fr_auto] lg:items-end"
-                      onSubmit={find}
-                    >
-                      <label className={labelClassName}>
-                        Servicio
-                        <select
-                          className={fieldClassName}
-                          required
-                          value={serviceId}
-                          onChange={(event) => setServiceId(event.target.value)}
-                        >
-                          {catalog.data?.services.map((service) => (
-                            <option key={service.id} value={service.id}>
-                              {service.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className={labelClassName}>
-                        Barbero
-                        <select
-                          className={fieldClassName}
-                          value={barberId}
-                          onChange={(event) => setBarberId(event.target.value)}
-                        >
-                          <option value="any">Cualquiera</option>
-                          {catalog.data?.barbers.map((barber) => (
-                            <option key={barber.id} value={barber.id}>
-                              {barber.displayName}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className={labelClassName}>
-                        Día
-                        <input
-                          className={fieldClassName}
-                          type="date"
-                          min={todayInBusinessTime()}
-                          value={date}
-                          onChange={(event) => setDate(event.target.value)}
-                        />
-                      </label>
-                      <Button variant="secondary">
-                        <AppIcon name="clock" size={18} />
-                        Buscar
-                      </Button>
-                    </form>
-
-                    {slots.isFetching && (
-                      <p className="mt-5" role="status">
-                        Buscando horarios…
-                      </p>
-                    )}
-                    {slots.isError && (
-                      <p
-                        className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-lou-danger"
-                        role="alert"
-                      >
-                        No pudimos consultar los horarios. Revisa la conexión y vuelve a buscar.
-                      </p>
-                    )}
-                    {search && !slots.isFetching && slots.data?.length === 0 && (
-                      <p className="mt-5 rounded-xl border border-dashed border-lou-steel p-5 text-center text-sm text-lou-graphite/60">
-                        No hay horarios ese día. Prueba otra fecha o barbero.
-                      </p>
-                    )}
-                    {slots.data && slots.data.length > 0 && (
-                      <ManageSlotChoices
-                        items={slots.data}
-                        selectedSlot={slot}
-                        onSelect={setSlot}
-                      />
-                    )}
-                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                      <Button
-                        disabled={!slot || connectivity !== 'online' || busy}
-                        onClick={() => void reschedule()}
-                      >
-                        <AppIcon name="check" size={18} />
-                        {busy ? 'Guardando…' : 'Confirmar nuevo horario'}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        disabled={busy}
-                        onClick={() => {
-                          setEditing(false)
-                          setSlot(undefined)
-                          setSearch(undefined)
-                        }}
-                      >
-                        Conservar cita actual
-                      </Button>
-                    </div>
-                  </div>
-                </m.div>
-              )}
-            </AnimatePresence>
-          </m.section>
-        )}
-
-        {connectivity === 'offline' && (
-          <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900" role="status">
-            Sin conexión no podemos consultar ni cambiar el enlace privado.
+        {!online && (
+          <p className={warningClassName} role="status">
+            Sin conexión. Puedes ver tu cita, pero no cambiarla ni cancelarla hasta volver a
+            conectarte.
           </p>
         )}
         {notice && (
-          <p
-            className="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-900"
-            role="status"
-          >
+          <p className={successClassName} role="status">
             {notice}
           </p>
         )}
-        <p className="mt-8 text-center text-sm">
-          <Link className="font-bold hover:underline" to="/reservar" viewTransition>
-            Hacer otra reserva
-          </Link>
-        </p>
+
+        {appointment.isPending && (
+          <div className="grid gap-3" role="status" aria-label="Cargando tu cita">
+            <div className="h-56 animate-pulse rounded-sheet bg-surface-strong" />
+            <div className="h-14 animate-pulse rounded-control bg-surface-strong" />
+          </div>
+        )}
+
+        {data && (
+          <m.section
+            className={cn(
+              'rounded-sheet bg-surface p-6 shadow-raised sm:p-8',
+              data.status === 'CANCELLED' && 'opacity-80',
+            )}
+            aria-labelledby="appointment-day"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {data.status === 'CONFIRMED' && (
+              <p className="font-semibold text-success-ink">
+                {appointmentCountdown(today, slotDate(data)) ?? 'Cita pasada'}
+              </p>
+            )}
+            <h2
+              id="appointment-day"
+              className={cn(
+                'mt-1 font-display text-[clamp(2.5rem,10vw,4rem)] leading-[0.95] font-extrabold first-letter:uppercase',
+                data.status === 'CANCELLED' && 'line-through decoration-2',
+              )}
+            >
+              {longDate(slotDate(data))}
+            </h2>
+            <p className="mt-2 font-display text-3xl font-extrabold tabular-nums">
+              {agendaTime(data.startsAt)} a {agendaTime(data.endsAt)}
+            </p>
+            <p className="mt-3 text-lg text-pretty text-ink-soft">
+              {data.serviceName} con {data.barberName}, {centsToBolivianos(data.priceCents)}.
+            </p>
+
+            {data.status === 'CONFIRMED' && (
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <a
+                  className={buttonStyles({ variant: 'secondary' })}
+                  href={calendarFileHref(data, managementUrl)}
+                  download="cita-lou-barbershop.ics"
+                >
+                  <AppIcon name="calendar" size={20} />
+                  Guardar en mi calendario
+                </a>
+                <a
+                  className={buttonStyles({ variant: 'secondary' })}
+                  href={publicSite.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <AppIcon name="map-pin" size={20} />
+                  Cómo llegar
+                </a>
+                {publicSite.whatsappUrl && (
+                  <a
+                    className={buttonStyles({ variant: 'secondary' })}
+                    href={publicSite.whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Escribir a la barbería
+                  </a>
+                )}
+              </div>
+            )}
+
+            {data.status === 'CANCELLED' && (
+              <div className="mt-6 grid gap-3">
+                <p className="text-lg">Esta cita está cancelada y ese horario quedó libre.</p>
+                <Link
+                  className={cn(buttonStyles({ size: 'lg' }), 'w-full sm:w-fit')}
+                  to="/reservar"
+                  viewTransition
+                >
+                  Reservar otra cita
+                </Link>
+              </div>
+            )}
+          </m.section>
+        )}
+
+        {data?.status === 'CONFIRMED' && !editing && (
+          <section
+            className="grid gap-3 rounded-sheet bg-surface p-6 shadow-raised sm:p-8"
+            aria-labelledby="change-title"
+          >
+            <h2 id="change-title" className="font-display text-3xl font-extrabold">
+              ¿Necesitas cambiarla?
+            </h2>
+            <Button
+              size="lg"
+              className="w-full sm:w-fit"
+              disabled={!online || busy}
+              onClick={() => {
+                setEditing(true)
+                setNotice('')
+                setError('')
+              }}
+            >
+              <AppIcon name="calendar" size={20} />
+              Cambiar día u hora
+            </Button>
+            <button
+              type="button"
+              className="inline-flex min-h-11 w-fit items-center px-1 font-semibold text-danger-ink underline underline-offset-4 hover:no-underline disabled:opacity-50"
+              disabled={!online || busy}
+              onClick={() => setConfirmingCancel(true)}
+            >
+              Cancelar cita
+            </button>
+            {error && (
+              <p className={errorClassName} role="alert">
+                {error}
+              </p>
+            )}
+          </section>
+        )}
+
+        <AnimatePresence initial={false}>
+          {data?.status === 'CONFIRMED' && editing && (
+            <m.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Reschedule
+                appointment={data}
+                today={today}
+                online={online}
+                busy={busy}
+                error={error}
+                onCancel={() => {
+                  setEditing(false)
+                  setError('')
+                }}
+                onConfirm={(slot) => void reschedule(data, slot)}
+              />
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {confirmingCancel && appointment.data && (
+      {confirmingCancel && data && (
         <ConfirmDialog
           busy={busy}
-          title={`¿Cancelar la cita de ${appointment.data.customerName}?`}
+          title="¿Cancelar tu cita?"
           confirmLabel="Sí, cancelar cita"
+          cancelLabel="No, conservarla"
           onCancel={() => setConfirmingCancel(false)}
-          onConfirm={() => {
-            void cancel().finally(() => setConfirmingCancel(false))
-          }}
+          onConfirm={() => void cancel(data)}
         >
-          El horario volverá a quedar disponible. Esta acción quedará registrada y no se puede
-          deshacer desde el enlace público.
+          {`Tu cita del ${longDate(slotDate(data))} a las ${agendaTime(data.startsAt)}. El horario volverá a quedar libre y no podrás recuperarlo desde este enlace.`}
         </ConfirmDialog>
       )}
     </main>
   )
 }
 
-const ManageSlotChoices = ({
-  items,
-  selectedSlot,
-  onSelect,
+// Choosing a new day and time with the same calendar as the booking.
+const Reschedule = ({
+  appointment,
+  today,
+  online,
+  busy,
+  error,
+  onCancel,
+  onConfirm,
 }: {
-  items: AvailabilitySlot[]
-  selectedSlot: AvailabilitySlot | undefined
-  onSelect: (slot: AvailabilitySlot) => void
+  appointment: PublicAppointment
+  today: string
+  online: boolean
+  busy: boolean
+  error: string
+  onCancel: () => void
+  onConfirm: (slot: AvailabilitySlot) => void
 }) => {
-  const [period, setPeriod] = useState<'morning' | 'afternoon'>('morning')
-  const uniqueSlots = Array.from(
-    new Map(items.map((item) => [agendaTime(item.startsAt), item])).values(),
-  )
-  const morningSlots = uniqueSlots.filter((item) => bookingHour(item.startsAt) < 13)
-  const afternoonSlots = uniqueSlots.filter((item) => bookingHour(item.startsAt) >= 15)
-  const activePeriod = period === 'morning' && morningSlots.length === 0 ? 'afternoon' : period
-  const visibleSlots = activePeriod === 'morning' ? morningSlots : afternoonSlots
+  const [serviceId, setServiceId] = useState(appointment.serviceId)
+  const [barberId, setBarberId] = useState(appointment.barberId)
+  const [changingService, setChangingService] = useState(false)
+  const [month, setMonth] = useState(() => {
+    const current = monthOf(slotDate(appointment))
+    return current < monthOf(today) ? monthOf(today) : current
+  })
+  const [chosenDate, setChosenDate] = useState('')
+  const [slot, setSlot] = useState<AvailabilitySlot>()
+
+  const catalog = useQuery({
+    queryKey: ['public-booking', 'catalog'],
+    queryFn: publicBookingApi.catalog,
+    networkMode: 'always',
+  })
+  const { first, last } = monthRange(month)
+  const rangeFrom = first < today ? today : first
+  const slots = useQuery({
+    queryKey: ['public-booking', 'availability', serviceId, barberId, rangeFrom, last],
+    networkMode: 'always',
+    retry: false,
+    queryFn: () => publicBookingApi.availabilityRange(serviceId, barberId, rangeFrom, last),
+  })
+  // The current appointment's own time is not offered as a change.
+  const offered = slots.data?.filter((item) => item.startsAt !== appointment.startsAt)
+  const available = offered ? datesWithSlots(offered) : undefined
+  const firstFree = available ? [...available].sort()[0] : undefined
+  const date = chosenDate && monthOf(chosenDate) === month ? chosenDate : (firstFree ?? rangeFrom)
+  const { morning, afternoon } = daySlots(offered, date)
+  const service = catalog.data?.services.find((item) => item.id === serviceId)
+  const resetSlot = () => setSlot(undefined)
 
   return (
-    <div className="mt-5">
-      <div
-        className="relative grid grid-cols-2 rounded-xl bg-lou-fog/70 p-1"
-        role="tablist"
-        aria-label="Periodo del nuevo horario"
-      >
-        <m.span
-          className="pointer-events-none absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-sm"
-          aria-hidden="true"
-          animate={{ x: activePeriod === 'morning' ? '0%' : '100%' }}
-          transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-        />
-        <PeriodButton
-          label="Mañana"
-          count={morningSlots.length}
-          selected={activePeriod === 'morning'}
-          disabled={morningSlots.length === 0}
-          onClick={() => setPeriod('morning')}
-        />
-        <PeriodButton
-          label="Tarde"
-          count={afternoonSlots.length}
-          selected={activePeriod === 'afternoon'}
-          disabled={afternoonSlots.length === 0}
-          onClick={() => setPeriod('afternoon')}
-        />
+    <section
+      className="rounded-sheet bg-surface p-5 shadow-raised sm:p-8"
+      aria-labelledby="reschedule-title"
+    >
+      <h2 id="reschedule-title" className="font-display text-4xl leading-none font-extrabold">
+        Elige el nuevo horario
+      </h2>
+      <p className="mt-2 text-lg text-ink-soft">
+        Tu cita actual se mantiene hasta que confirmes el cambio.
+      </p>
+
+      <div className="mt-6 grid gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-control bg-paper-warm px-4 py-3">
+          <span>
+            <span className="block text-sm text-ink-soft">Servicio</span>
+            <span className="font-semibold">{service?.name ?? appointment.serviceName}</span>
+          </span>
+          <button
+            type="button"
+            className="min-h-11 px-2 font-semibold underline underline-offset-4 hover:no-underline"
+            aria-expanded={changingService}
+            onClick={() => setChangingService((value) => !value)}
+          >
+            {changingService ? 'Mantener servicio' : 'Cambiar servicio'}
+          </button>
+        </div>
+        {changingService && catalog.data && (
+          <ServicePicker
+            services={catalog.data.services}
+            selectedId={serviceId}
+            onSelect={(next) => {
+              setServiceId(next.id)
+              setChangingService(false)
+              resetSlot()
+            }}
+          />
+        )}
+
+        <section aria-labelledby="reschedule-barber">
+          <h3 id="reschedule-barber" className="mb-2 text-lg font-semibold text-ink-soft">
+            Barbero
+          </h3>
+          <BarberPicker
+            barbers={catalog.data?.barbers ?? []}
+            selectedId={barberId}
+            onSelect={(next) => {
+              setBarberId(next)
+              resetSlot()
+            }}
+          />
+        </section>
+
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <MonthCalendar
+            month={month}
+            today={today}
+            selected={date}
+            available={available}
+            canGoBack={month > monthOf(today)}
+            canGoForward={month < shiftMonth(monthOf(today), monthsAhead)}
+            onMonthChange={(delta) => {
+              setMonth(shiftMonth(month, delta))
+              setChosenDate('')
+              resetSlot()
+            }}
+            onSelect={(next) => {
+              setChosenDate(next)
+              resetSlot()
+            }}
+          />
+          <div aria-live="polite">
+            <h3 className="mb-3 font-display text-2xl font-extrabold first-letter:uppercase">
+              Hora para el {longDate(date)}
+            </h3>
+            {slots.isPending && (
+              <div className="grid grid-cols-3 gap-2" role="status" aria-label="Buscando horarios">
+                {[0, 1, 2, 3, 4, 5].map((item) => (
+                  <div key={item} className="h-14 animate-pulse rounded-control bg-surface-muted" />
+                ))}
+              </div>
+            )}
+            {slots.isError && (
+              <p className={errorClassName} role="alert">
+                No pudimos cargar los horarios. Revisa tu conexión.
+              </p>
+            )}
+            {offered &&
+              (morning.length + afternoon.length === 0 ? (
+                <p className="rounded-control bg-surface-muted p-5 text-ink-soft">
+                  No hay horarios libres ese día. Elige otro en el calendario.
+                </p>
+              ) : (
+                <SlotPicker
+                  morning={morning}
+                  afternoon={afternoon}
+                  selected={slot}
+                  showBarber={barberId === 'any'}
+                  onSelect={setSlot}
+                />
+              ))}
+          </div>
+        </div>
       </div>
-      <div
-        className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
-        role="radiogroup"
-        aria-label={`Horarios de ${activePeriod === 'morning' ? 'la mañana' : 'la tarde'}`}
-      >
-        {visibleSlots.map((item) => {
-          const selected =
-            selectedSlot?.barberId === item.barberId && selectedSlot.startsAt === item.startsAt
-          return (
-            <button
-              className={cn(
-                'grid min-h-20 rounded-xl border border-lou-fog p-3 text-left transition-[translate,border-color,background-color,color,box-shadow] duration-300 ease-lou hover:-translate-y-0.5 hover:border-lou-steel hover:shadow-lou-sm',
-                selected && 'border-lou-ink bg-lou-ink text-white shadow-lou-md',
-              )}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              key={`${item.barberId}-${item.startsAt}`}
-              onClick={() => onSelect(item)}
-            >
-              <strong className="font-display text-2xl">{agendaTime(item.startsAt)}</strong>
-              <span className="text-xs font-bold opacity-65">{item.barberName}</span>
-            </button>
-          )
-        })}
+
+      <div className="sticky bottom-[env(safe-area-inset-bottom)] z-20 -mx-5 mt-8 -mb-5 grid grid-cols-[minmax(0,1fr)] gap-3 rounded-b-sheet border-t border-surface-strong bg-surface/95 px-5 py-4 backdrop-blur sm:-mx-8 sm:-mb-8 sm:px-8">
+        {error && (
+          <p className={errorClassName} role="alert">
+            {error}
+          </p>
+        )}
+        <p className="truncate font-semibold" aria-live="polite">
+          {slot
+            ? `Nuevo horario: ${longDate(slotDate(slot))}, ${agendaTime(slot.startsAt)}`
+            : 'Elige un día y una hora.'}
+        </p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" size="lg" disabled={busy} onClick={onCancel}>
+            Conservar mi cita
+          </Button>
+          <Button
+            size="lg"
+            disabled={!slot || !online || busy}
+            onClick={() => slot && onConfirm(slot)}
+          >
+            {busy ? 'Guardando' : 'Confirmar cambio'}
+          </Button>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
 
-const PeriodButton = ({
-  label,
-  count,
-  selected,
-  disabled,
-  onClick,
-}: {
-  label: string
-  count: number
-  selected: boolean
-  disabled: boolean
-  onClick: () => void
-}) => (
-  <button
-    className={cn(
-      'relative z-10 min-h-10 rounded-lg px-3 text-sm font-bold transition-colors duration-300',
-      selected ? 'text-lou-ink' : 'text-lou-graphite/55',
-      disabled && 'cursor-not-allowed opacity-40',
-    )}
-    type="button"
-    role="tab"
-    aria-selected={selected}
-    disabled={disabled}
-    onClick={onClick}
-  >
-    {label} <span className="ml-1 opacity-50">{count}</span>
-  </button>
-)
-
-const bookingHour = (startsAt: string) =>
-  Number(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/La_Paz',
-      hour: '2-digit',
-      hour12: false,
-    }).format(new Date(startsAt)),
-  )
-
 const ManagementAccess = ({
   invalidLink = false,
-  notice,
   onOpen,
 }: {
   invalidLink?: boolean
-  notice?: string
   onOpen: (input: string) => boolean
 }) => {
   const [input, setInput] = useState('')
@@ -492,57 +539,27 @@ const ManagementAccess = ({
   }
 
   return (
-    <main className="bg-lou-paper px-4 py-10 sm:px-6 lg:py-16">
-      <div className="mx-auto grid w-full max-w-5xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-14">
-        <section>
-          <p className="mb-3 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
-            Tu reserva
-          </p>
-          <h1 className="m-0 max-w-3xl font-display text-5xl leading-[0.9] font-bold sm:text-7xl">
-            Gestiona tu cita.
-          </h1>
-          <p className="mt-5 max-w-xl leading-7 text-lou-graphite/65">
-            Abre el enlace privado que guardaste al reservar. Por seguridad no buscamos citas por
-            nombre ni teléfono.
-          </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:max-w-2xl">
-            {[
-              ['01', 'Busca el enlace', 'Está en la confirmación de tu reserva.'],
-              ['02', 'Pégalo aquí', 'Aceptamos el enlace completo o su código.'],
-              ['03', 'Gestiona', 'Consulta, cambia o cancela con seguridad.'],
-            ].map(([number, title, description]) => (
-              <div className="border-t border-lou-steel/60 pt-3" key={number}>
-                <span className="font-display text-xl font-bold text-lou-graphite/35">
-                  {number}
-                </span>
-                <strong className="mt-1 block text-sm">{title}</strong>
-                <small className="mt-1 block leading-5 text-lou-graphite/55">{description}</small>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <m.form
-          className="rounded-2xl bg-lou-ink p-5 text-white shadow-lou-lg sm:p-7"
-          onSubmit={submit}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <span className="grid size-12 place-items-center rounded-full bg-white text-lou-ink">
-            <AppIcon name="calendar" size={23} />
-          </span>
-          <h2 className="mt-5 font-display text-4xl font-bold">Abrir mi cita</h2>
-          <p className="mt-2 text-sm leading-6 text-white/55">
-            El código permanece en tu navegador y se usa sólo para consultar esta reserva.
-          </p>
-          <label className="mt-6 grid gap-2 text-sm font-bold">
-            Enlace privado
+    <main className="bg-paper-warm px-4 pt-6 pb-10 sm:px-6 lg:pt-10">
+      <div className="mx-auto grid w-full max-w-xl gap-5">
+        <h1 className="font-display text-5xl leading-none font-extrabold sm:text-6xl">Mi cita</h1>
+        <p className="text-lg text-pretty text-ink-soft">
+          Abre el enlace privado que recibiste al reservar. Por seguridad no buscamos citas por
+          nombre ni teléfono.
+        </p>
+        <form className="grid gap-4 rounded-sheet bg-surface p-6 shadow-raised" onSubmit={submit}>
+          {invalidLink && (
+            <p className={errorClassName} role="alert">
+              Ese enlace no es válido, ya venció o la cita dejó de estar disponible.
+            </p>
+          )}
+          <label className={labelClassName}>
+            Tu enlace privado
             <input
-              className="min-h-12 w-full rounded-xl border border-white/20 bg-white px-4 text-base text-lou-ink outline-none transition-[border-color,box-shadow] focus:border-white focus:ring-3 focus:ring-white/20"
+              className={fieldClassName}
+              name="management-link"
               autoComplete="off"
               spellCheck={false}
-              placeholder="https://…/mi-cita#…"
+              placeholder="Pega aquí el enlace de tu reserva"
               value={input}
               onChange={(event) => {
                 setInput(event.target.value)
@@ -550,35 +567,39 @@ const ManagementAccess = ({
               }}
             />
           </label>
-          {(validation || invalidLink) && (
-            <p className="mt-3 rounded-xl bg-white/10 p-3 text-sm text-white" role="alert">
-              {validation ||
-                'Ese enlace no es válido, ya venció o la cita dejó de estar disponible.'}
+          {validation && (
+            <p className={errorClassName} role="alert">
+              {validation}
             </p>
           )}
-          {notice && (
-            <p className="mt-3 rounded-xl bg-emerald-700/35 p-3 text-sm text-white" role="status">
-              {notice}
-            </p>
-          )}
-          <Button className="mt-5" variant="secondary" width="full" type="submit">
+          <Button size="lg" width="full" type="submit">
             Abrir mi cita
-            <AppIcon name="arrow-right" size={18} />
           </Button>
-          <p className="mt-5 border-t border-white/10 pt-4 text-xs leading-5 text-white/45">
-            ¿No conservas el enlace? Contacta a la barbería para recibir ayuda.
+        </form>
+        <div className="grid gap-2 rounded-sheet bg-surface p-6 shadow-raised">
+          <h2 className="font-display text-2xl font-extrabold">¿Perdiste el enlace?</h2>
+          <p className="text-ink-soft">
+            {publicSite.whatsappUrl
+              ? 'Escríbenos y te ayudamos a encontrar tu cita, o reserva una nueva.'
+              : 'Pide ayuda en la barbería para encontrar tu cita, o reserva una nueva.'}
           </p>
-        </m.form>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            {publicSite.whatsappUrl && (
+              <a
+                className={buttonStyles({ variant: 'secondary' })}
+                href={publicSite.whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Escribir a la barbería
+              </a>
+            )}
+            <Link className={buttonStyles({ variant: 'secondary' })} to="/reservar" viewTransition>
+              Reservar una cita
+            </Link>
+          </div>
+        </div>
       </div>
-      <p className="mx-auto mt-10 max-w-5xl text-center text-sm">
-        <Link
-          className={cn(buttonStyles({ variant: 'ghost' }), 'w-fit')}
-          to="/reservar"
-          viewTransition
-        >
-          Hacer una nueva reserva
-        </Link>
-      </p>
     </main>
   )
 }

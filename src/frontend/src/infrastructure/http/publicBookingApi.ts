@@ -5,10 +5,6 @@ const tokenHeader = (token: string) => ({ 'X-Management-Token': token })
 
 export const publicBookingApi: PublicBookingPort = {
   catalog: () => apiRequest('/api/v1/public/catalog'),
-  availability: (serviceId, barberId, date) =>
-    apiRequest(
-      `/api/v1/public/availability?${new URLSearchParams({ serviceId, barberId, dateFrom: date, dateTo: date })}`,
-    ),
   availabilityRange: (serviceId, barberId, dateFrom, dateTo) =>
     apiRequest(
       `/api/v1/public/availability?${new URLSearchParams({ serviceId, barberId, dateFrom, dateTo })}`,

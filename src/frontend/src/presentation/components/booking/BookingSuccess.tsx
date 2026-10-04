@@ -1,17 +1,14 @@
 import { m } from 'motion/react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  calendarEvent,
-  type PublicBookingConfirmation,
-} from '../../../core/public-booking/PublicBooking'
-import { publicSite } from '../../content/publicSite'
+import type { PublicBookingConfirmation } from '../../../core/public-booking/PublicBooking'
 import { cn } from '../../styles/cn'
 import { AppIcon } from '../AppIcon'
 import { Button } from '../Button'
 import { buttonStyles } from '../buttonStyles'
 import { AppointmentSummary } from './AppointmentSummary'
 import { bookingDateTime } from './bookingFormat'
+import { calendarFileHref } from './calendarLink'
 
 const darkButtonClassName = cn(
   buttonStyles({ variant: 'ghost' }),
@@ -27,16 +24,7 @@ export const BookingSuccess = ({ confirmation }: { confirmation: PublicBookingCo
   const whatsappText = encodeURIComponent(
     `Mi cita en Lou Barbershop: ${bookingDateTime(appointment.startsAt)}. Enlace privado: ${managementUrl}`,
   )
-  const calendarHref = `data:text/calendar;charset=utf-8,${encodeURIComponent(
-    calendarEvent({
-      id: appointment.id,
-      title: `${appointment.serviceName} en Lou Barbershop`,
-      startsAt: appointment.startsAt,
-      durationMinutes: appointment.durationMinutes,
-      location: publicSite.address ?? `Lou Barbershop, ${publicSite.city}`,
-      description: `Con ${appointment.barberName}. Para cambiar o cancelar: ${managementUrl}`,
-    }),
-  )}`
+  const calendarHref = calendarFileHref(appointment, managementUrl)
 
   const copyManagementLink = async () => {
     try {
