@@ -179,4 +179,21 @@ describe('public booking', () => {
     expect(screen.getAllByText(/miércoles, 23 de septiembre, 16:00/)).not.toHaveLength(0)
     expect(screen.queryByText(/04:00 p\.\s*m\./i)).not.toBeInTheDocument()
   })
+
+  it('starts at the barber step when the home already chose the service', async () => {
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <MemoryRouter initialEntries={['/reservar?servicio=service&barbero=barber']}>
+          <PublicBookingPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: '¿Con quién te atiendes?' }),
+    ).toBeInTheDocument()
+    expect(await screen.findByRole('radio', { name: /Luis/ })).toBeChecked()
+  })
 })

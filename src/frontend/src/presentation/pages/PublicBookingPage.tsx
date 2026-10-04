@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, m } from 'motion/react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { agendaTime } from '../../core/agenda/Agenda'
 import { centsToBolivianos } from '../../core/configuration/Configuration'
 import type {
@@ -26,10 +26,12 @@ const panelClassName = 'rounded-2xl border border-lou-fog bg-white p-5 shadow-lo
 
 export const PublicBookingPage = () => {
   const connectivity = useConnectivity()
-  const [step, setStep] = useState(0)
+  // The home links here with the service or barber already chosen.
+  const [params] = useSearchParams()
+  const [step, setStep] = useState(() => (params.get('servicio') ? 1 : 0))
   const [direction, setDirection] = useState(1)
-  const [serviceId, setServiceId] = useState('')
-  const [barberId, setBarberId] = useState('any')
+  const [serviceId, setServiceId] = useState(() => params.get('servicio') ?? '')
+  const [barberId, setBarberId] = useState(() => params.get('barbero') ?? 'any')
   const [date, setDate] = useState(todayInBusinessTime())
   const [slot, setSlot] = useState<AvailabilitySlot>()
   const [displayName, setDisplayName] = useState('')
@@ -63,6 +65,12 @@ export const PublicBookingPage = () => {
 
   const continueFromStep = () => {
     if (step === 0 && !serviceId) return setValidation('Elige un servicio para continuar.')
+    // A link may name a service that is no longer offered: start again from the list.
+    if (step > 0 && catalog.data && !selectedService) {
+      setServiceId('')
+      goTo(0)
+      return setValidation('Ese servicio ya no está disponible. Elige otro para continuar.')
+    }
     if (step === 2 && !slot) return setValidation('Elige una hora disponible para continuar.')
     if (step === 3) {
       if (displayName.trim().length < 2) return setValidation('Escribe tu nombre completo.')

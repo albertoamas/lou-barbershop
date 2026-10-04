@@ -5,6 +5,8 @@ import { ConnectivityBanner } from '../components/ConnectivityBanner'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { ServiceWorkerUpdateBanner } from '../components/ServiceWorkerUpdateBanner'
 import { SocialLinks } from '../components/SocialLinks'
+import { buttonStyles } from '../components/buttonStyles'
+import { cn } from '../styles/cn'
 
 interface AppShellProps {
   children: ReactNode
@@ -16,6 +18,12 @@ const subscribeToScroll = (listener: () => void) => {
 }
 
 const getScrollSnapshot = () => window.scrollY > 24
+
+const headerLinkClassName =
+  'hidden min-h-11 items-center rounded-control px-3 font-semibold text-on-ink-muted transition-colors duration-150 hover:bg-on-ink/10 hover:text-on-ink lg:inline-flex'
+
+const footerLinkClassName =
+  'inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline'
 
 export const AppShell = ({ children }: AppShellProps) => {
   const connectivity = useConnectivity()
@@ -40,56 +48,52 @@ export const AppShell = ({ children }: AppShellProps) => {
   }, [location.pathname, location.hash])
 
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col bg-lou-paper text-lou-ink">
+    <div className="flex min-h-dvh min-w-0 flex-col bg-canvas text-ink">
       <a
-        className="sr-only fixed top-3 left-3 z-100 rounded-lg bg-white px-4 py-3 font-bold text-lou-ink shadow-lou-lg focus:not-sr-only"
+        className="sr-only fixed top-3 left-3 z-100 rounded-control bg-surface px-4 py-3 font-bold text-ink shadow-floating focus:not-sr-only"
         href="#main-content"
       >
         Saltar al contenido
       </a>
       {publicShell && (
         <header
-          className={`top-0 z-40 w-full text-white transition-[background-color,border-color,box-shadow] duration-200 ${
+          className={cn(
+            'top-0 z-40 w-full text-on-ink transition-[background-color,box-shadow] duration-200 [--color-focus:var(--color-on-ink)]',
             landingScreen
-              ? `fixed ${
+              ? cn(
+                  'fixed pt-[env(safe-area-inset-top)]',
                   landingHeaderScrolled
-                    ? 'border-b border-white/10 bg-lou-ink/95 shadow-lg backdrop-blur-xl'
-                    : 'border-b border-transparent bg-transparent'
-                }`
-              : 'sticky border-b border-white/10 bg-lou-ink/95 shadow-lg backdrop-blur-xl'
-          }`}
+                    ? 'bg-ink/95 shadow-floating backdrop-blur'
+                    : 'bg-transparent',
+                )
+              : 'sticky bg-ink/95 pt-[env(safe-area-inset-top)] shadow-floating backdrop-blur',
+          )}
           data-landing-header={
             landingScreen ? (landingHeaderScrolled ? 'solid' : 'transparent') : undefined
           }
         >
           <div className="mx-auto flex min-h-18 max-w-360 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
             <BrandLockup />
-            <nav className="flex items-center gap-1 sm:gap-3" aria-label="Navegación pública">
-              {landingScreen && (
-                <>
-                  <a
-                    className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white lg:inline-flex"
-                    href="#servicios"
-                  >
-                    Servicios
+            <nav className="flex items-center gap-1 sm:gap-2" aria-label="Navegación pública">
+              {landingScreen &&
+                [
+                  ['#servicios', 'Servicios'],
+                  ['#equipo', 'Equipo'],
+                  ['#ubicacion', 'Horario'],
+                ].map(([href, label]) => (
+                  <a key={href} className={headerLinkClassName} href={href}>
+                    {label}
                   </a>
-                  <a
-                    className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white lg:inline-flex"
-                    href="#como-funciona"
-                  >
-                    Cómo funciona
-                  </a>
-                </>
-              )}
+                ))}
               <Link
-                className="hidden min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
+                className={cn(headerLinkClassName, 'sm:inline-flex')}
                 to="/mi-cita"
                 viewTransition
               >
                 Mi cita
               </Link>
               <Link
-                className="inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-bold text-lou-ink shadow-sm transition-[translate,scale,background-color] duration-300 ease-lou hover:-translate-y-px hover:bg-lou-paper active:scale-[0.98]"
+                className={buttonStyles({ variant: 'inverse', size: 'sm' })}
                 to="/reservar"
                 viewTransition
               >
@@ -100,7 +104,11 @@ export const AppShell = ({ children }: AppShellProps) => {
         </header>
       )}
       <div
-        className={landingScreen ? 'fixed inset-x-0 top-[4.5625rem] z-30' : undefined}
+        className={
+          landingScreen
+            ? 'fixed inset-x-0 top-[calc(4.5rem+env(safe-area-inset-top))] z-30'
+            : undefined
+        }
         data-public-notices={landingScreen ? 'below-fixed-header' : undefined}
       >
         <ConnectivityBanner connectivity={connectivity} />
@@ -116,37 +124,42 @@ export const AppShell = ({ children }: AppShellProps) => {
         {children}
       </div>
       {publicShell && (
-        <footer className="border-t border-lou-fog bg-white">
+        <footer className="border-t border-surface-strong bg-surface pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto grid max-w-360 gap-8 px-4 py-10 sm:grid-cols-[1fr_auto] sm:px-6 lg:px-10">
             <div>
-              <BrandLockup linked={false} className="text-lou-ink" />
-              <p className="mt-4 max-w-md text-sm leading-6 text-lou-graphite/70">
-                Reserva tu cita sin crear una cuenta y gestiona los cambios desde tu enlace privado.
+              <BrandLockup linked={false} className="text-ink" />
+              <p className="mt-4 max-w-md text-pretty text-ink-soft">
+                Reserva sin crear una cuenta y cambia tu cita desde el enlace privado que te
+                enviamos.
               </p>
               <SocialLinks />
             </div>
-            <nav className="grid content-start gap-2 text-sm" aria-label="Enlaces del pie">
-              <Link className="font-semibold hover:underline" to="/reservar" viewTransition>
+            <nav className="grid content-start" aria-label="Enlaces del pie">
+              <Link className={footerLinkClassName} to="/reservar" viewTransition>
                 Reservar una cita
               </Link>
-              <Link className="font-semibold hover:underline" to="/mi-cita" viewTransition>
+              <Link className={footerLinkClassName} to="/mi-cita" viewTransition>
                 Gestionar mi cita
               </Link>
               <Link
-                className="text-lou-graphite/65 hover:underline"
+                className={cn(footerLinkClassName, 'font-normal text-ink-soft')}
                 to="/privacidad"
                 viewTransition
               >
                 Privacidad
               </Link>
-              <Link className="text-lou-graphite/65 hover:underline" to="/app/login" viewTransition>
+              <Link
+                className={cn(footerLinkClassName, 'font-normal text-ink-soft')}
+                to="/app/login"
+                viewTransition
+              >
                 Acceso del equipo
               </Link>
             </nav>
           </div>
-          <div className="border-t border-lou-fog px-4 py-4 text-center text-xs text-lou-graphite/60">
-            Lou Barbershop · America/La_Paz · BOB
-          </div>
+          <p className="border-t border-surface-strong px-4 py-4 text-center text-sm text-ink-soft">
+            Lou Barbershop, {new Date().getFullYear()}.
+          </p>
         </footer>
       )}
     </div>
