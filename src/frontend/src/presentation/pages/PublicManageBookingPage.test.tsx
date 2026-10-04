@@ -10,7 +10,7 @@ vi.mock('../../infrastructure/http/publicBookingApi', () => ({
   publicBookingApi: {
     read: vi.fn(),
     catalog: vi.fn().mockResolvedValue({ services: [], barbers: [] }),
-    availability: vi.fn().mockResolvedValue([]),
+    availabilityRange: vi.fn().mockResolvedValue([]),
     reschedule: vi.fn(),
     cancel: vi.fn(),
   },
@@ -32,12 +32,12 @@ const appointment = {
   version: 1,
 }
 
-const renderPage = () =>
+const renderPage = (entry = '/mi-cita') =>
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[entry]}>
         <PublicManageBookingPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -48,34 +48,80 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const token = 'a'.repeat(43)
+
 describe('public appointment management', () => {
-  it('offers a useful access form when navigation has no private token', async () => {
+  it('offers a short access form when navigation has no private token', async () => {
     const user = userEvent.setup()
     renderPage()
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Gestiona tu cita.' })).toBeVisible()
-    expect(screen.getByLabelText('Enlace privado')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Mi cita' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Abrir mi cita' }))
     expect(screen.getByRole('alert')).toHaveTextContent('Pega el enlace completo')
+    expect(screen.getByRole('link', { name: 'Reservar una cita' })).toHaveAttribute(
+      'href',
+      '/reservar',
+    )
     expect(publicBookingApi.read).not.toHaveBeenCalled()
   })
 
-  it('opens a saved management link and renders the appointment', async () => {
+  it('opens a saved link and leads with the day and time', async () => {
     vi.mocked(publicBookingApi.read).mockResolvedValueOnce(appointment)
     const user = userEvent.setup()
-    const token = 'a'.repeat(43)
     renderPage()
 
     await user.type(
-      screen.getByLabelText('Enlace privado'),
+      screen.getByLabelText('Tu enlace privado'),
       `http://localhost:8088/mi-cita#${token}`,
     )
     await user.click(screen.getByRole('button', { name: 'Abrir mi cita' }))
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Tu cita, bajo control.' }),
+      await screen.findByRole('heading', { name: /miércoles, 23 de septiembre/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Corte')).toBeInTheDocument()
+    expect(screen.getByText('16:00 a 16:30')).toBeInTheDocument()
+    expect(screen.getByText(/Corte con Luis, Bs\s*50,00/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Guardar en mi calendario' })).toHaveAttribute(
+      'download',
+      'cita-lou-barbershop.ics',
+    )
     expect(publicBookingApi.read).toHaveBeenCalledWith(token)
+  })
+
+  it('keeps cancelling discreet and asks before doing it', async () => {
+    vi.mocked(publicBookingApi.read).mockResolvedValueOnce(appointment)
+    vi.mocked(publicBookingApi.cancel).mockResolvedValueOnce({
+      ...appointment,
+      status: 'CANCELLED',
+    })
+    const user = userEvent.setup()
+    renderPage(`/mi-cita#${token}`)
+
+    await user.click(await screen.findByRole('button', { name: 'Cancelar cita' }))
+    expect(publicBookingApi.cancel).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Sí, cancelar cita' }))
+
+    expect(
+      await screen.findByText('Esta cita está cancelada y ese horario quedó libre.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Reservar otra cita' })).toBeInTheDocument()
+  })
+
+  it('reschedules with the booking calendar and loads times without a search button', async () => {
+    vi.mocked(publicBookingApi.read).mockResolvedValueOnce(appointment)
+    const user = userEvent.setup()
+    renderPage(`/mi-cita#${token}`)
+
+    await user.click(await screen.findByRole('button', { name: 'Cambiar día u hora' }))
+
+    expect(await screen.findByRole('group', { name: /^Días de / })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument()
+    expect(publicBookingApi.availabilityRange).toHaveBeenCalledWith(
+      'service',
+      'barber',
+      expect.any(String),
+      expect.any(String),
+    )
+    expect(screen.getByRole('button', { name: 'Confirmar cambio' })).toBeDisabled()
   })
 })
