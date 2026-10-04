@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
+import { monthRange } from '../../core/public-booking/PublicBooking'
 import { addCalendarDays, todayInBusinessTime } from '../../core/scheduling/Scheduling'
 import { publicBookingApi } from '../../infrastructure/http/publicBookingApi'
 import { BookingSuccess } from '../components/booking/BookingSuccess'
@@ -28,7 +29,11 @@ const slot = (date: string, utcTime: string, barberName = 'Luis') => ({
   priceCents: 5_000,
 })
 
-const tomorrow = addCalendarDays(todayInBusinessTime(), 1)
+const today = todayInBusinessTime()
+// A free day inside the visible month: tomorrow, unless today is the last day.
+const tomorrow =
+  addCalendarDays(today, 1).slice(0, 7) === today.slice(0, 7) ? addCalendarDays(today, 1) : today
+const monthEnd = monthRange(today.slice(0, 7)).last
 
 const renderPage = (entry = '/reservar') =>
   render(
@@ -79,19 +84,22 @@ describe('public booking', () => {
     expect(publicBookingApi.availabilityRange).toHaveBeenCalledWith(
       'service',
       'any',
-      todayInBusinessTime(),
-      addCalendarDays(todayInBusinessTime(), 13),
+      today,
+      monthEnd,
     )
   })
 
-  it('preselects the first day with free times and greys out the empty ones', async () => {
+  it('preselects the first free day on a month calendar and greys out the rest', async () => {
     const user = userEvent.setup()
     renderPage('/reservar?servicio=service')
     await user.click(await screen.findByRole('radio', { name: /Cualquiera/ }))
 
-    expect(await screen.findByRole('radio', { name: /^Mañana .*/ })).toBeChecked()
-    expect(screen.getByRole('radio', { name: /^Hoy .*, sin horarios$/ })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Otra fecha' })).toBeInTheDocument()
+    const calendar = await screen.findByRole('group', { name: /^Días de / })
+    const free = within(calendar).getByRole('button', { pressed: true })
+    expect(free).toHaveAccessibleName(new RegExp(`${Number(tomorrow.slice(8))} de`))
+    expect(within(calendar).getAllByRole('button', { name: /sin horarios$/ })[0]).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Mes anterior' })).toBeDisabled()
+    expect(screen.getByRole('heading', { name: /^Hora para el / })).toBeInTheDocument()
   })
 
   it('reviews in 24-hour time and blocks confirmation while offline', async () => {
