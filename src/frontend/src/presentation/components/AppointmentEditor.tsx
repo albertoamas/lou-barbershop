@@ -16,6 +16,9 @@ import { errorClassName, fieldClassName, labelClassName } from '../styles/formSt
 interface Props {
   appointment: Appointment | undefined
   date: string
+  // Suggested barber and start time ("HH:MM") when the agenda's empty half hour was tapped.
+  barberId?: string | undefined
+  startTime?: string | undefined
   disabled: boolean
   onSaved: () => void
   onClose: () => void
@@ -24,6 +27,8 @@ interface Props {
 export const AppointmentEditor = ({
   appointment,
   date: initialDate,
+  barberId: initialBarberId,
+  startTime,
   disabled,
   onSaved,
   onClose,
@@ -31,9 +36,9 @@ export const AppointmentEditor = ({
   const [customer, setCustomer] = useState<Customer>()
   const [date, setDate] = useState(initialDate)
   const [serviceId, setServiceId] = useState(appointment?.serviceId ?? '')
-  const [barberId, setBarberId] = useState(appointment?.barberId ?? 'any')
+  const [barberId, setBarberId] = useState(appointment?.barberId ?? initialBarberId ?? 'any')
   const [reason, setReason] = useState('')
-  const [slot, setSlot] = useState<AvailabilitySlot>()
+  const [picked, setSlot] = useState<AvailabilitySlot>()
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const barbers = useQuery({
@@ -53,6 +58,12 @@ export const AppointmentEditor = ({
         ? agendaApi.alternatives(appointment.id, serviceId, barberId, date)
         : schedulingApi.search({ serviceId, barberId, dateFrom: date, dateTo: date }),
   })
+  // The tapped time comes preselected once its service shows it free that day.
+  const suggestedTime = startTime && date === initialDate ? startTime : undefined
+  const suggested = suggestedTime
+    ? slots.data?.find((item) => agendaTime(item.startsAt) === suggestedTime)
+    : undefined
+  const slot = picked ?? suggested
   const step = appointment ? 1 : 2
 
   const save = async () => {
@@ -124,6 +135,11 @@ export const AppointmentEditor = ({
         <h3 id="schedule-step" className="font-display text-2xl font-extrabold">
           {step}. Servicio y horario
         </h3>
+        {suggestedTime && !serviceId && (
+          <p className="rounded-control bg-info-soft p-4 text-sm text-info-ink">
+            Elegiste las {suggestedTime}. Elige el servicio para ver si ese horario está libre.
+          </p>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className={labelClassName}>
             Servicio
@@ -225,6 +241,11 @@ export const AppointmentEditor = ({
         {serviceId && slots.data?.length === 0 && (
           <p className="rounded-control bg-surface-muted p-4 text-sm text-ink-soft">
             No hay horarios libres ese día. Prueba con otra fecha o con otro barbero.
+          </p>
+        )}
+        {suggestedTime && !picked && !suggested && Boolean(slots.data?.length) && (
+          <p className="rounded-control bg-warning-soft p-4 text-sm text-warning-ink">
+            Las {suggestedTime} no están libres para este servicio. Elige otro horario.
           </p>
         )}
         {slotGroups.length > 0 && (

@@ -13,7 +13,7 @@ vi.mock('../../infrastructure/http/schedulingApi', () => ({
   schedulingApi: { listBarbers: vi.fn(), listServices: vi.fn(), search: vi.fn() },
 }))
 
-const renderEditor = () =>
+const renderEditor = (suggestion: { barberId?: string; startTime?: string } = {}) =>
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -21,6 +21,8 @@ const renderEditor = () =>
       <AppointmentEditor
         appointment={undefined}
         date="2026-10-05"
+        barberId={suggestion.barberId}
+        startTime={suggestion.startTime}
         disabled={false}
         onSaved={vi.fn()}
         onClose={vi.fn()}
@@ -96,5 +98,38 @@ describe('AppointmentEditor', () => {
       await screen.findByText('Elige un servicio para ver los horarios libres.'),
     ).toBeInTheDocument()
     expect(schedulingApi.search).not.toHaveBeenCalled()
+  })
+
+  it('preselects the barber and the time tapped in the agenda when it is free', async () => {
+    const user = userEvent.setup()
+    renderEditor({ barberId: 'diego', startTime: '15:00' })
+    await screen.findByRole('option', { name: /Corte clásico/ })
+    expect(
+      screen.getByText('Elegiste las 15:00. Elige el servicio para ver si ese horario está libre.'),
+    ).toBeInTheDocument()
+
+    await user.selectOptions(await screen.findByLabelText('Servicio'), 'corte')
+
+    await waitFor(() =>
+      expect(schedulingApi.search).toHaveBeenCalledWith(
+        expect.objectContaining({ barberId: 'diego', dateFrom: '2026-10-05' }),
+      ),
+    )
+    expect(await screen.findByRole('button', { name: /15:00/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('says when the tapped time is not free for the chosen service', async () => {
+    const user = userEvent.setup()
+    renderEditor({ barberId: 'diego', startTime: '16:30' })
+    await screen.findByRole('option', { name: /Corte clásico/ })
+
+    await user.selectOptions(await screen.findByLabelText('Servicio'), 'corte')
+
+    expect(
+      await screen.findByText('Las 16:30 no están libres para este servicio. Elige otro horario.'),
+    ).toBeInTheDocument()
   })
 })

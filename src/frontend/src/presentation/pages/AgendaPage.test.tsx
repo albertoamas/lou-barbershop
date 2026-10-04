@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
@@ -96,7 +96,7 @@ describe('AgendaPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Agenda' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Nueva cita/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Nueva cita' })).toBeInTheDocument()
     expect(screen.getByLabelText('Barbero')).toBeInTheDocument()
     expect(await screen.findByRole('region', { name: 'Agenda de Diego' })).toBeInTheDocument()
   })
@@ -110,7 +110,7 @@ describe('AgendaPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Mi agenda' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Nueva cita/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Nueva cita' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Barbero')).not.toBeInTheDocument()
     await waitFor(() =>
       expect(agendaApi.list).toHaveBeenCalledWith('2026-09-15', '2026-09-15', undefined),
@@ -219,6 +219,25 @@ describe('AgendaPage', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Detalle de cita' })).not.toBeInTheDocument(),
     )
+  })
+
+  it('books an empty half hour with the barber and day already chosen', async () => {
+    vi.mocked(authApi.current).mockResolvedValue(admin)
+    vi.mocked(schedulingApi.listServices).mockResolvedValue([])
+    renderPage()
+
+    // 14:00Z is 10:00 in La Paz: earlier half hours are gone, later ones can be booked.
+    await screen.findByRole('region', { name: 'Agenda de Diego' })
+    expect(
+      screen.queryByRole('button', { name: /Nueva cita con Diego, .* a las 09:30/ }),
+    ).toBeNull()
+    await userEvent
+      .setup({ advanceTimers: vi.advanceTimersByTime })
+      .click(screen.getByRole('button', { name: /Nueva cita con Diego, .* a las 11:00/ }))
+
+    const editor = await screen.findByRole('dialog', { name: 'Nueva cita' })
+    expect(within(editor).getByLabelText('Barbero')).toHaveValue('diego')
+    expect(within(editor).getByLabelText('Fecha')).toHaveValue('2026-09-15')
   })
 
   it('moves safely to the previous day', async () => {

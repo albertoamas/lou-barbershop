@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest'
 import type { Appointment } from './Agenda'
 import {
   formatMinutes,
+  halfHourSlots,
+  isMiddayClosure,
   minutesOfDay,
   nowOffset,
   summarizeDay,
   timeRangeLabel,
   timelineHours,
+  timelineLanes,
   timelineSlot,
 } from './AgendaTimeline'
 
@@ -77,5 +80,30 @@ describe('agenda timeline', () => {
         appointment('2026-10-05T22:00:00Z', '2026-10-05T22:45:00Z'),
       ]),
     ).toEqual({ active: 3, waiting: 1, inService: 1 })
+  })
+
+  it('splits the day in half hours and knows the midday closure', () => {
+    const slots = halfHourSlots()
+    expect(slots[0]).toBe(8 * 60)
+    expect(slots[1]).toBe(8 * 60 + 30)
+    expect(slots.at(-1)).toBe(20 * 60 + 30)
+    expect(isMiddayClosure(13 * 60)).toBe(true)
+    expect(isMiddayClosure(14 * 60 + 30)).toBe(true)
+    expect(isMiddayClosure(15 * 60)).toBe(false)
+  })
+
+  it('places overlapping appointments side by side and keeps the rest full width', () => {
+    const first = appointment('2026-10-05T12:00:00Z', '2026-10-05T13:00:00Z')
+    const second = appointment('2026-10-05T12:30:00Z', '2026-10-05T13:30:00Z')
+    const third = appointment('2026-10-05T13:00:00Z', '2026-10-05T13:30:00Z')
+    const later = appointment('2026-10-05T14:00:00Z', '2026-10-05T14:30:00Z')
+
+    const lanes = timelineLanes([later, third, second, first])
+
+    expect(lanes.get(first.id)).toEqual({ lane: 0, lanes: 2 })
+    expect(lanes.get(second.id)).toEqual({ lane: 1, lanes: 2 })
+    // The third starts when the first ends, so it reuses the first lane.
+    expect(lanes.get(third.id)).toEqual({ lane: 0, lanes: 2 })
+    expect(lanes.get(later.id)).toEqual({ lane: 0, lanes: 1 })
   })
 })
