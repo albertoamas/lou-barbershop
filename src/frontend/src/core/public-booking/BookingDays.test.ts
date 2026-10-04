@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { AvailabilitySlot } from '../scheduling/Scheduling'
-import { bookingDays, calendarEvent, datesWithSlots, daySlots } from './PublicBooking'
+import {
+  calendarEvent,
+  datesWithSlots,
+  daySlots,
+  monthOf,
+  monthRange,
+  monthWeeks,
+  shiftMonth,
+} from './PublicBooking'
 
 const slot = (startsAt: string, barberName = 'Luis'): AvailabilitySlot => ({
   barberId: barberName,
@@ -12,12 +20,28 @@ const slot = (startsAt: string, barberName = 'Luis'): AvailabilitySlot => ({
   priceCents: 5000,
 })
 
-describe('booking days', () => {
-  it('lists the next two weeks from today', () => {
-    const days = bookingDays('2026-10-04')
-    expect(days).toHaveLength(14)
-    expect(days[0]).toBe('2026-10-04')
-    expect(days.at(-1)).toBe('2026-10-17')
+describe('booking calendar', () => {
+  it('lays out a month in weeks starting on Monday', () => {
+    // October 2026 starts on a Thursday and has 31 days.
+    const weeks = monthWeeks('2026-10')
+    expect(weeks[0]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      '2026-10-01',
+      '2026-10-02',
+      '2026-10-03',
+      '2026-10-04',
+    ])
+    expect(weeks.at(-1)?.filter(Boolean).at(-1)).toBe('2026-10-31')
+    expect(weeks.every((week) => week.length === 7)).toBe(true)
+  })
+
+  it('moves between months and knows their first and last day', () => {
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01')
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12')
+    expect(monthRange('2026-02')).toEqual({ first: '2026-02-01', last: '2026-02-28' })
+    expect(monthOf('2026-10-04')).toBe('2026-10')
   })
 
   it('knows which business days have free times', () => {

@@ -5,17 +5,14 @@ import { useSearchParams } from 'react-router-dom'
 import { agendaTime } from '../../core/agenda/Agenda'
 import { centsToBolivianos } from '../../core/configuration/Configuration'
 import {
-  bookingDays,
-  bookingWindowDays,
   datesWithSlots,
   daySlots,
+  monthOf,
+  monthRange,
+  shiftMonth,
   type PublicBookingConfirmation,
 } from '../../core/public-booking/PublicBooking'
-import {
-  addCalendarDays,
-  todayInBusinessTime,
-  type AvailabilitySlot,
-} from '../../core/scheduling/Scheduling'
+import { todayInBusinessTime, type AvailabilitySlot } from '../../core/scheduling/Scheduling'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { publicBookingApi } from '../../infrastructure/http/publicBookingApi'
 import { AppIcon } from '../components/AppIcon'
@@ -24,7 +21,7 @@ import { BookingProgress } from '../components/booking/BookingProgress'
 import {
   BarberPicker,
   CustomerForm,
-  DayPicker,
+  MonthCalendar,
   ReviewList,
   ServicePicker,
   SlotPicker,
@@ -36,18 +33,28 @@ import { useConnectivity } from '../hooks/useConnectivity'
 import { cn } from '../styles/cn'
 import { errorClassName, warningClassName } from '../styles/formStyles'
 
+const longDate = (date: string) =>
+  new Intl.DateTimeFormat('es-BO', {
+    timeZone: 'UTC',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date(`${date}T12:00:00Z`))
+
 const lastStep = bookingSteps.length - 1
+// Customers can book up to three months ahead.
+const monthsAhead = 3
 
 export const PublicBookingPage = () => {
   const online = useConnectivity() === 'online'
   const today = todayInBusinessTime()
-  const days = bookingDays(today)
   // The home links here with the service or barber already chosen.
   const [params] = useSearchParams()
   const [step, setStep] = useState(() => (params.get('servicio') ? 1 : 0))
   const [direction, setDirection] = useState(1)
   const [serviceId, setServiceId] = useState(() => params.get('servicio') ?? '')
   const [barberId, setBarberId] = useState(() => params.get('barbero') ?? 'any')
+  const [month, setMonth] = useState(() => monthOf(today))
   // Empty until the customer picks a day: the first day with free times is preselected.
   const [chosenDate, setChosenDate] = useState('')
   const [slot, setSlot] = useState<AvailabilitySlot>()
@@ -63,19 +70,19 @@ export const PublicBookingPage = () => {
     queryFn: publicBookingApi.catalog,
     networkMode: 'always',
   })
-  const inWindow = !chosenDate || days.includes(chosenDate)
-  const rangeFrom = inWindow ? today : chosenDate
-  const rangeTo = inWindow ? addCalendarDays(today, bookingWindowDays - 1) : chosenDate
-  // One request covers the whole two-week strip, so days without times show as such.
+  const { first, last } = monthRange(month)
+  const rangeFrom = first < today ? today : first
+  // One request covers the visible month, so the calendar knows which days are free.
   const slots = useQuery({
-    queryKey: ['public-booking', 'availability', serviceId, barberId, rangeFrom, rangeTo],
+    queryKey: ['public-booking', 'availability', serviceId, barberId, rangeFrom, last],
     enabled: step >= 2 && Boolean(serviceId),
     networkMode: 'always',
     retry: false,
-    queryFn: () => publicBookingApi.availabilityRange(serviceId, barberId, rangeFrom, rangeTo),
+    queryFn: () => publicBookingApi.availabilityRange(serviceId, barberId, rangeFrom, last),
   })
   const available = slots.data ? datesWithSlots(slots.data) : undefined
-  const date = chosenDate || days.find((day) => available?.has(day)) || today
+  const firstFree = available ? [...available].sort()[0] : undefined
+  const date = chosenDate && monthOf(chosenDate) === month ? chosenDate : (firstFree ?? rangeFrom)
   const { morning, afternoon } = daySlots(slots.data, date)
   const service = catalog.data?.services.find((item) => item.id === serviceId)
   const barber = catalog.data?.barbers.find((item) => item.id === barberId)
@@ -239,77 +246,89 @@ export const PublicBookingPage = () => {
               {step === 2 && (
                 <>
                   <StepHeading>Elige día y hora</StepHeading>
-                  <DayPicker
-                    days={days}
-                    today={today}
-                    selected={date}
-                    available={available}
-                    onSelect={(next) => {
-                      setChosenDate(next)
-                      setSlot(undefined)
-                    }}
-                  />
-                  <div className="mt-6" aria-live="polite">
-                    {slots.isPending && (
-                      <div
-                        className="grid grid-cols-3 gap-2"
-                        role="status"
-                        aria-label="Buscando horarios"
-                      >
-                        {[0, 1, 2, 3, 4, 5].map((item) => (
-                          <div
-                            key={item}
-                            className="h-14 animate-pulse rounded-control bg-surface-muted"
+                  <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                    <MonthCalendar
+                      month={month}
+                      today={today}
+                      selected={date}
+                      available={available}
+                      canGoBack={month > monthOf(today)}
+                      canGoForward={month < shiftMonth(monthOf(today), monthsAhead)}
+                      onMonthChange={(delta) => {
+                        setMonth(shiftMonth(month, delta))
+                        setChosenDate('')
+                        setSlot(undefined)
+                      }}
+                      onSelect={(next) => {
+                        setChosenDate(next)
+                        setSlot(undefined)
+                      }}
+                    />
+                    <div aria-live="polite">
+                      <h3 className="mb-3 font-display text-2xl font-extrabold first-letter:uppercase">
+                        Hora para el {longDate(date)}
+                      </h3>
+                      {slots.isPending && (
+                        <div
+                          className="grid grid-cols-3 gap-2"
+                          role="status"
+                          aria-label="Buscando horarios"
+                        >
+                          {[0, 1, 2, 3, 4, 5].map((item) => (
+                            <div
+                              key={item}
+                              className="h-14 animate-pulse rounded-control bg-surface-muted"
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {slots.isError && (
+                        <div
+                          className={cn(
+                            errorClassName,
+                            'flex flex-wrap items-center justify-between gap-3',
+                          )}
+                          role="alert"
+                        >
+                          {online
+                            ? 'No pudimos cargar los horarios.'
+                            : 'Conéctate para ver los horarios libres.'}
+                          {online && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => void slots.refetch()}
+                            >
+                              Reintentar
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      {slots.data &&
+                        (morning.length + afternoon.length === 0 ? (
+                          <p className="rounded-control bg-surface-muted p-5 text-ink-soft">
+                            No hay horarios libres ese día. Elige otro en el calendario
+                            {barberId === 'any' ? '.' : ' o elige "Cualquiera" como barbero.'}
+                          </p>
+                        ) : (
+                          <SlotPicker
+                            morning={morning}
+                            afternoon={afternoon}
+                            selected={slot}
+                            showBarber={barberId === 'any'}
+                            onSelect={(next) => {
+                              setSlot(next)
+                              setNotice('')
+                            }}
                           />
                         ))}
-                      </div>
-                    )}
-                    {slots.isError && (
-                      <div
-                        className={cn(
-                          errorClassName,
-                          'flex flex-wrap items-center justify-between gap-3',
-                        )}
-                        role="alert"
-                      >
-                        {online
-                          ? 'No pudimos cargar los horarios.'
-                          : 'Conéctate para ver los horarios libres.'}
-                        {online && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => void slots.refetch()}
-                          >
-                            Reintentar
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                    {slots.data &&
-                      (morning.length + afternoon.length === 0 ? (
-                        <p className="rounded-control bg-surface-muted p-5 text-ink-soft">
-                          No hay horarios libres el {shortDay(date)}. Prueba otro día
-                          {barberId === 'any' ? '.' : ' o elige "Cualquiera" como barbero.'}
+                      {!online && slots.data && (
+                        <p className={cn(warningClassName, 'mt-4')}>
+                          Estos horarios estaban guardados y pueden estar desactualizados. Conéctate
+                          antes de confirmar.
                         </p>
-                      ) : (
-                        <SlotPicker
-                          morning={morning}
-                          afternoon={afternoon}
-                          selected={slot}
-                          showBarber={barberId === 'any'}
-                          onSelect={(next) => {
-                            setSlot(next)
-                            setNotice('')
-                          }}
-                        />
-                      ))}
-                    {!online && slots.data && (
-                      <p className={cn(warningClassName, 'mt-4')}>
-                        Estos horarios estaban guardados y pueden estar desactualizados. Conéctate
-                        antes de confirmar.
-                      </p>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </>
               )}

@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { agendaTime } from '../../../core/agenda/Agenda'
 import { centsToBolivianos } from '../../../core/configuration/Configuration'
 import {
+  monthWeeks,
   serviceGroupOf,
   type PublicBarber,
   type PublicService,
@@ -172,98 +173,112 @@ export const BarberPicker = ({
   </div>
 )
 
-const dayLabel = (date: string, today: string, tomorrow: string) => {
-  const value = new Date(`${date}T12:00:00Z`)
-  const weekday = new Intl.DateTimeFormat('es-BO', { timeZone: 'UTC', weekday: 'short' })
-    .format(value)
-    .replace('.', '')
-  return {
-    name: date === today ? 'Hoy' : date === tomorrow ? 'Mañana' : weekday,
-    day: value.getUTCDate(),
-    month: new Intl.DateTimeFormat('es-BO', { timeZone: 'UTC', month: 'short' })
-      .format(value)
-      .replace('.', ''),
-  }
-}
+const weekdayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-export const DayPicker = ({
-  days,
+const monthTitle = (month: string) =>
+  new Intl.DateTimeFormat('es-BO', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(
+    new Date(`${month}-15T12:00:00Z`),
+  )
+
+const longDayName = (date: string) =>
+  new Intl.DateTimeFormat('es-BO', {
+    timeZone: 'UTC',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date(`${date}T12:00:00Z`))
+
+// A month calendar for the booking. Past days and days without free times are greyed
+// out; today is outlined and the chosen day filled in ink.
+export const MonthCalendar = ({
+  month,
   today,
   selected,
   available,
+  canGoBack,
+  canGoForward,
+  onMonthChange,
   onSelect,
 }: {
-  days: string[]
+  month: string
   today: string
   selected: string
   // Days known to have free times; undefined while they load.
   available: Set<string> | undefined
+  canGoBack: boolean
+  canGoForward: boolean
+  onMonthChange: (delta: number) => void
   onSelect: (date: string) => void
-}) => {
-  const [otherDate, setOtherDate] = useState(!days.includes(selected))
-  const tomorrow = days[1] ?? ''
-  return (
-    <div>
-      <div
-        className="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:px-8"
-        role="radiogroup"
-        aria-label="Día"
+}) => (
+  <div className="rounded-control bg-paper-warm p-3 sm:p-4">
+    <div className="mb-2 flex items-center justify-between gap-2">
+      <button
+        type="button"
+        className="grid size-11 place-items-center rounded-full hover:bg-surface disabled:pointer-events-none disabled:opacity-30"
+        aria-label="Mes anterior"
+        disabled={!canGoBack}
+        onClick={() => onMonthChange(-1)}
       >
-        {days.map((date) => {
-          const label = dayLabel(date, today, tomorrow)
-          const full = available !== undefined && !available.has(date)
+        <AppIcon name="arrow-left" size={20} />
+      </button>
+      <h3
+        className="font-display text-2xl font-extrabold first-letter:uppercase"
+        aria-live="polite"
+      >
+        {monthTitle(month)}
+      </h3>
+      <button
+        type="button"
+        className="grid size-11 place-items-center rounded-full hover:bg-surface disabled:pointer-events-none disabled:opacity-30"
+        aria-label="Mes siguiente"
+        disabled={!canGoForward}
+        onClick={() => onMonthChange(1)}
+      >
+        <AppIcon name="arrow-right" size={20} />
+      </button>
+    </div>
+    <div
+      className="grid grid-cols-7 gap-1 text-center"
+      role="group"
+      aria-label={`Días de ${monthTitle(month)}`}
+    >
+      {weekdayNames.map((name) => (
+        <span key={name} aria-hidden="true" className="py-1 text-sm font-semibold text-ink-soft">
+          {name}
+        </span>
+      ))}
+      {monthWeeks(month)
+        .flat()
+        .map((date, index) => {
+          if (!date) return <span key={`empty-${index}`} aria-hidden="true" />
+          const past = date < today
+          const loading = available === undefined
+          const free = !past && (loading || available.has(date))
           const active = date === selected
           return (
             <button
               key={date}
               type="button"
-              role="radio"
-              aria-checked={active}
-              aria-label={`${label.name} ${label.day} de ${label.month}${full ? ', sin horarios' : ''}`}
-              disabled={full}
+              aria-pressed={active}
+              aria-current={date === today ? 'date' : undefined}
+              aria-label={`${longDayName(date)}${!free && !past && !loading ? ', sin horarios' : ''}`}
+              disabled={!free}
               className={cn(
-                'flex min-h-20 w-18 shrink-0 snap-start flex-col items-center justify-center rounded-control border-2 transition-colors duration-150',
-                active
-                  ? 'border-ink bg-ink text-on-ink'
-                  : 'border-transparent bg-paper-warm hover:border-line-control',
-                full && 'cursor-not-allowed bg-surface-muted text-ink-muted line-through',
+                'mx-auto grid aspect-square w-full max-w-12 min-h-11 place-items-center rounded-full font-semibold tabular-nums transition-colors duration-150',
+                active && 'bg-ink text-on-ink',
+                !active && free && 'bg-surface hover:bg-ink hover:text-on-ink',
+                !free && 'cursor-not-allowed text-ink-muted/60',
+                date === today && !active && 'ring-2 ring-ink ring-inset',
               )}
               onClick={() => onSelect(date)}
             >
-              <span className="text-sm font-semibold first-letter:uppercase">{label.name}</span>
-              <span className="font-display text-2xl leading-none font-extrabold tabular-nums">
-                {label.day}
-              </span>
-              <span className="text-sm">{label.month}</span>
+              {Number(date.slice(8))}
             </button>
           )
         })}
-      </div>
-      {otherDate ? (
-        <label className={cn(labelClassName, 'mt-3 max-w-xs')}>
-          Otra fecha
-          <input
-            className={fieldClassName}
-            type="date"
-            name="booking-date"
-            min={today}
-            value={selected}
-            onChange={(event) => event.target.value && onSelect(event.target.value)}
-          />
-        </label>
-      ) : (
-        <button
-          type="button"
-          className="mt-2 inline-flex min-h-11 items-center gap-2 px-1 font-semibold underline underline-offset-4 hover:no-underline"
-          onClick={() => setOtherDate(true)}
-        >
-          <AppIcon name="calendar" size={18} />
-          Otra fecha
-        </button>
-      )}
     </div>
-  )
-}
+  </div>
+)
 
 export const SlotPicker = ({
   morning,
@@ -279,7 +294,7 @@ export const SlotPicker = ({
   showBarber: boolean
   onSelect: (slot: AvailabilitySlot) => void
 }) => (
-  <div className="grid gap-5 md:grid-cols-2">
+  <div className="grid gap-5">
     {(
       [
         ['Mañana', morning],

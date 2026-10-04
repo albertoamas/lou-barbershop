@@ -108,11 +108,30 @@ export const serviceGroupOf = (name: string): ServiceGroup => {
   return 'DETAILS'
 }
 
-// The day strip of the booking covers two weeks; later dates use the device calendar.
-export const bookingWindowDays = 14
+// Month calendar of the booking: weeks from Monday, with empty cells before the 1st and
+// after the last day. A month is written "YYYY-MM"; days are "YYYY-MM-DD".
+export const monthOf = (date: string) => date.slice(0, 7)
 
-export const bookingDays = (today: string, count = bookingWindowDays) =>
-  Array.from({ length: count }, (_, index) => addCalendarDays(today, index))
+export const shiftMonth = (month: string, delta: number) => {
+  const [year = 0, index = 1] = month.split('-').map(Number)
+  const value = new Date(Date.UTC(year, index - 1 + delta, 1))
+  return value.toISOString().slice(0, 7)
+}
+
+export const monthRange = (month: string) => {
+  const first = `${month}-01`
+  return { first, last: addCalendarDays(`${shiftMonth(month, 1)}-01`, -1) }
+}
+
+export const monthWeeks = (month: string): (string | undefined)[][] => {
+  const { first, last } = monthRange(month)
+  // getUTCDay: Sunday 0; shifted so Monday opens the week.
+  const lead = (new Date(`${first}T12:00:00Z`).getUTCDay() + 6) % 7
+  const cells: (string | undefined)[] = Array.from({ length: lead }, () => undefined)
+  for (let day = first; day <= last; day = addCalendarDays(day, 1)) cells.push(day)
+  while (cells.length % 7 !== 0) cells.push(undefined)
+  return Array.from({ length: cells.length / 7 }, (_, week) => cells.slice(week * 7, week * 7 + 7))
+}
 
 // Business date (America/La_Paz) on which a slot starts.
 export const slotDate = (slot: Pick<AvailabilitySlot, 'startsAt'>) =>
