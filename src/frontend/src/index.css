@@ -92,6 +92,7 @@
   button,
   a {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   :is(button, a, input, select, textarea, summary):focus-visible {

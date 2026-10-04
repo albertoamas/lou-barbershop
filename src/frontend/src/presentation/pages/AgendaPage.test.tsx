@@ -17,12 +17,12 @@ vi.mock('../../infrastructure/http/schedulingApi', () => ({
   schedulingApi: { listBarbers: vi.fn(), listServices: vi.fn(), search: vi.fn() },
 }))
 
-const renderPage = () =>
+const renderPage = (entry = '/app/agenda') =>
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[entry]}>
         <MotionProvider>
           <AgendaPage />
         </MotionProvider>
@@ -75,6 +75,39 @@ describe('AgendaPage', () => {
     await waitFor(() =>
       expect(agendaApi.list).toHaveBeenCalledWith('2026-09-15', '2026-09-15', undefined),
     )
+  })
+
+  it('shows one barber at a time on a phone and switches with the barber chips', async () => {
+    vi.mocked(authApi.current).mockResolvedValue({
+      id: 'admin',
+      userName: 'admin.demo',
+      roles: ['ADMIN'],
+    })
+    renderPage()
+
+    expect(await screen.findByRole('region', { name: 'Agenda de Diego' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Agenda de Alex' })).not.toBeInTheDocument()
+
+    await userEvent
+      .setup({ advanceTimers: vi.advanceTimersByTime })
+      .click(screen.getByRole('button', { name: /Alex/ }))
+
+    expect(await screen.findByRole('region', { name: 'Agenda de Alex' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Agenda de Diego' })).not.toBeInTheDocument()
+    // Switching the visible barber on a phone does not refetch the whole team.
+    expect(agendaApi.list).toHaveBeenLastCalledWith('2026-09-15', '2026-09-15', '')
+  })
+
+  it('opens the date and view kept in the link', async () => {
+    vi.mocked(authApi.current).mockResolvedValue({
+      id: 'admin',
+      userName: 'admin.demo',
+      roles: ['ADMIN'],
+    })
+    renderPage('/app/agenda?fecha=2026-09-10&vista=semana')
+
+    await waitFor(() => expect(agendaApi.list).toHaveBeenCalledWith('2026-09-10', '2026-09-16', ''))
+    expect(screen.getByRole('button', { name: 'Semana' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('moves safely to the previous day', async () => {

@@ -2,18 +2,23 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   agendaActions,
+  agendaTime,
   statusLabels,
   type AgendaAction,
   type Appointment,
   type AppointmentSnapshot,
 } from '../../core/agenda/Agenda'
+import { timeRangeLabel } from '../../core/agenda/AgendaTimeline'
 import { centsToBolivianos } from '../../core/configuration/Configuration'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
-import { agendaTime } from '../../core/agenda/Agenda'
 import { salesApi } from '../../infrastructure/http/salesApi'
 import type { Operation } from '../../core/sales/Sales'
+import { AppIcon } from './AppIcon'
+import { Avatar } from './Avatar'
 import { Button } from './Button'
+import { StatusBadge } from './StatusBadge'
+import { statusBadgeTone } from './agenda/appointmentStatusStyles'
 import { errorClassName, fieldClassName, labelClassName } from '../styles/formStyles'
 
 const actionLabels: Record<AgendaAction, string> = {
@@ -22,16 +27,26 @@ const actionLabels: Record<AgendaAction, string> = {
   'check-in': 'Registrar llegada',
   start: 'Iniciar atención',
 }
+const destructive = (action: AgendaAction) => action === 'cancel' || action === 'no-show'
+
 const appointmentDateLabel = (value: string) =>
   new Intl.DateTimeFormat('es-BO', {
     timeZone: 'America/La_Paz',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric',
   }).format(new Date(value))
+
 const describe = (snapshot: AppointmentSnapshot) =>
-  `${appointmentDateLabel(snapshot.startsAt)}, ${agendaTime(snapshot.startsAt)}–${agendaTime(snapshot.endsAt)} · ${statusLabels[snapshot.status]} · ${snapshot.durationMinutes} min · ${centsToBolivianos(snapshot.priceCents)}`
+  `${appointmentDateLabel(snapshot.startsAt)}, de ${timeRangeLabel(snapshot)}. ${statusLabels[snapshot.status]}, ${snapshot.durationMinutes} min, ${centsToBolivianos(snapshot.priceCents)}.`
+
+const eventLabel = (action: string, status: AppointmentSnapshot['status']) =>
+  action === 'CREATED'
+    ? 'Creación'
+    : action === 'RESCHEDULED'
+      ? 'Reprogramación'
+      : statusLabels[status]
+
 interface Props {
   appointment: Appointment
   canManage: boolean
@@ -41,6 +56,7 @@ interface Props {
   onClose: () => void
   onOperationOpened?: (operation: Operation) => void
 }
+
 export const AppointmentDetails = ({
   appointment,
   canManage,
@@ -59,7 +75,11 @@ export const AppointmentDetails = ({
     queryFn: () => agendaApi.history(appointment.id),
     enabled: canManage,
   })
-  const needsReason = action === 'cancel' || action === 'no-show'
+  const actions = agendaActions(appointment.status, canManage)
+  const forward = actions.filter((item) => !destructive(item))
+  const backward = actions.filter(destructive)
+  const needsReason = action !== undefined && destructive(action)
+
   const execute = async () => {
     if (!action || disabled || busy) return
     setBusy(true)
@@ -76,105 +96,145 @@ export const AppointmentDetails = ({
       setBusy(false)
     }
   }
+
+  const openOperation = () => {
+    setBusy(true)
+    void salesApi
+      .openAppointment(appointment.id)
+      .then((opened) => onOperationOpened?.(opened))
+      .catch((error: unknown) =>
+        setNotice(
+          error instanceof ApiError
+            ? (error.problem.detail ?? error.message)
+            : 'No se pudo abrir la atención.',
+        ),
+      )
+      .finally(() => setBusy(false))
+  }
+
   return (
     <section className="grid gap-6" aria-label="Detalle de cita">
-      <div className="flex items-start justify-between gap-4 border-b border-lou-fog pb-5">
-        <div>
-          <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
-            Detalle de cita
-          </p>
-          <h2 className="mt-1 font-display text-3xl leading-none font-bold">
-            {appointment.customerName}
-          </h2>
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar name={appointment.customerName} size="lg" />
+          <div className="min-w-0">
+            <h2 className="truncate font-display text-3xl leading-none font-extrabold text-balance">
+              {appointment.customerName}
+            </h2>
+            <StatusBadge className="mt-2" tone={statusBadgeTone[appointment.status]}>
+              {statusLabels[appointment.status]}
+            </StatusBadge>
+          </div>
         </div>
-        <Button type="button" variant="ghost" disabled={busy} onClick={onClose}>
-          Cerrar detalle
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-11 shrink-0 px-0"
+          aria-label="Cerrar detalle"
+          disabled={busy}
+          onClick={onClose}
+        >
+          <AppIcon name="close" />
         </Button>
-      </div>
-      <div className="grid gap-3 rounded-2xl border border-lou-fog bg-lou-paper p-5 sm:grid-cols-2">
-        <div>
-          <span className="text-[0.65rem] font-bold tracking-wider text-lou-graphite/45 uppercase">
-            Servicio
-          </span>
-          <p className="mt-1 font-bold">{appointment.serviceName}</p>
-          <p className="text-sm text-lou-graphite/60">con {appointment.barberName}</p>
-        </div>
-        <div>
-          <span className="text-[0.65rem] font-bold tracking-wider text-lou-graphite/45 uppercase">
-            Horario y estado
-          </span>
-          <p className="mt-1 font-display text-xl font-bold tabular-nums">
-            {agendaTime(appointment.startsAt)}–{agendaTime(appointment.endsAt)}
-          </p>
-          <p className="text-sm capitalize text-lou-graphite/60">
-            {appointmentDateLabel(appointment.startsAt)}
-          </p>
-          <span className="mt-2 inline-flex rounded-full bg-black/7 px-2.5 py-1 text-xs font-bold">
-            {statusLabels[appointment.status]}
-          </span>
-        </div>
-      </div>
-      {appointment.quotedPriceCents !== null && (
-        <p className="rounded-xl border border-sky-800/15 bg-sky-50 p-4 text-sm text-sky-950">
-          Precio informado: {centsToBolivianos(appointment.quotedPriceCents)} ·{' '}
-          {appointment.quotedDurationMinutes} min. Sin cobro registrado por esta cita.
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
+      </header>
+
+      <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-3">
+        <dt className="text-ink-muted">Servicio</dt>
+        <dd className="font-semibold">{appointment.serviceName}</dd>
+        <dt className="text-ink-muted">Barbero</dt>
+        <dd className="font-semibold">{appointment.barberName}</dd>
+        <dt className="text-ink-muted">Fecha</dt>
+        <dd className="font-semibold first-letter:uppercase">
+          {appointmentDateLabel(appointment.startsAt)}
+        </dd>
+        <dt className="text-ink-muted">Horario</dt>
+        <dd className="font-semibold tabular-nums">{timeRangeLabel(appointment)}</dd>
+        {appointment.quotedPriceCents !== null && (
+          <>
+            <dt className="text-ink-muted">Precio informado</dt>
+            <dd className="font-semibold tabular-nums">
+              {centsToBolivianos(appointment.quotedPriceCents)}, {appointment.quotedDurationMinutes}{' '}
+              min
+              <span className="block text-sm font-normal text-ink-muted">
+                Se cobra al terminar la atención.
+              </span>
+            </dd>
+          </>
+        )}
+      </dl>
+
+      <div className="grid gap-3">
         {appointment.status === 'IN_SERVICE' && (
           <Button
+            variant="money"
+            size="lg"
+            width="full"
             disabled={disabled || busy}
-            onClick={() => {
-              setBusy(true)
-              void salesApi
-                .openAppointment(appointment.id)
-                .then((opened) => onOperationOpened?.(opened))
-                .catch((error: unknown) =>
-                  setNotice(
-                    error instanceof ApiError
-                      ? (error.problem.detail ?? error.message)
-                      : 'No se pudo abrir la atención.',
-                  ),
-                )
-                .finally(() => setBusy(false))
-            }}
+            onClick={openOperation}
           >
             Abrir atención y cobro
           </Button>
         )}
-        {canManage && appointment.status === 'CONFIRMED' && (
-          <Button variant="secondary" disabled={disabled || busy} onClick={onReschedule}>
-            Reprogramar / reasignar
-          </Button>
-        )}
-        {agendaActions(appointment.status, canManage).map((item) => (
+        {forward.map((item) => (
           <Button
-            variant={item === 'cancel' || item === 'no-show' ? 'danger' : 'secondary'}
             key={item}
+            size="lg"
+            width="full"
             disabled={disabled || busy}
             onClick={() => {
               setAction(item)
+              setReason('')
               setNotice('')
             }}
           >
             {actionLabels[item]}
           </Button>
         ))}
+        {canManage && appointment.status === 'CONFIRMED' && (
+          <Button
+            variant="secondary"
+            width="full"
+            disabled={disabled || busy}
+            onClick={onReschedule}
+          >
+            Reprogramar
+          </Button>
+        )}
+        {backward.length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {backward.map((item) => (
+              <Button
+                key={item}
+                variant="dangerSoft"
+                disabled={disabled || busy}
+                onClick={() => {
+                  setAction(item)
+                  setReason('')
+                  setNotice('')
+                }}
+              >
+                {actionLabels[item]}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
+
       {action && (
         <form
-          className="grid gap-4 rounded-2xl border border-lou-fog bg-lou-paper p-4"
+          className="grid gap-4 rounded-panel bg-surface-muted p-4"
           onSubmit={(event) => {
             event.preventDefault()
             void execute()
           }}
         >
-          <h3 className="font-display text-2xl font-bold">{actionLabels[action]}</h3>
+          <h3 className="font-display text-2xl font-extrabold">{actionLabels[action]}</h3>
           {needsReason && (
             <label className={labelClassName}>
               Motivo
               <textarea
                 className={`${fieldClassName} min-h-24 py-3`}
+                name="reason"
                 required
                 maxLength={300}
                 value={reason}
@@ -182,59 +242,74 @@ export const AppointmentDetails = ({
               />
             </label>
           )}
-          <Button
-            variant={action === 'cancel' || action === 'no-show' ? 'danger' : 'primary'}
-            disabled={disabled || busy || (needsReason && !reason.trim())}
-          >
-            {busy ? 'Guardando…' : 'Confirmar acción'}
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => setAction(undefined)}
+            >
+              Volver
+            </Button>
+            <Button
+              variant={needsReason ? 'danger' : 'primary'}
+              disabled={disabled || busy || (needsReason && !reason.trim())}
+            >
+              {busy ? 'Guardando...' : 'Confirmar acción'}
+            </Button>
+          </div>
         </form>
       )}
+
       {notice && (
         <p className={errorClassName} role="alert">
           {notice}
         </p>
       )}
+
       {canManage && (
-        <section className="border-t border-lou-fog pt-6" aria-label="Historial de cita">
-          <h3 className="font-display text-2xl font-bold">Historial</h3>
-          {history.isPending && <p role="status">Cargando historial…</p>}
-          {history.isError && (
-            <p className={errorClassName} role="alert">
-              No se pudo cargar el historial.{' '}
-              <button className="font-bold underline" onClick={() => void history.refetch()}>
-                Reintentar historial
-              </button>
-            </p>
-          )}
-          <ol className="mt-4 grid gap-3 border-l border-lou-steel/60 pl-5">
-            {history.data?.map((event) => (
-              <li
-                className="relative rounded-xl border border-lou-fog bg-white p-4 text-sm shadow-sm before:absolute before:top-5 before:-left-[1.58rem] before:size-2 before:rounded-full before:bg-lou-ink"
-                key={event.id}
-              >
-                <strong>
-                  {event.action === 'CREATED'
-                    ? 'Creación'
-                    : event.action === 'RESCHEDULED'
-                      ? 'Reprogramación'
-                      : statusLabels[event.after.status]}
-                </strong>{' '}
-                · {agendaTime(event.occurredAt)}
-                {event.reason && <p>Motivo: {event.reason}</p>}
-                {event.before && <p>Antes: {describe(event.before)}</p>}
-                <p>Después: {describe(event.after)}</p>
-                {event.before?.barberId !== event.after.barberId && event.before && (
-                  <p className="font-semibold">Se cambió el barbero asignado.</p>
-                )}
-                {event.before?.serviceId !== event.after.serviceId && event.before && (
-                  <p className="font-semibold">Se cambió el servicio.</p>
-                )}
-                <small className="text-lou-graphite/45">Cambio registrado por el equipo.</small>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <details className="group rounded-panel bg-surface-muted" aria-label="Historial de cita">
+          <summary className="flex min-h-12 cursor-pointer items-center justify-between rounded-panel px-4 font-semibold hover:bg-surface-strong">
+            Historial
+            <span className="text-sm font-normal text-ink-muted">
+              {history.data ? `${history.data.length} cambios` : ''}
+            </span>
+          </summary>
+          <div className="px-4 pb-4">
+            {history.isPending && <p role="status">Cargando historial...</p>}
+            {history.isError && (
+              <p className={errorClassName} role="alert">
+                No se pudo cargar el historial.{' '}
+                <button className="font-bold underline" onClick={() => void history.refetch()}>
+                  Reintentar historial
+                </button>
+              </p>
+            )}
+            <ol className="grid gap-3">
+              {history.data?.map((event) => (
+                <li className="rounded-control bg-surface p-3 text-sm" key={event.id}>
+                  <strong>{eventLabel(event.action, event.after.status)}</strong>{' '}
+                  <span className="text-ink-muted tabular-nums">
+                    a las {agendaTime(event.occurredAt)}
+                  </span>
+                  {event.reason && <p className="mt-1">Motivo: {event.reason}</p>}
+                  {event.before && (
+                    <p className="mt-1 text-ink-soft">Antes: {describe(event.before)}</p>
+                  )}
+                  <p className="mt-1 text-ink-soft">
+                    {event.before ? 'Después' : 'Quedó'}: {describe(event.after)}
+                  </p>
+                  {event.before && event.before.barberId !== event.after.barberId && (
+                    <p className="mt-1 font-semibold">Se cambió el barbero asignado.</p>
+                  )}
+                  {event.before && event.before.serviceId !== event.after.serviceId && (
+                    <p className="mt-1 font-semibold">Se cambió el servicio.</p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </details>
       )}
     </section>
   )

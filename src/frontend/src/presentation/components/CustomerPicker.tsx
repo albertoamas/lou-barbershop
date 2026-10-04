@@ -1,14 +1,18 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { Customer } from '../../core/agenda/Agenda'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
+import { cn } from '../styles/cn'
+import { AppIcon } from './AppIcon'
+import { Avatar } from './Avatar'
 import { Button } from './Button'
 import {
   errorClassName,
   fieldClassName,
   labelClassName,
   noticeClassName,
+  successClassName,
 } from '../styles/formStyles'
 
 interface Props {
@@ -16,16 +20,27 @@ interface Props {
   onSelect: (customer: Customer) => void
   disabled: boolean
 }
+
+// Searching waits for a short pause in typing so each keystroke does not hit the API.
+const searchDelayMs = 300
+
 export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
   const [query, setQuery] = useState('')
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Customer | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearch(query.trim()), searchDelayMs)
+    return () => window.clearTimeout(timer)
+  }, [query])
+
   const customers = useQuery({
     queryKey: ['customers', search],
     queryFn: () => agendaApi.customers(search),
   })
+
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (disabled || busy) return
@@ -45,7 +60,7 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
       setEditing(undefined)
       setNotice(
         change.possibleDuplicates.length
-          ? 'Guardado. Atención: hay otros clientes con este teléfono; comprueba que elegiste a la persona correcta.'
+          ? 'Guardado. Hay otros clientes con este teléfono; comprueba que elegiste a la persona correcta.'
           : 'Cliente guardado y seleccionado.',
       )
       await customers.refetch()
@@ -59,37 +74,50 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
       setBusy(false)
     }
   }
+
   return (
-    <section className="grid gap-4" aria-label="Seleccionar cliente">
-      <div>
-        <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
-          Paso 1
-        </p>
-        <h3 className="mt-1 font-display text-2xl font-bold">Elige al cliente</h3>
-      </div>
-      <form
-        className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
-        onSubmit={(event) => {
-          event.preventDefault()
-          setSearch(query.trim())
-        }}
-      >
-        <label className={labelClassName}>
-          Buscar por nombre o teléfono
-          <input
-            className={fieldClassName}
-            value={query}
-            maxLength={120}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
-        <Button type="submit" variant="secondary">
-          Buscar
-        </Button>
-      </form>
+    <section className="grid gap-4" aria-labelledby="customer-step">
+      <h3 id="customer-step" className="font-display text-2xl font-extrabold">
+        1. Cliente
+      </h3>
+
+      {selected && editing === undefined ? (
+        <div className={cn(successClassName, 'flex items-center justify-between gap-3')}>
+          <span className="flex min-w-0 items-center gap-3">
+            <Avatar name={selected.displayName} />
+            <span className="min-w-0">
+              <span className="block truncate">{selected.displayName}</span>
+              <span className="block font-normal tabular-nums">{selected.phone}</span>
+            </span>
+          </span>
+          <Button
+            className="shrink-0"
+            size="sm"
+            variant="ghost"
+            disabled={disabled}
+            onClick={() => setEditing(selected)}
+          >
+            Corregir
+          </Button>
+        </div>
+      ) : null}
+
+      <label className={labelClassName}>
+        Buscar por nombre o teléfono
+        <input
+          className={fieldClassName}
+          type="search"
+          name="customer-search"
+          value={query}
+          maxLength={120}
+          autoComplete="off"
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </label>
+
       {customers.isPending && (
-        <p className="text-sm text-lou-graphite/60" role="status">
-          Buscando clientes…
+        <p className="text-sm text-ink-muted" role="status">
+          Buscando clientes...
         </p>
       )}
       {customers.isError && (
@@ -101,68 +129,63 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
         </p>
       )}
       {customers.data?.length === 0 && (
-        <p className="rounded-xl border border-dashed border-lou-steel p-4 text-sm text-lou-graphite/60">
-          No hay coincidencias. Puedes crear un cliente.
+        <p className="rounded-control bg-surface-muted p-4 text-sm text-ink-soft">
+          No hay coincidencias. Puedes registrar un cliente nuevo.
         </p>
       )}
       {Boolean(customers.data?.length) && (
-        <label className={labelClassName}>
-          Coincidencias (máximo 50)
-          <select
-            className={fieldClassName}
-            value={selected?.id ?? ''}
-            onChange={(event) => {
-              const customer = customers.data?.find((item) => item.id === event.target.value)
-              if (customer) onSelect(customer)
-            }}
-          >
-            <option value="">Selecciona una persona</option>
-            {selected && !customers.data?.some((item) => item.id === selected.id) && (
-              <option value={selected.id}>
-                {selected.displayName} · {selected.phone}
-              </option>
-            )}
-            {customers.data?.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.displayName} · {customer.phone}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      {selected && (
-        <p className="rounded-xl border border-emerald-800/15 bg-emerald-50 p-3 text-sm text-emerald-950">
-          Cliente seleccionado: <strong>{selected.displayName}</strong> · {selected.phone}
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={disabled}
-          onClick={() => setEditing(null)}
+        <ul
+          className="grid max-h-72 gap-1 overflow-y-auto rounded-panel bg-surface-muted p-1"
+          aria-label="Coincidencias"
         >
-          Nuevo cliente
+          {customers.data?.map((customer) => {
+            const isSelected = customer.id === selected?.id
+            return (
+              <li key={customer.id}>
+                <button
+                  type="button"
+                  className={cn(
+                    'flex min-h-14 w-full items-center gap-3 rounded-control px-3 text-left transition-colors',
+                    isSelected ? 'bg-ink text-on-ink' : 'bg-surface hover:bg-surface-strong',
+                  )}
+                  aria-pressed={isSelected}
+                  disabled={disabled}
+                  onClick={() => {
+                    onSelect(customer)
+                    setNotice('')
+                  }}
+                >
+                  <Avatar
+                    name={customer.displayName}
+                    size="sm"
+                    tone={isSelected ? 'onInk' : 'neutral'}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold">{customer.displayName}</span>
+                    <span className="block text-sm tabular-nums opacity-80">{customer.phone}</span>
+                  </span>
+                  {isSelected && <AppIcon name="check" size={18} />}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      {editing === undefined && (
+        <Button variant="secondary" disabled={disabled} onClick={() => setEditing(null)}>
+          Registrar cliente nuevo
         </Button>
-        {selected && (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={disabled}
-            onClick={() => setEditing(selected)}
-          >
-            Corregir cliente
-          </Button>
-        )}
-      </div>
+      )}
+
       {editing !== undefined && (
         <form
           key={editing?.id ?? 'new'}
-          className="grid gap-4 rounded-2xl border border-lou-fog bg-lou-paper p-4"
+          className="grid gap-4 rounded-panel bg-surface-muted p-4"
           onSubmit={(event) => void save(event)}
         >
-          <h4 className="font-display text-xl font-bold">
-            {editing ? 'Corregir ficha' : 'Nuevo cliente'}
+          <h4 className="font-display text-xl font-extrabold">
+            {editing ? 'Corregir datos del cliente' : 'Cliente nuevo'}
           </h4>
           <label className={labelClassName}>
             Nombre
@@ -171,6 +194,7 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
               name="name"
               required
               maxLength={120}
+              autoComplete="off"
               defaultValue={editing?.displayName}
             />
           </label>
@@ -180,9 +204,10 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
               className={fieldClassName}
               name="phone"
               type="tel"
+              inputMode="tel"
               required
               maxLength={25}
-              placeholder="71234567 o +59171234567"
+              placeholder="71234567"
               defaultValue={editing?.phone}
             />
           </label>
@@ -195,14 +220,15 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
               defaultValue={editing?.notes ?? ''}
             />
           </label>
-          <div className="flex flex-wrap gap-2">
-            <Button disabled={disabled || busy}>{busy ? 'Guardando…' : 'Guardar cliente'}</Button>
+          <div className="grid grid-cols-2 gap-3">
             <Button type="button" variant="ghost" onClick={() => setEditing(undefined)}>
-              Cerrar ficha
+              Volver
             </Button>
+            <Button disabled={disabled || busy}>{busy ? 'Guardando...' : 'Guardar cliente'}</Button>
           </div>
         </form>
       )}
+
       {notice && (
         <p className={noticeClassName} role="status">
           {notice}

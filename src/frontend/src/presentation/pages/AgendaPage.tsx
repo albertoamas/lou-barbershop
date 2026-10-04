@@ -1,15 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { appointmentsForDate, sortAppointments, type Appointment } from '../../core/agenda/Agenda'
 import {
-  agendaTime,
-  appointmentsForDate,
-  overlapsAnotherAppointment,
-  sortAppointments,
-  statusLabels,
-  type Appointment,
-  type AppointmentStatus,
-} from '../../core/agenda/Agenda'
+  formatMinutes,
+  minutesOfDay,
+  nowOffset,
+  summarizeDay,
+} from '../../core/agenda/AgendaTimeline'
 import { addCalendarDays, todayInBusinessTime } from '../../core/scheduling/Scheduling'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { authApi } from '../../infrastructure/http/authApi'
@@ -19,68 +17,60 @@ import { AppIcon } from '../components/AppIcon'
 import { AppointmentDetails } from '../components/AppointmentDetails'
 import { AppointmentEditor } from '../components/AppointmentEditor'
 import { Button } from '../components/Button'
+import { AgendaTimeline, type AgendaColumn } from '../components/agenda/AgendaTimeline'
+import { AgendaWeek } from '../components/agenda/AgendaWeek'
 import { useConnectivity } from '../hooks/useConnectivity'
+import { tabletQuery, useMediaQuery, wideQuery } from '../hooks/useMediaQuery'
 import { cn } from '../styles/cn'
-import { fieldClassName } from '../styles/formStyles'
+import {
+  errorClassName,
+  fieldClassName,
+  successClassName,
+  warningClassName,
+} from '../styles/formStyles'
 
-const statusClassName: Record<AppointmentStatus, string> = {
-  CONFIRMED: 'border-lou-steel bg-white before:bg-lou-graphite',
-  CHECKED_IN: 'border-amber-300 bg-amber-50 before:bg-amber-600',
-  IN_SERVICE: 'border-sky-300 bg-sky-50 before:bg-sky-700',
-  COMPLETED: 'border-emerald-300 bg-emerald-50 before:bg-emerald-700',
-  CANCELLED: 'border-red-200 bg-red-50/70 text-lou-graphite/55 before:bg-red-500',
-  NO_SHOW: 'border-lou-fog bg-black/3 text-lou-graphite/55 before:bg-lou-graphite/45',
-}
-
-const dateLabel = (date: string, long = false) =>
+const longDate = (date: string) =>
   new Intl.DateTimeFormat('es-BO', {
     timeZone: 'America/La_Paz',
-    weekday: long ? 'long' : 'short',
+    weekday: 'long',
     day: 'numeric',
-    month: long ? 'long' : 'short',
+    month: 'long',
   }).format(new Date(`${date}T12:00:00Z`))
 
-const AppointmentCard = ({
-  appointment,
-  allAppointments,
-  onOpen,
-}: {
-  appointment: Appointment
-  allAppointments: Appointment[]
-  onOpen: () => void
-}) => {
-  const overlap = overlapsAnotherAppointment(appointment, allAppointments)
-  return (
-    <button
-      className={cn(
-        'relative grid w-full gap-1 overflow-hidden rounded-2xl border p-4 pl-5 text-left shadow-lou-sm transition-[translate,box-shadow,border-color] duration-300 ease-lou before:absolute before:inset-y-0 before:left-0 before:w-1 hover:-translate-y-0.5 hover:border-lou-graphite/35 hover:shadow-lou-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lou-ink',
-        statusClassName[appointment.status],
-        overlap && 'border-dashed border-red-600',
-      )}
-      onClick={onOpen}
-    >
-      <span className="flex items-start justify-between gap-2">
-        <strong className="font-display text-xl leading-none font-bold tabular-nums">
-          {agendaTime(appointment.startsAt)}–{agendaTime(appointment.endsAt)}
-        </strong>
-        <small className="rounded-full bg-black/7 px-2 py-1 text-[0.65rem] leading-none font-bold whitespace-nowrap">
-          {statusLabels[appointment.status]}
-        </small>
-      </span>
-      <b className="mt-1 text-sm">{appointment.customerName}</b>
-      <span className="text-xs text-lou-graphite/65">{appointment.serviceName}</span>
-      <span className="text-xs text-lou-graphite/50">{appointment.barberName}</span>
-      {overlap && <span className="mt-2 text-xs font-bold text-red-800">Horario superpuesto</span>}
-    </button>
-  )
+const shortDate = (date: string) =>
+  new Intl.DateTimeFormat('es-BO', {
+    timeZone: 'America/La_Paz',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(`${date}T12:00:00Z`))
+
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/
+
+const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
+
+// Re-renders once a minute so the current time line keeps moving.
+const useMinuteClock = () => {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+  return now
 }
+
+const chipClassName = (active: boolean) =>
+  cn(
+    'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors duration-150',
+    active
+      ? 'border-ink bg-ink text-on-ink'
+      : 'border-transparent bg-surface text-ink hover:border-line-control',
+  )
 
 export const AgendaPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [date, setDate] = useState(todayInBusinessTime())
-  const [weekly, setWeekly] = useState(false)
   const [barberId, setBarberId] = useState('')
+  const [phoneBarberId, setPhoneBarberId] = useState('')
   const [selected, setSelected] = useState<Appointment>()
   const [editor, setEditor] = useState<Appointment | null | undefined>(() =>
     (location.state as { newAppointment?: boolean } | null)?.newAppointment ? null : undefined,
@@ -88,6 +78,29 @@ export const AgendaPage = () => {
   const [notice, setNotice] = useState('')
   const client = useQueryClient()
   const disabled = useConnectivity() !== 'online'
+  const isTablet = useMediaQuery(tabletQuery)
+  const isWide = useMediaQuery(wideQuery)
+  const now = useMinuteClock()
+  const today = todayInBusinessTime(now)
+
+  // Date and view live in the URL so a reload or a shared link keeps the same agenda.
+  const [params, setParams] = useSearchParams()
+  const requestedDate = params.get('fecha')
+  const date = requestedDate && isoDatePattern.test(requestedDate) ? requestedDate : today
+  const weekly = params.get('vista') === 'semana'
+  const updateParams = (change: (next: URLSearchParams) => void) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        change(next)
+        return next
+      },
+      { replace: true },
+    )
+  const setDate = (next: string) => updateParams((query) => query.set('fecha', next))
+  const setWeekly = (next: boolean) =>
+    updateParams((query) => (next ? query.set('vista', 'semana') : query.delete('vista')))
+
   const session = useQuery({ queryKey: ['auth', 'session'], queryFn: authApi.current })
   const canManage = Boolean(
     session.data?.roles.some((role) => role === 'OWNER' || role === 'ADMIN'),
@@ -107,14 +120,44 @@ export const AgendaPage = () => {
     enabled: Boolean(session.data),
     refetchInterval: disabled ? false : 30_000,
   })
+
   const appointments = sortAppointments(agenda.data ?? [])
-  const activeCount = appointments.filter(
-    (item) => item.status !== 'CANCELLED' && item.status !== 'NO_SHOW',
-  ).length
+  const dayAppointments = appointmentsForDate(appointments, date)
+  const summary = summarizeDay(weekly ? appointments : dayAppointments)
+  const team = barbers.data ?? []
+  const showTeamChips = canManage && team.length > 1
+  const focusedPhoneBarber = phoneBarberId || team[0]?.id || ''
+
+  const columns: AgendaColumn[] = canManage
+    ? team
+        .filter((barber) =>
+          isTablet ? !barberId || barber.id === barberId : barber.id === focusedPhoneBarber,
+        )
+        .map((barber) => ({
+          id: barber.id,
+          name: barber.displayName,
+          appointments: dayAppointments.filter((item) => item.barberId === barber.id),
+        }))
+    : [
+        {
+          id: 'own',
+          name: dayAppointments[0]?.barberName ?? session.data?.userName ?? 'Mi agenda',
+          appointments: dayAppointments,
+        },
+      ]
+
+  const nowMarker =
+    !weekly && date === today && nowOffset(now) !== undefined
+      ? {
+          offset: nowOffset(now) ?? 0,
+          label: formatMinutes(minutesOfDay(now.toISOString())),
+        }
+      : undefined
+
   const changed = () => {
     setSelected(undefined)
     setEditor(undefined)
-    setNotice('Cambio guardado correctamente.')
+    setNotice('Cambio guardado.')
     void client.invalidateQueries({ queryKey: ['agenda'] })
     void client.invalidateQueries({ queryKey: ['availability'] })
   }
@@ -124,20 +167,44 @@ export const AgendaPage = () => {
     setNotice('')
   }
   const moveDate = (direction: -1 | 1) =>
-    setDate((current) => addCalendarDays(current, direction * (weekly ? 7 : 1)))
+    setDate(addCalendarDays(date, direction * (weekly ? 7 : 1)))
+
+  const summaryText = [
+    plural(summary.active, 'cita', 'citas'),
+    summary.waiting > 0 ? plural(summary.waiting, 'cliente esperando', 'clientes esperando') : '',
+    summary.inService > 0 ? `${summary.inService} en atención` : '',
+  ]
+    .filter(Boolean)
+    .join(', ')
+
+  const details = selected && (
+    <AppointmentDetails
+      key={`${selected.id}-${selected.version}`}
+      appointment={selected}
+      canManage={canManage}
+      disabled={disabled}
+      onChanged={changed}
+      onClose={() => setSelected(undefined)}
+      onOperationOpened={(opened) => navigate('/app/atenciones', { state: { opened } })}
+      onReschedule={() => {
+        setEditor(selected)
+        setSelected(undefined)
+      }}
+    />
+  )
 
   return (
-    <main className="mx-auto w-full max-w-360 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
-      <header className="flex flex-col justify-between gap-5 border-b border-lou-fog pb-7 sm:flex-row sm:items-end">
+    <main className="mx-auto w-full max-w-360 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="mb-2 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
-            {canManage ? 'Agenda del equipo' : 'Agenda personal'} · America/La_Paz
-          </p>
-          <h1 className="m-0 font-display text-5xl leading-[0.9] font-bold sm:text-6xl">
+          <h1 className="font-display text-5xl leading-none font-extrabold text-balance sm:text-6xl">
             {canManage ? 'Agenda' : 'Mi agenda'}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-lou-graphite/65">
-            Citas, llegadas y atención. Los cobros continúan separados.
+          <p className="mt-2 text-lg text-ink-soft first-letter:uppercase">
+            {weekly
+              ? `Semana del ${shortDate(date)} al ${shortDate(dates.at(-1) ?? date)}`
+              : longDate(date)}
+            . {agenda.data ? `${summaryText}.` : ''}
           </p>
         </div>
         {canManage && (
@@ -149,234 +216,198 @@ export const AgendaPage = () => {
               setNotice('')
             }}
           >
-            <AppIcon name="calendar" size={18} /> Nueva cita
+            <AppIcon name="calendar" size={20} />
+            Nueva cita
           </Button>
         )}
       </header>
 
-      {disabled && (
-        <p
-          role="status"
-          className="mt-5 rounded-xl border border-amber-800/20 bg-amber-50 p-4 text-sm text-amber-950"
-        >
-          Sin conexión: puedes consultar la vista guardada, pero no confirmar ni cambiar citas.
-        </p>
-      )}
-      {notice && (
-        <p
-          className="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-900"
-          role="status"
-        >
-          {notice}
-        </p>
-      )}
-
       <section
-        className="sticky top-0 z-20 mt-5 rounded-2xl border border-lou-fog bg-white/95 p-3 shadow-lou-sm backdrop-blur-xl"
+        className="sticky top-0 z-20 -mx-4 mt-5 flex flex-wrap items-center gap-2 bg-canvas/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         aria-label="Controles de agenda"
       >
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
-            variant="ghost"
+            variant="secondary"
+            size="sm"
+            className="w-11 px-0"
             aria-label={weekly ? 'Semana anterior' : 'Día anterior'}
             onClick={() => moveDate(-1)}
           >
             <AppIcon name="arrow-left" size={18} />
           </Button>
-          <Button variant="ghost" onClick={() => setDate(todayInBusinessTime())}>
+          <Button variant="secondary" size="sm" onClick={() => setDate(today)}>
             Hoy
           </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
+            size="sm"
+            className="w-11 px-0"
             aria-label={weekly ? 'Semana siguiente' : 'Día siguiente'}
             onClick={() => moveDate(1)}
           >
             <AppIcon name="arrow-right" size={18} />
           </Button>
-          <div className="min-w-44 flex-1 px-2">
-            <p className="font-display text-xl leading-none font-bold capitalize">
-              {weekly
-                ? `${dateLabel(date)} — ${dateLabel(dates.at(-1) ?? date)}`
-                : dateLabel(date, true)}
-            </p>
-            <p className="mt-1 text-xs text-lou-graphite/50">
-              {agenda.isPending
-                ? 'Actualizando…'
-                : `${activeCount} ${activeCount === 1 ? 'cita activa' : 'citas activas'}`}
-            </p>
-          </div>
-          <div
-            className="relative grid grid-cols-2 rounded-xl bg-lou-fog/60 p-1 text-sm font-bold"
-            aria-label="Tipo de vista"
-          >
-            <span
-              aria-hidden="true"
-              className={cn(
-                'absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-sm transition-transform duration-300 ease-lou',
-                weekly && 'translate-x-full',
-              )}
-            />
-            <button
-              className="relative z-10 px-4 py-2"
-              aria-pressed={!weekly}
-              onClick={() => setWeekly(false)}
-            >
-              Día
-            </button>
-            <button
-              className="relative z-10 px-4 py-2"
-              aria-pressed={weekly}
-              onClick={() => setWeekly(true)}
-            >
-              7 días
-            </button>
-          </div>
         </div>
-        <div className="mt-3 grid gap-3 border-t border-lou-fog pt-3 sm:grid-cols-2">
-          <label className="grid gap-1 text-xs font-bold">
-            Ir a una fecha
-            <input
-              className={fieldClassName}
-              type="date"
-              required
-              value={date}
-              onChange={(event) => event.target.value && setDate(event.target.value)}
-            />
-          </label>
-          {canManage && (
-            <label className="grid gap-1 text-xs font-bold">
-              Barbero
-              <select
-                className={fieldClassName}
-                value={barberId}
-                onChange={(event) => setBarberId(event.target.value)}
-              >
-                <option value="">Todo el equipo</option>
-                {barbers.data?.map((barber) => (
-                  <option key={barber.id} value={barber.id}>
-                    {barber.displayName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+        <label className="sr-only" htmlFor="agenda-date">
+          Ir a una fecha
+        </label>
+        <input
+          id="agenda-date"
+          name="fecha"
+          autoComplete="off"
+          className={cn(fieldClassName, 'min-h-11 w-auto')}
+          type="date"
+          required
+          value={date}
+          onChange={(event) => event.target.value && setDate(event.target.value)}
+        />
+        <div
+          className="ml-auto grid grid-cols-2 rounded-control bg-surface-strong p-1"
+          role="group"
+          aria-label="Vista"
+        >
+          <button
+            type="button"
+            className={cn(
+              'min-h-10 rounded-lg px-4 text-sm font-semibold',
+              !weekly && 'bg-surface shadow-raised',
+            )}
+            aria-pressed={!weekly}
+            onClick={() => setWeekly(false)}
+          >
+            Día
+          </button>
+          <button
+            type="button"
+            className={cn(
+              'min-h-10 rounded-lg px-4 text-sm font-semibold',
+              weekly && 'bg-surface shadow-raised',
+            )}
+            aria-pressed={weekly}
+            onClick={() => setWeekly(true)}
+          >
+            Semana
+          </button>
         </div>
       </section>
 
-      <div className="mt-5 flex flex-wrap gap-2 text-xs" aria-label="Estados de las citas">
-        {(['CONFIRMED', 'CHECKED_IN', 'IN_SERVICE', 'COMPLETED'] as AppointmentStatus[]).map(
-          (status) => (
-            <span
-              key={status}
-              className={cn(
-                'rounded-full border px-3 py-1.5 font-semibold',
-                statusClassName[status],
-              )}
+      {showTeamChips && (
+        <div
+          className="-mx-4 mt-1 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+          role="group"
+          aria-label="Barbero"
+        >
+          {isTablet && (
+            <button
+              type="button"
+              className={chipClassName(!barberId)}
+              aria-pressed={!barberId}
+              onClick={() => setBarberId('')}
             >
-              {statusLabels[status]}
-            </span>
-          ),
-        )}
-      </div>
-
-      {agenda.isPending && (
-        <p className="mt-8" role="status">
-          Cargando citas…
-        </p>
-      )}
-      {agenda.isError && (
-        <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5" role="alert">
-          <p>No se pudo cargar la agenda.</p>
-          <Button className="mt-3" variant="secondary" onClick={() => void agenda.refetch()}>
-            Reintentar
-          </Button>
-        </div>
-      )}
-
-      {agenda.data && weekly && (
-        <div className="mt-6 grid gap-4 lg:grid-cols-7 lg:gap-2" aria-label="Agenda semanal">
-          {dates.map((day) => {
-            const rows = appointmentsForDate(appointments, day)
+              Todo el equipo
+            </button>
+          )}
+          {team.map((barber) => {
+            const active = isTablet ? barberId === barber.id : focusedPhoneBarber === barber.id
+            const count = dayAppointments.filter((item) => item.barberId === barber.id).length
             return (
-              <section key={day} className="min-w-0" aria-label={`Citas del ${day}`}>
-                <h2 className="mb-3 border-b border-lou-fog pb-2 font-display text-2xl font-bold capitalize">
-                  {dateLabel(day)}
-                </h2>
-                <div className="grid gap-3">
-                  {rows.map((appointment) => (
-                    <AppointmentCard
-                      key={appointment.id}
-                      appointment={appointment}
-                      allAppointments={appointments}
-                      onOpen={() => openAppointment(appointment)}
-                    />
-                  ))}
-                  {rows.length === 0 && (
-                    <p className="rounded-xl border border-dashed border-lou-steel/70 p-5 text-center text-xs text-lou-graphite/50">
-                      Sin citas
-                    </p>
-                  )}
-                </div>
-              </section>
+              <button
+                key={barber.id}
+                type="button"
+                className={chipClassName(active)}
+                aria-pressed={active}
+                onClick={() => (isTablet ? setBarberId(barber.id) : setPhoneBarberId(barber.id))}
+              >
+                {barber.displayName}
+                {!weekly && <span className="tabular-nums opacity-75">{count}</span>}
+              </button>
             )
           })}
         </div>
       )}
 
-      {agenda.data && !weekly && (
-        <section className="mt-6" aria-label="Agenda diaria">
-          {canManage && !barberId && (barbers.data?.length ?? 0) > 1 ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {barbers.data?.map((barber) => {
-                const rows = appointmentsForDate(appointments, date).filter(
-                  (item) => item.barberId === barber.id,
-                )
-                return (
-                  <section
-                    key={barber.id}
-                    className="rounded-2xl border border-lou-fog bg-lou-paper/50 p-3"
-                    aria-label={`Agenda de ${barber.displayName}`}
-                  >
-                    <h2 className="mb-3 px-1 font-display text-2xl font-bold">
-                      {barber.displayName}
-                    </h2>
-                    <div className="grid gap-3">
-                      {rows.map((appointment) => (
-                        <AppointmentCard
-                          key={appointment.id}
-                          appointment={appointment}
-                          allAppointments={appointments}
-                          onOpen={() => openAppointment(appointment)}
-                        />
-                      ))}
-                      {rows.length === 0 && (
-                        <p className="rounded-xl border border-dashed border-lou-steel/70 p-5 text-center text-xs text-lou-graphite/50">
-                          Horario disponible · sin citas
-                        </p>
-                      )}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="mx-auto grid max-w-3xl gap-3">
-              {appointmentsForDate(appointments, date).map((appointment) => (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  allAppointments={appointments}
-                  onOpen={() => openAppointment(appointment)}
-                />
-              ))}
-              {appointmentsForDate(appointments, date).length === 0 && (
-                <p className="rounded-2xl border border-dashed border-lou-steel/70 p-10 text-center text-sm text-lou-graphite/55">
-                  No hay citas para este día. El horario está disponible.
-                </p>
-              )}
-            </div>
+      {disabled && (
+        <p role="status" className={cn(warningClassName, 'mt-4')}>
+          Sin conexión. Puedes consultar la agenda guardada, pero no registrar llegadas ni cambiar
+          citas.
+        </p>
+      )}
+      {notice && (
+        <p role="status" className={cn(successClassName, 'mt-4')}>
+          {notice}
+        </p>
+      )}
+
+      {agenda.isPending && (
+        <div className="mt-4 grid gap-3" role="status" aria-label="Cargando citas">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="h-24 animate-pulse rounded-panel bg-surface-strong" />
+          ))}
+        </div>
+      )}
+      {agenda.isError && (
+        <div
+          className={cn(errorClassName, 'mt-4 flex flex-wrap items-center justify-between gap-3')}
+          role="alert"
+        >
+          No se pudo cargar la agenda.
+          <Button variant="secondary" size="sm" onClick={() => void agenda.refetch()}>
+            Reintentar
+          </Button>
+        </div>
+      )}
+
+      {agenda.data && (
+        <div
+          className={cn(
+            'mt-4 grid items-start gap-6',
+            isWide && selected && 'grid-cols-[minmax(0,1fr)_24rem]',
           )}
-        </section>
+        >
+          <div className="min-w-0">
+            {weekly ? (
+              <AgendaWeek
+                dates={dates}
+                today={today}
+                appointments={appointments}
+                selectedId={selected?.id}
+                showBarber={canManage && !barberId}
+                onOpen={openAppointment}
+              />
+            ) : (
+              <section aria-label="Agenda diaria">
+                {dayAppointments.length === 0 && (
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-panel bg-surface p-5 shadow-raised">
+                    <p className="text-ink-soft">No hay citas este día. El horario está libre.</p>
+                    {canManage && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={disabled}
+                        onClick={() => setEditor(null)}
+                      >
+                        Crear cita
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <AgendaTimeline
+                  columns={columns}
+                  allAppointments={appointments}
+                  now={nowMarker}
+                  selectedId={selected?.id}
+                  onOpen={openAppointment}
+                />
+              </section>
+            )}
+          </div>
+          {isWide && details && (
+            <aside className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain rounded-sheet bg-surface p-6 shadow-floating">
+              {details}
+            </aside>
+          )}
+        </div>
       )}
 
       {editor !== undefined && canManage && (
@@ -391,23 +422,7 @@ export const AgendaPage = () => {
           />
         </AgendaDialog>
       )}
-      {selected && (
-        <AgendaDialog label="Detalle de cita">
-          <AppointmentDetails
-            key={`${selected.id}-${selected.version}`}
-            appointment={selected}
-            canManage={canManage}
-            disabled={disabled}
-            onChanged={changed}
-            onClose={() => setSelected(undefined)}
-            onOperationOpened={(opened) => navigate('/app/atenciones', { state: { opened } })}
-            onReschedule={() => {
-              setEditor(selected)
-              setSelected(undefined)
-            }}
-          />
-        </AgendaDialog>
-      )}
+      {!isWide && details && <AgendaDialog label="Detalle de cita">{details}</AgendaDialog>}
     </main>
   )
 }

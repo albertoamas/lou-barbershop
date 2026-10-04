@@ -1,19 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { agendaTime, type Appointment, type Customer } from '../../core/agenda/Agenda'
+import { timeRangeLabel } from '../../core/agenda/AgendaTimeline'
 import { todayInBusinessTime, type AvailabilitySlot } from '../../core/scheduling/Scheduling'
 import { centsToBolivianos } from '../../core/configuration/Configuration'
 import { schedulingApi } from '../../infrastructure/http/schedulingApi'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
+import { cn } from '../styles/cn'
 import { CustomerPicker } from './CustomerPicker'
 import { Button } from './Button'
-import {
-  errorClassName,
-  fieldClassName,
-  labelClassName,
-  noticeClassName,
-} from '../styles/formStyles'
+import { errorClassName, fieldClassName, labelClassName } from '../styles/formStyles'
 
 interface Props {
   appointment: Appointment | undefined
@@ -22,6 +19,7 @@ interface Props {
   onSaved: () => void
   onClose: () => void
 }
+
 export const AppointmentEditor = ({
   appointment,
   date: initialDate,
@@ -34,12 +32,9 @@ export const AppointmentEditor = ({
   const [serviceId, setServiceId] = useState(appointment?.serviceId ?? '')
   const [barberId, setBarberId] = useState(appointment?.barberId ?? 'any')
   const [reason, setReason] = useState('')
-  const [search, setSearch] = useState<{ serviceId: string; barberId: string; date: string }>()
   const [slot, setSlot] = useState<AvailabilitySlot>()
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
-  const searchMatches =
-    search?.serviceId === serviceId && search?.barberId === barberId && search?.date === date
   const barbers = useQuery({
     queryKey: ['scheduling', 'barbers'],
     queryFn: schedulingApi.listBarbers,
@@ -48,23 +43,17 @@ export const AppointmentEditor = ({
     queryKey: ['scheduling', 'services'],
     queryFn: schedulingApi.listServices,
   })
+  // Times load as soon as service, barber and date are chosen.
   const slots = useQuery({
-    queryKey: ['availability', appointment?.id, search],
-    enabled: Boolean(search),
-    queryFn: () => {
-      if (!search) return Promise.resolve([])
-      return appointment
-        ? agendaApi.alternatives(appointment.id, search.serviceId, search.barberId, search.date)
-        : schedulingApi.search({ ...search, dateFrom: search.date, dateTo: search.date })
-    },
+    queryKey: ['availability', appointment?.id, serviceId, barberId, date],
+    enabled: Boolean(serviceId && date),
+    queryFn: () =>
+      appointment
+        ? agendaApi.alternatives(appointment.id, serviceId, barberId, date)
+        : schedulingApi.search({ serviceId, barberId, dateFrom: date, dateTo: date }),
   })
-  const find = (event: FormEvent) => {
-    event.preventDefault()
-    setSlot(undefined)
-    if (search?.serviceId === serviceId && search.barberId === barberId && search.date === date)
-      void slots.refetch()
-    setSearch({ serviceId, barberId, date })
-  }
+  const step = appointment ? 1 : 2
+
   const save = async () => {
     if (disabled || busy || !slot || (!appointment && !customer)) return
     setBusy(true)
@@ -86,6 +75,7 @@ export const AppointmentEditor = ({
       setBusy(false)
     }
   }
+
   const slotGroups = slots.data
     ? [
         {
@@ -98,91 +88,97 @@ export const AppointmentEditor = ({
         },
       ].filter((group) => group.items.length > 0)
     : []
+
   return (
-    <section className="grid gap-6" aria-label={appointment ? 'Reprogramar cita' : 'Nueva cita'}>
-      <div className="flex items-start justify-between gap-4 border-b border-lou-fog pb-5">
+    <section className="grid gap-7" aria-label={appointment ? 'Reprogramar cita' : 'Nueva cita'}>
+      <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
-            Agenda interna
-          </p>
-          <h2 className="mt-1 font-display text-3xl leading-none font-bold">
-            {appointment ? `Reprogramar · ${appointment.customerName}` : 'Nueva cita'}
+          <h2 className="font-display text-3xl leading-none font-extrabold">
+            {appointment ? 'Reprogramar cita' : 'Nueva cita'}
           </h2>
+          {appointment && (
+            <p className="mt-2 text-ink-soft">
+              {appointment.customerName}. Horario actual: {timeRangeLabel(appointment)} con{' '}
+              {appointment.barberName}
+            </p>
+          )}
         </div>
-        <Button type="button" variant="ghost" disabled={busy} onClick={onClose}>
+        <Button variant="ghost" size="sm" disabled={busy} onClick={onClose}>
           Cerrar editor
         </Button>
-      </div>
+      </header>
+
       {!appointment && (
         <CustomerPicker selected={customer} onSelect={setCustomer} disabled={disabled || busy} />
       )}
-      <div>
-        <p className="text-[0.65rem] font-bold tracking-[0.18em] text-lou-graphite/45 uppercase">
-          {appointment ? 'Nueva condición' : 'Paso 2'}
-        </p>
-        <h3 className="mt-1 font-display text-2xl font-bold">Servicio y horario</h3>
-      </div>
-      <form className="grid gap-4 sm:grid-cols-2" onSubmit={find}>
-        <label className={labelClassName}>
-          Servicio
-          <select
-            className={fieldClassName}
-            required
-            value={serviceId}
-            onChange={(event) => {
-              setServiceId(event.target.value)
-              setSlot(undefined)
-            }}
-          >
-            <option value="">Selecciona servicio</option>
-            {services.data
-              ?.filter((service) => service.active)
-              .map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
+
+      <section className="grid gap-4" aria-labelledby="schedule-step">
+        <h3 id="schedule-step" className="font-display text-2xl font-extrabold">
+          {step}. Servicio y horario
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className={labelClassName}>
+            Servicio
+            <select
+              className={fieldClassName}
+              required
+              value={serviceId}
+              onChange={(event) => {
+                setServiceId(event.target.value)
+                setSlot(undefined)
+              }}
+            >
+              <option value="">Elige un servicio</option>
+              {services.data
+                ?.filter((service) => service.active)
+                .map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className={labelClassName}>
+            Barbero
+            <select
+              className={fieldClassName}
+              value={barberId}
+              onChange={(event) => {
+                setBarberId(event.target.value)
+                setSlot(undefined)
+              }}
+            >
+              <option value="any">Cualquiera disponible</option>
+              {barbers.data?.map((barber) => (
+                <option key={barber.id} value={barber.id}>
+                  {barber.displayName}
                 </option>
               ))}
-          </select>
-        </label>
-        <label className={labelClassName}>
-          Barbero
-          <select
-            className={fieldClassName}
-            value={barberId}
-            onChange={(event) => {
-              setBarberId(event.target.value)
-              setSlot(undefined)
-            }}
-          >
-            <option value="any">Cualquiera disponible</option>
-            {barbers.data?.map((barber) => (
-              <option key={barber.id} value={barber.id}>
-                {barber.displayName}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={labelClassName}>
-          Fecha de la cita
-          <input
-            className={fieldClassName}
-            type="date"
-            required
-            min={todayInBusinessTime()}
-            value={date}
-            onChange={(event) => {
-              setDate(event.target.value)
-              setSlot(undefined)
-            }}
-          />
-        </label>
+            </select>
+          </label>
+          <label className={cn(labelClassName, 'sm:col-span-2')}>
+            Fecha
+            <input
+              className={fieldClassName}
+              type="date"
+              required
+              min={todayInBusinessTime()}
+              value={date}
+              onChange={(event) => {
+                setDate(event.target.value)
+                setSlot(undefined)
+              }}
+            />
+          </label>
+        </div>
+
         {(barbers.isPending || services.isPending) && (
-          <p className="text-sm text-lou-graphite/60" role="status">
-            Cargando catálogo…
+          <p className="text-sm text-ink-muted" role="status">
+            Cargando servicios y barberos...
           </p>
         )}
         {(barbers.isError || services.isError) && (
-          <p className={`${errorClassName} sm:col-span-2`} role="alert">
+          <p className={errorClassName} role="alert">
             No se pudo cargar el catálogo.{' '}
             <button
               className="font-bold underline"
@@ -196,82 +192,78 @@ export const AppointmentEditor = ({
             </button>
           </p>
         )}
-        <Button
-          className="sm:col-span-2"
-          width="full"
-          disabled={disabled || busy || !serviceId || barbers.isPending || services.isPending}
-        >
-          Buscar horarios
-        </Button>
-      </form>
-      {search && slots.isFetching && (
-        <p className="text-sm text-lou-graphite/60" role="status">
-          Consultando disponibilidad…
-        </p>
-      )}
-      {search && slots.isError && (
-        <p className={errorClassName} role="alert">
-          No se pudo consultar disponibilidad.{' '}
-          <button className="font-bold underline" onClick={() => void slots.refetch()}>
-            Reintentar horarios
-          </button>
-        </p>
-      )}
-      {search && slots.data?.length === 0 && (
-        <p className="rounded-xl border border-dashed border-lou-steel p-4 text-sm text-lou-graphite/60">
-          No hay horarios. Prueba otra fecha o barbero.
-        </p>
-      )}
-      {searchMatches && slots.data && slots.data.length > 0 && (
-        <fieldset className="grid gap-4">
-          <legend className="text-sm font-bold">Elige un horario disponible</legend>
-          {slotGroups.map((group) => (
-            <div key={group.label}>
-              <p className="mb-2 text-[0.65rem] font-bold tracking-[0.16em] text-lou-graphite/45 uppercase">
-                {group.label}
-              </p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {group.items.map((item) => {
-                  const selected =
-                    slot?.barberId === item.barberId && slot.startsAt === item.startsAt
-                  return (
-                    <button
-                      key={`${item.barberId}|${item.startsAt}`}
-                      className={`rounded-xl border p-3 text-left transition-[background-color,border-color,box-shadow] duration-300 ease-lou ${
-                        selected
-                          ? 'border-lou-ink bg-lou-ink text-white shadow-lou-sm'
-                          : 'border-lou-fog bg-white hover:border-lou-graphite/45 hover:shadow-lou-sm'
-                      }`}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => setSlot(item)}
-                    >
-                      <strong className="block font-display text-xl tabular-nums">
-                        {agendaTime(item.startsAt)}
-                      </strong>
-                      <span
-                        className={`block truncate text-xs ${selected ? 'text-white/70' : 'text-lou-graphite/55'}`}
+        {!serviceId && (
+          <p className="rounded-control bg-surface-muted p-4 text-sm text-ink-soft">
+            Elige un servicio para ver los horarios libres.
+          </p>
+        )}
+        {serviceId && slots.isFetching && (
+          <p className="text-sm text-ink-muted" role="status">
+            Buscando horarios libres...
+          </p>
+        )}
+        {serviceId && slots.isError && (
+          <p className={errorClassName} role="alert">
+            No se pudo consultar la disponibilidad.{' '}
+            <button
+              className="font-bold underline"
+              type="button"
+              onClick={() => void slots.refetch()}
+            >
+              Reintentar horarios
+            </button>
+          </p>
+        )}
+        {serviceId && slots.data?.length === 0 && (
+          <p className="rounded-control bg-surface-muted p-4 text-sm text-ink-soft">
+            No hay horarios libres ese día. Prueba con otra fecha o con otro barbero.
+          </p>
+        )}
+        {slotGroups.length > 0 && (
+          <fieldset className="grid gap-4">
+            <legend className="sr-only">Elige un horario libre</legend>
+            {slotGroups.map((group) => (
+              <div key={group.label} className="grid gap-2">
+                <p className="text-sm font-semibold text-ink-soft">{group.label}</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {group.items.map((item) => {
+                    const selected =
+                      slot?.barberId === item.barberId && slot.startsAt === item.startsAt
+                    return (
+                      <button
+                        key={`${item.barberId}|${item.startsAt}`}
+                        className={cn(
+                          'min-h-16 rounded-control border-2 px-3 py-2 text-left transition-colors duration-150',
+                          selected
+                            ? 'border-ink bg-ink text-on-ink'
+                            : 'border-transparent bg-surface-muted hover:border-line-control',
+                        )}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setSlot(item)}
                       >
-                        {item.barberName}
-                      </span>
-                      <span
-                        className={`mt-1 block text-[0.65rem] ${selected ? 'text-white/70' : 'text-lou-graphite/45'}`}
-                      >
-                        {item.durationMinutes} min · {centsToBolivianos(item.priceCents)}
-                      </span>
-                    </button>
-                  )
-                })}
+                        <strong className="block font-display text-2xl leading-none font-extrabold tabular-nums">
+                          {agendaTime(item.startsAt)}
+                        </strong>
+                        <span className="mt-1 block truncate text-sm opacity-80">
+                          {item.barberName}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </fieldset>
-      )}
+            ))}
+          </fieldset>
+        )}
+      </section>
+
       {appointment && (
         <label className={labelClassName}>
-          Motivo de reprogramación
+          Motivo del cambio
           <textarea
             className={`${fieldClassName} min-h-24 py-3`}
+            name="reason"
             required
             maxLength={300}
             value={reason}
@@ -279,13 +271,21 @@ export const AppointmentEditor = ({
           />
         </label>
       )}
+
       {slot && (
-        <p className={noticeClassName}>
-          Confirmar {agendaTime(slot.startsAt)}–{agendaTime(slot.endsAt)} con {slot.barberName}.
-          Precio informado: {centsToBolivianos(slot.priceCents)}. No registra un cobro.
-        </p>
+        <div className="rounded-panel bg-surface-muted p-4">
+          <p className="font-semibold">
+            {timeRangeLabel(slot)} con {slot.barberName}
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Precio informado {centsToBolivianos(slot.priceCents)}, {slot.durationMinutes} min. Se
+            cobra al terminar la atención.
+          </p>
+        </div>
       )}
+
       <Button
+        size="lg"
         width="full"
         disabled={
           disabled ||
@@ -296,7 +296,7 @@ export const AppointmentEditor = ({
         }
         onClick={() => void save()}
       >
-        {busy ? 'Confirmando…' : appointment ? 'Guardar reprogramación' : 'Confirmar cita'}
+        {busy ? 'Confirmando...' : appointment ? 'Guardar reprogramación' : 'Confirmar cita'}
       </Button>
       {notice && (
         <p className={errorClassName} role="alert">
