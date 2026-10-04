@@ -84,14 +84,16 @@ const isNarrow = () =>
 
 export const OperationsPage = () => {
   const location = useLocation()
-  const opened = (location.state as { opened?: Operation } | null)?.opened
+  // The agenda opens an attention; the home can ask for the walk-in panel directly.
+  const { opened, walkIn: walkInRequested } =
+    (location.state as { opened?: Operation; walkIn?: boolean } | null) ?? {}
   const [, setParams] = useSearchParams()
   const today = todayInBusinessTime()
   const [date, setDate] = useState(today)
   const [operation, setOperation] = useState<Operation | undefined>(opened)
   // A draft moves to the charge step once its consumption is saved.
   const [reviewing, setReviewing] = useState(false)
-  const [walkIn, setWalkIn] = useState(false)
+  const [walkIn, setWalkIn] = useState(Boolean(walkInRequested && !opened))
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const clearNotice = useCallback(() => setNotice(''), [])

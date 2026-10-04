@@ -28,6 +28,7 @@ import { AgendaWeek } from '../components/agenda/AgendaWeek'
 import { DateField } from '../components/agenda/DateField'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { tabletQuery, useMediaQuery, wideQuery } from '../hooks/useMediaQuery'
+import { useMinuteClock } from '../hooks/useMinuteClock'
 import { cn } from '../styles/cn'
 import { errorClassName, warningClassName } from '../styles/formStyles'
 
@@ -54,16 +55,6 @@ const weekdayName = (date: string) =>
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
-
-// Re-renders once a minute so the current time line keeps moving.
-const useMinuteClock = () => {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
-  return now
-}
 
 const chipClassName = (active: boolean) =>
   cn(
