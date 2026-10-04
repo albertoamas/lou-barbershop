@@ -20,6 +20,9 @@ export type IconName =
   | 'shield'
   | 'alert'
   | 'plus'
+  | 'minus'
+  | 'qr'
+  | 'cash'
 
 interface AppIconProps {
   name: IconName
@@ -88,6 +91,20 @@ const paths: Record<IconName, React.ReactNode> = {
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
+  qr: (
+    <>
+      <path d="M4 4h6v6H4ZM14 4h6v6h-6ZM4 14h6v6H4Z" />
+      <path d="M14 14h2v2h-2ZM18 14h2M14 20h6M20 17v3M17 17v1" />
+    </>
+  ),
+  cash: (
+    <>
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6.5 9.5v.01M17.5 14.5v.01" />
+    </>
+  ),
   'map-pin': (
     <>
       <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />

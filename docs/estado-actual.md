@@ -56,6 +56,9 @@ Surgieron en el rediseño y quedan fuera de su alcance (plan, sección 1):
 - mostrar el teléfono del cliente en el detalle de la cita (la cita no lo incluye hoy);
 - reprogramar arrastrando la cita en la línea de tiempo;
 - mostrar la hora real de llegada del cliente ("llegó a las 15:24").
+- apertura y cierre de caja con arqueo del efectivo;
+- comprobante del cobro por WhatsApp o impreso;
+- ver el total calculado por el servidor mientras se elige el consumo, antes de guardarlo.
 
 ## Qué falta antes de producción
 
