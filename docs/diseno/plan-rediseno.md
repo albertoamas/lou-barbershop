@@ -140,7 +140,7 @@ Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) ante
 
 | N.º | Pantalla | Fase | Por qué en este lugar | Estado |
 |---|---|---|---|---|
-| 1 | Agenda | 3 | La más usada en recepción. Define la línea de tiempo, el detalle de cita y el editor de citas, que luego reutilizan otras pantallas | Pendiente |
+| 1 | Agenda | 3 | La más usada en recepción. Define la línea de tiempo, el detalle de cita y el editor de citas, que luego reutilizan otras pantallas | ✔ Cerrada |
 | 2 | Atender y cobrar | 3 | El flujo del dinero. Define el resumen de cobro, los medios de pago y el buscador de clientes | Pendiente |
 | 3 | Inicio (por rol) | 3 | Resume lo que producen la agenda y el cobro; conviene hacerla cuando esos patrones ya existen | Pendiente |
 | 4 | Portada | 4 | La vitrina pública y la entrada de los clientes | Pendiente |

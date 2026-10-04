@@ -49,6 +49,14 @@ Consulta [páginas, secciones y roles](diseno/paginas-y-roles.md) para el propó
 3. desplegar en un servidor (VPS recomendado: Compose y Caddy ya cubren HTTPS) con backups externos;
 4. piloto de dos semanas en paralelo al sistema actual, conciliando la caja diaria.
 
+## Mejoras detectadas que requieren backend
+
+Surgieron en el rediseño y quedan fuera de su alcance (plan, sección 1):
+
+- mostrar el teléfono del cliente en el detalle de la cita (la cita no lo incluye hoy);
+- reprogramar arrastrando la cita en la línea de tiempo;
+- mostrar la hora real de llegada del cliente ("llegó a las 15:24").
+
 ## Qué falta antes de producción
 
 1. contratar el servidor y configurar dominio/HTTPS;
