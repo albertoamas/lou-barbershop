@@ -27,7 +27,7 @@ dotnet run --project src/backend/LouBarbershop.Api     # http://localhost:8080; 
 dotnet ef migrations add <Name> --project src/backend/LouBarbershop.Infrastructure --startup-project src/backend/LouBarbershop.Api --output-dir Persistence/Migrations
 ```
 
-`LouBarbershop.Integration.Tests` uses Testcontainers (real PostgreSQL) and `WebApplicationFactory`, so Docker must be running. The API also accepts `--migrate`, which applies migrations and exits. Compose's `migrate` service uses this. The app never migrates on normal startup.
+`LouBarbershop.Integration.Tests` uses Testcontainers (real PostgreSQL) and `WebApplicationFactory`, so Docker must be running. The API also accepts `--migrate`, which applies migrations and exits, and `--seed-demo` (Development only), which seeds demo data and exits. Compose's `migrate` service uses this. The app never migrates on normal startup.
 
 Frontend (`src/frontend`, Node 24):
 
@@ -56,7 +56,7 @@ To fix formatting instead of only checking it, run `dotnet format LouBarbershop.
 
 `Directory.Build.props` sets `TreatWarningsAsErrors`, `latest-recommended` analyzers and `EnforceCodeStyleInBuild`, so analyzer or style violations break the build.
 
-Operational scripts in `deploy/` need a healthy stack. They include `verify-backup-restore.ps1`, `verify-application-rollback.ps1`, `benchmark-100k.ps1`, `seed-local-demo.ps1` and `backup.ps1`. Acceptance testing runs on a disposable stack at `http://127.0.0.1:8091` (`deploy/compose.acceptance.yaml`). Run `seed-acceptance.ps1` first, then `test-acceptance-runtime.ps1`. Demo credentials live only in the git-ignored `.env`. Migrations, demo data and troubleshooting are covered in `docs/operacion/desarrollo-local.md`.
+Operational scripts in `deploy/` need a healthy stack. They include `verify-backup-restore.ps1`, `verify-application-rollback.ps1`, `benchmark-100k.ps1`, `seed-demo.ps1` and `backup.ps1`. `seed-demo.ps1 -ResetDatabase` wipes the local database and replays four weeks of realistic activity through the application services (`--seed-demo`, Development only, simulated clock). Acceptance testing runs on a disposable stack at `http://127.0.0.1:8091` (`deploy/compose.acceptance.yaml`). Run `seed-acceptance.ps1` first, then `test-acceptance-runtime.ps1`. Demo credentials live only in the git-ignored `.env`. Migrations, demo data and troubleshooting are covered in `docs/operacion/desarrollo-local.md`.
 
 ## Architecture
 

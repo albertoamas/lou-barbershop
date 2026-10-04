@@ -22,6 +22,19 @@ La PWA queda en `http://localhost:8088`. El proxy sirve web y reenvía `/api` y 
 docker compose -f compose.yaml -f compose.dev.yaml up --build
 ```
 
+## Datos de prueba
+
+`deploy/seed-demo.ps1` llena la base local con cuatro semanas de actividad realista: equipo (dueño, recepción y tres barberos), catálogo, 60 clientes, citas en todos los estados, cobros en efectivo, QR y mixtos, ventas de productos, compras, gastos, un cobro revertido y liquidaciones pagadas, cerradas y en borrador. Hoy queda con citas completadas, en atención, esperando y confirmadas, y la próxima semana con reservas.
+
+```powershell
+# Primera vez o para empezar de cero (borra la base local):
+.\deploy\seed-demo.ps1 -ResetDatabase
+```
+
+Requiere en `.env`: `LOCAL_OWNER_USERNAME`, `LOCAL_OWNER_PASSWORD` y `LOU_DEMO_STAFF_PASSWORD`. Las cuentas del equipo son `recepcion.lucia`, `barbero.diego`, `barbero.mateo` y `barbero.lucas`, con la contraseña `LOU_DEMO_STAFF_PASSWORD`.
+
+El seed ejecuta la API con `--seed-demo`. Ese modo solo funciona con `ASPNETCORE_ENVIRONMENT=Development`. Simula cada día con un reloj controlado y usa los servicios de la aplicación, sin escribir en la base directamente, así que precios, comisiones, inventario y auditoría cumplen las reglas de negocio. Se niega a correr si la base ya tiene personal. Los datos son deterministas: misma fecha, mismos datos.
+
 ## Backend sin contenedores
 
 ```powershell
