@@ -18,7 +18,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { buttonStyles } from '../components/buttonStyles'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { cn } from '../styles/cn'
-import { AppointmentSummary } from './PublicBookingPage'
+import { AppointmentSummary } from '../components/booking/AppointmentSummary'
 
 const fieldClassName =
   'min-h-12 w-full rounded-xl border border-lou-steel/60 bg-white px-4 text-base shadow-sm outline-none transition-[border-color,box-shadow] focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'

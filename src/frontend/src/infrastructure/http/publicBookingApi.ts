@@ -9,6 +9,10 @@ export const publicBookingApi: PublicBookingPort = {
     apiRequest(
       `/api/v1/public/availability?${new URLSearchParams({ serviceId, barberId, dateFrom: date, dateTo: date })}`,
     ),
+  availabilityRange: (serviceId, barberId, dateFrom, dateTo) =>
+    apiRequest(
+      `/api/v1/public/availability?${new URLSearchParams({ serviceId, barberId, dateFrom, dateTo })}`,
+    ),
   create: (input) => secureApiRequest('/api/v1/public/appointments', 'POST', input),
   read: (token) =>
     apiRequest('/api/v1/public/appointments/manage', { headers: tokenHeader(token) }),
