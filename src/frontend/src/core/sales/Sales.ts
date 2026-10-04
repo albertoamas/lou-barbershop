@@ -44,20 +44,6 @@ export interface DailyOperations {
   qrCents: number
   operations: Operation[]
 }
-export const paymentMatches = (total: number, cash: number, qr: number) =>
-  cash >= 0 && qr >= 0 && cash + qr === total
-export const paymentDifference = (total: number, cash: number, qr: number) => total - cash - qr
-export const operationStep = (operation?: Pick<Operation, 'status'>) => {
-  if (!operation) return 1
-  if (operation.status === 'DRAFT') return 2
-  if (operation.status === 'READY_TO_PAY') return 4
-  return 5
-}
-export const paymentDraftFor = (
-  currentOperationId: string | undefined,
-  nextOperationId: string,
-  current: { cash: number; qr: number },
-) => (currentOperationId === nextOperationId ? current : { cash: 0, qr: 0 })
 export const operationStatus = (value: OperationStatus) =>
   (
     ({
@@ -67,3 +53,38 @@ export const operationStatus = (value: OperationStatus) =>
       REVERSED: 'Revertida',
     }) as const
   )[value]
+
+// Waiting to be charged: consumption still open or total confirmed but unpaid.
+export const isPendingOperation = (operation: Pick<Operation, 'status'>) =>
+  operation.status === 'DRAFT' || operation.status === 'READY_TO_PAY'
+
+export type PaymentChoice = 'CASH' | 'QR' | 'MIXED'
+
+// Cash and QR amounts for a payment choice. "Mixed" takes the cash typed and leaves the
+// rest to QR; the backend still checks that both add up to the total it calculated.
+export const paymentSplit = (choice: PaymentChoice, totalCents: number, mixedCashCents = 0) => {
+  if (choice === 'CASH') return { cash: totalCents, qr: 0 }
+  if (choice === 'QR') return { cash: 0, qr: totalCents }
+  const cash = Math.min(Math.max(mixedCashCents, 0), totalCents)
+  return { cash, qr: totalCents - cash }
+}
+
+// Change to hand back when the customer gives more cash than is due. A counter aid
+// only: it is never sent or stored. Negative means cash is still missing.
+export const cashChange = (cashDueCents: number, receivedCents: number) =>
+  receivedCents - cashDueCents
+
+// The three steps shown on screen: what was done, review and charge, done.
+export type OperationStage = 'consumption' | 'checkout' | 'done'
+
+export const stageOf = (
+  operation: Pick<Operation, 'status'>,
+  reviewing: boolean,
+): OperationStage =>
+  operation.status === 'DRAFT'
+    ? reviewing
+      ? 'checkout'
+      : 'consumption'
+    : operation.status === 'READY_TO_PAY'
+      ? 'checkout'
+      : 'done'

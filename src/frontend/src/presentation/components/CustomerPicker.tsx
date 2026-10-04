@@ -19,12 +19,14 @@ interface Props {
   selected: Customer | undefined
   onSelect: (customer: Customer) => void
   disabled: boolean
+  // Section heading; the agenda editor numbers its steps, other screens ask a question.
+  title?: string
 }
 
 // Searching waits for a short pause in typing so each keystroke does not hit the API.
 const searchDelayMs = 300
 
-export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
+export const CustomerPicker = ({ selected, onSelect, disabled, title = '1. Cliente' }: Props) => {
   const [query, setQuery] = useState('')
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Customer | null | undefined>(undefined)
@@ -78,7 +80,7 @@ export const CustomerPicker = ({ selected, onSelect, disabled }: Props) => {
   return (
     <section className="grid gap-4" aria-labelledby="customer-step">
       <h3 id="customer-step" className="font-display text-2xl font-extrabold">
-        1. Cliente
+        {title}
       </h3>
 
       {selected && editing === undefined ? (
