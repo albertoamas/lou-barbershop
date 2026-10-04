@@ -25,7 +25,7 @@ export const ServiceWorkerUpdateBanner = () => {
   }
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-3 bg-accent-soft px-4 py-2.5 text-sm font-semibold text-ink"
+      className="flex flex-wrap items-center justify-center gap-3 bg-surface-muted px-4 py-2.5 text-sm font-semibold text-ink"
       role="status"
     >
       <span>
@@ -35,7 +35,7 @@ export const ServiceWorkerUpdateBanner = () => {
       </span>
       <Button
         size="sm"
-        variant="ink"
+        variant="primary"
         type="button"
         disabled={applying}
         onClick={() => void apply()}

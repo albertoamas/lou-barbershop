@@ -27,12 +27,6 @@
   --color-line: #c3c9cf;
   --color-line-control: #858d95;
 
-  /* Brand accent: brass fill takes ink text; lines and text on light use accent-strong */
-  --color-accent: #c9a24c;
-  --color-accent-strong: #8f6e22;
-  --color-accent-soft: #f6eed9;
-  --color-on-accent: #000000;
-
   /* States: strong, soft background and text on soft */
   --color-success: #1e7a46;
   --color-success-soft: #e3f4ea;
@@ -47,7 +41,8 @@
   --color-danger-soft: #fce8e5;
   --color-danger-ink: #a42a1c;
 
-  --color-focus: #8f6e22;
+  /* Keyboard focus: ink on light surfaces; dark containers switch it to on-ink. */
+  --color-focus: #000000;
 
   /* Shape: anchored surfaces stay square; floating ones are rounded */
   --radius-control: 12px;
@@ -105,7 +100,7 @@
   }
 
   ::selection {
-    @apply bg-accent text-on-accent;
+    @apply bg-ink text-on-ink;
   }
 }
 

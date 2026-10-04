@@ -12,7 +12,6 @@ const badgeStyles = cva(
       tone: {
         neutral: 'border-2 border-ink bg-surface text-ink',
         muted: 'bg-surface-muted text-ink-soft',
-        accent: 'bg-accent-soft text-ink',
         info: 'bg-info-soft text-info-ink',
         success: 'bg-success-soft text-success-ink',
         warning: 'bg-warning-soft text-warning-ink',

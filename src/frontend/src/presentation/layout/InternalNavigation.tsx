@@ -25,7 +25,7 @@ const sideLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
     'flex min-h-16 flex-col items-center justify-center gap-1 rounded-control px-1 text-center text-sm font-semibold text-on-ink-muted transition-colors duration-150 hover:bg-ink-soft hover:text-on-ink',
     'xl:min-h-12 xl:flex-row xl:justify-start xl:gap-3 xl:px-3 xl:text-left',
-    isActive && 'bg-accent text-on-accent hover:bg-accent hover:text-on-accent',
+    isActive && 'bg-surface text-ink hover:bg-surface hover:text-ink',
   )
 
 const SideLink = ({ item }: { item: NavigationItem }) => (
@@ -52,7 +52,7 @@ const MobileLink = ({ item }: { item: NavigationItem }) => (
         <span
           className={cn(
             'grid h-8 w-12 place-items-center rounded-full transition-colors duration-150',
-            isActive && 'bg-accent text-on-accent',
+            isActive && 'bg-surface text-ink',
           )}
         >
           <AppIcon name={item.icon} size={21} />
@@ -118,7 +118,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
   return (
     <>
       <aside
-        className="sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-ink px-2 py-4 text-on-ink md:flex xl:px-4 xl:py-5"
+        className="sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-ink [--color-focus:var(--color-on-ink)] px-2 py-4 text-on-ink md:flex xl:px-4 xl:py-5"
         aria-label="Navegación principal"
       >
         <BrandLockup compact className="mx-auto xl:hidden" to="/app" useViewTransition={false} />
@@ -152,7 +152,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
       </aside>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 flex min-h-16 bg-ink px-1 pb-[env(safe-area-inset-bottom)] text-on-ink md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 flex min-h-16 bg-ink [--color-focus:var(--color-on-ink)] px-1 pb-[env(safe-area-inset-bottom)] text-on-ink md:hidden"
         aria-label="Navegación principal móvil"
       >
         {primaryItems.map((item) => (
@@ -172,7 +172,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
           <span
             className={cn(
               'grid h-8 w-12 place-items-center rounded-full transition-colors duration-150',
-              moreOpen && 'bg-accent text-on-accent',
+              moreOpen && 'bg-surface text-ink',
             )}
           >
             <AppIcon name="more" size={21} />
@@ -250,7 +250,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
                     className={({ isActive }) =>
                       cn(
                         'flex min-h-14 items-center gap-3 rounded-control px-3 font-semibold text-ink-soft transition-colors hover:bg-surface-muted',
-                        isActive && 'bg-accent text-on-accent hover:bg-accent',
+                        isActive && 'bg-ink text-on-ink hover:bg-ink',
                       )
                     }
                     to={item.to}

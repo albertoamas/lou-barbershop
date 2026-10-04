@@ -14,7 +14,6 @@ const avatarStyles = cva(
       tone: {
         ink: 'bg-ink text-on-ink',
         neutral: 'bg-surface-strong text-ink',
-        accent: 'bg-accent text-on-accent',
         onInk: 'bg-ink-soft text-on-ink',
       },
     },

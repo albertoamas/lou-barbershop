@@ -41,7 +41,6 @@ export const BusinessStates: Story = {
       <StatusBadge tone="warning">Stock bajo</StatusBadge>
       <StatusBadge tone="warning">Comisión pendiente</StatusBadge>
       <StatusBadge tone="muted">Borrador</StatusBadge>
-      <StatusBadge tone="accent">Seleccionada</StatusBadge>
     </div>
   ),
 }

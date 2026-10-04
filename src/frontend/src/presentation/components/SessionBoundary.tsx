@@ -26,7 +26,7 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
     return (
       <main className="grid min-h-[70vh] place-items-center px-4" aria-busy="true">
         <div className="flex items-center gap-3 text-sm font-semibold text-ink-muted">
-          <span className="size-2 animate-pulse rounded-full bg-accent" />
+          <span className="size-2 animate-pulse rounded-full bg-ink" />
           Verificando sesión…
         </div>
       </main>

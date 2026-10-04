@@ -20,7 +20,16 @@ type Story = StoryObj<typeof meta>
 
 export const Primary: Story = {}
 export const Money: Story = { args: { variant: 'money', children: 'Cobrar Bs 115,00' } }
-export const Ink: Story = { args: { variant: 'ink', children: 'Actualizar ahora' } }
+export const Inverse: Story = {
+  args: { variant: 'inverse', children: 'Reservar cita' },
+  decorators: [
+    (Story) => (
+      <div className="bg-ink p-6">
+        <Story />
+      </div>
+    ),
+  ],
+}
 export const Secondary: Story = { args: { variant: 'secondary', children: 'Reprogramar' } }
 export const Ghost: Story = { args: { variant: 'ghost', children: 'Más tarde' } }
 export const Danger: Story = { args: { variant: 'danger', children: 'Cancelar cita' } }
@@ -36,7 +45,7 @@ export const AllVariants: Story = {
           Nueva cita
         </Button>
         <Button variant="money">Cobrar Bs 115,00</Button>
-        <Button variant="ink">Ver reportes</Button>
+        <Button variant="secondary">Ver reportes</Button>
         <Button variant="secondary">Reprogramar</Button>
         <Button variant="ghost">Más tarde</Button>
         <Button variant="dangerSoft">Cancelar cita</Button>

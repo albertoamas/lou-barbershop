@@ -26,7 +26,7 @@ export const Avatars: Story = {
     <div className="flex flex-wrap items-center gap-3">
       <Avatar name="Diego" tone="ink" />
       <Avatar name="Mateo" />
-      <Avatar name="Pablo Suárez" tone="accent" size="lg" />
+      <Avatar name="Pablo Suárez" tone="ink" size="lg" />
       <Avatar name="Jorge Mendoza" size="sm" />
     </div>
   ),

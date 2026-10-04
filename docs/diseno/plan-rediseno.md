@@ -67,7 +67,7 @@ No hay fotos de la barbería todavía. El diseño deja **espacios reservados** q
 
 ### 3.4 Dirección aprobada (fase 1)
 
-Se aprobó el 3 de octubre de 2026 sobre el lienzo de direcciones visuales (fila "Lou"). Combina la base de "Navaja", las franjas de "Poste" en blanco y negro y las esquinas de "Sillón", con un acento cálido y colores de estado. Estos valores son la fuente de los tokens de la fase 2.
+Se aprobó el 3 de octubre de 2026 sobre el lienzo de direcciones visuales (fila "Lou"). Combina la base de "Navaja", las franjas de "Poste" en blanco y negro y las esquinas de "Sillón", con colores de estado. El 3 de octubre se retiró el acento latón: la marca es solo blanco y negro. Estos valores son la fuente de los tokens de la fase 2.
 
 **Carácter:** blanco y negro como el logo, amigable y con vida. La app no se siente rígida: textos cercanos, avatares, esquinas suaves en lo que flota y color con significado.
 
@@ -84,9 +84,6 @@ Se aprobó el 3 de octubre de 2026 sobre el lienzo de direcciones visuales (fila
 | Acero 400 | `#858D95` | Bordes de campos y controles (3,4:1 sobre blanco) |
 | Acero 600 | `#5F676F` | Texto auxiliar (5,7:1 sobre blanco) |
 | Acero 800 | `#2E3338` | Texto secundario, botones secundarios sobre tinta |
-| Latón | `#C9A24C` (texto encima: tinta, 8,8:1) | Acento de marca como relleno |
-| Latón oscuro | `#8F6E22` | Acento como línea, borde o texto sobre claro (4,8:1) |
-| Latón suave | `#F6EED9` | Fondo tenue del acento |
 
 **Colores de estado**
 
@@ -99,8 +96,8 @@ Se aprobó el 3 de octubre de 2026 sobre el lienzo de direcciones visuales (fila
 
 **Reglas de color**
 
-- El latón como relleno solo lleva texto en tinta. Sobre fondos claros, toda línea, borde o texto del acento usa latón oscuro, porque el latón da 2,4:1 contra blanco.
-- El latón marca navegación activa, acciones principales que no son de dinero ("Reservar cita", "Nueva cita", "Cliente llegó"), la selección y la hora actual en la agenda.
+- La marca no tiene color de acento. Sobre fondos claros, la acción principal, la selección y la hora actual van en tinta con texto blanco. Sobre fondos oscuros (barra lateral, menú, portada), lo activo y la acción principal van en blanco con texto tinta.
+- El foco de teclado es tinta sobre fondos claros y blanco sobre fondos oscuros.
 - El verde fuerte se usa en acciones que registran dinero ("Cobrar", "Registrar pago").
 - Los estados usan el fondo suave con texto oscuro. El color fuerte se limita a una acción por pantalla y a puntos o chips pequeños.
 - El color nunca va solo: siempre lo acompaña texto, un ícono o un patrón.
