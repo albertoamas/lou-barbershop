@@ -60,6 +60,7 @@ Surgieron en el rediseño y quedan fuera de su alcance (plan, sección 1):
 - comprobante del cobro por WhatsApp o impreso;
 - ver el total calculado por el servidor mientras se elige el consumo, antes de guardarlo.
 - recordatorio automático por WhatsApp antes de la cita;
+- ausencias que se repiten (por ejemplo, todos los lunes en la tarde);
 - saludar por el nombre real en el inicio ("Buenas tardes, Lucía"): la sesión solo devuelve el usuario técnico.
 
 ## Datos pendientes de la barbería

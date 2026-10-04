@@ -115,22 +115,6 @@ export const businessDateFromIso = (value: string) =>
     day: '2-digit',
   }).format(new Date(value))
 
-export const weekStartFor = (date: string) => {
-  const weekday = new Date(`${date}T12:00:00Z`).getUTCDay()
-  return addCalendarDays(date, -(weekday === 0 ? 6 : weekday - 1))
-}
-
-export const scheduleAppliesOn = (schedule: WorkingSchedule, date: string) =>
-  schedule.active &&
-  schedule.weekday === ((new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7) + 1 &&
-  schedule.validFrom <= date &&
-  (!schedule.validTo || schedule.validTo >= date)
-
-export const exceptionAppliesOn = (exception: AvailabilityException, date: string) =>
-  exception.active &&
-  businessDateFromIso(exception.startsAt) <= date &&
-  businessDateFromIso(new Date(new Date(exception.endsAt).getTime() - 1).toISOString()) >= date
-
 export const weekdayLabels = [
   'Lunes',
   'Martes',

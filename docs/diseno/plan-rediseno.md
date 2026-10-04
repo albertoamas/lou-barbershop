@@ -147,8 +147,8 @@ Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) ante
 | 4 | Portada | 4 | La vitrina pública y la entrada de los clientes | ✔ Cerrada |
 | 5 | Reservar | 4 | El flujo público más importante; reutiliza la selección de horarios | ✔ Cerrada |
 | 6 | Mi cita | 4 | Consultar, reprogramar o cancelar; reutiliza piezas de Reservar | ✔ Cerrada |
-| 7 | Privacidad | 4 | Solo texto; rápida | En revisión |
-| 8 | Disponibilidad | 5 | Horarios y excepciones que alimentan la agenda; la usa recepción | Pendiente |
+| 7 | Privacidad | 4 | Solo texto; rápida | ✔ Cerrada |
+| 8 | Disponibilidad | 5 | Horarios y excepciones que alimentan la agenda; la usa recepción | En revisión |
 | 9 | Inventario y gastos | 5 | Uso diario de recepción en tablet | Pendiente |
 | 10 | Comisiones | 5 | Dueño y barberos; liquidaciones | Pendiente |
 | 11 | Reportes | 5 | Dueño; cifras y gráficos | Pendiente |
@@ -398,7 +398,7 @@ Lista de lo que se rediseña. Sirve como punto de partida del análisis de cada 
 | Atender y cobrar | `/app/atenciones` | Dueño, Administrador, Barbero | Tablet (recepción) y celular (barbero) | Progreso de atención en 5 etapas; abrir llegada directa (buscar o registrar cliente, barbero); atención actual; "¿Qué se realizó y vendió?" (servicios, productos, cantidades); ajuste autorizado (descuento o cortesía); "¿Cómo pagó?" (efectivo, QR o mixto); cobro confirmado; operación revertida; resumen del día | Registro de cliente nuevo (desplegable "El cliente no está registrado"); no tiene diálogos propios |
 | Comisiones | `/app/comisiones` | Dueño (todas), Barbero (las suyas) | Celular y PC (dueño) | Filtros; resumen de comisiones; saldo de comisión; preparar liquidación; lista de liquidaciones con estado | Detalle de liquidación (`AgendaDialog`): revisar borrador, operaciones incluidas, ajustes autorizados, registrar pago completo; crear liquidación |
 | Inventario y gastos | `/app/inventario` | Dueño, Administrador | Tablet | Pestañas: Existencias (productos, alertas de stock), Compras (compras de reventa, productos recibidos), Gastos (gastos pagados), Caja de hoy | Panel lateral de registro (`AgendaDialog`) para compra, ajuste de stock y gasto |
-| Disponibilidad | `/app/disponibilidad` | Dueño, Administrador (barbero: la suya) | Tablet y PC | Pestañas: Semana (horarios registrados, navegación semanal), Buscar espacios (espacios disponibles), Excepciones (próximas e historial) | Panel de horario; panel de nueva excepción (`AgendaDialog`) |
+| Disponibilidad | `/app/disponibilidad` | Dueño, Administrador (barbero: la suya, solo lectura) | Tablet y PC | Barberos en chips; Horario semanal (una fila por día con turnos como píldoras, agregar y editar); Ausencias y horarios especiales (próximas, historial plegado); aviso de citas afectadas con enlace a la agenda | Panel de turno (día, Mañana/Tarde/Personalizado, vigencia en Más opciones); panel de ausencia u horario especial (todo el día, motivos rápidos) |
 | Reportes | `/app/reportes` | Dueño | PC y celular | Período del reporte (selector y rango); pestañas (`ReportTabs`): Operación, Caja, Comisiones, Equipo, Auditoría; secciones (`ReportSections`) con cifras y tablas; exportar CSV | Ninguno |
 | Configuración | `/app/configuracion` | Dueño (algunas secciones Administrador) | PC | Secciones: Equipo, Servicios, Ofertas (precio y duración por barbero), Productos, Comisiones (tasas y vigencia), Gastos (categorías), Usuarios (roles, activación, restablecer contraseña y MFA); lista y detalle por sección | Editor (`ConfigurationEditor`); `ConfirmDialog` para desactivar o restablecer |
 | Seguridad | `/app/seguridad` | Todos | Celular y PC | Cambiar contraseña; verificación en dos pasos (activar con QR, desactivar); códigos de recuperación | Ninguno |
