@@ -56,3 +56,50 @@ export const summarizeDay = (appointments: Appointment[]): AgendaDaySummary => (
   waiting: appointments.filter((item) => item.status === 'CHECKED_IN').length,
   inService: appointments.filter((item) => item.status === 'IN_SERVICE').length,
 })
+
+// Grid rows every 30 minutes, the slot size the shop books in, from opening to closing.
+export const halfHourSlots = () =>
+  Array.from(
+    { length: (timelineEndMinutes - timelineStartMinutes) / 30 },
+    (_, index) => timelineStartMinutes + index * 30,
+  )
+
+export const isMiddayClosure = (minutes: number) =>
+  minutes >= middayClosure.startMinutes && minutes < middayClosure.endMinutes
+
+export interface TimelineLane {
+  lane: number
+  lanes: number
+}
+
+// Places appointments that share time side by side, as calendar apps do: each one gets
+// the first free lane, and every appointment in a cluster of overlaps divides the width
+// by the cluster's lane count.
+export const timelineLanes = (appointments: Appointment[]) => {
+  const ordered = [...appointments].sort(
+    (left, right) =>
+      left.startsAt.localeCompare(right.startsAt) || right.endsAt.localeCompare(left.endsAt),
+  )
+  const result = new Map<string, TimelineLane>()
+  let cluster: string[] = []
+  let laneEnds: string[] = []
+  let clusterEnd = ''
+  const closeCluster = () => {
+    for (const id of cluster)
+      result.set(id, { lane: result.get(id)?.lane ?? 0, lanes: laneEnds.length })
+    cluster = []
+    laneEnds = []
+    clusterEnd = ''
+  }
+  for (const appointment of ordered) {
+    if (cluster.length > 0 && appointment.startsAt >= clusterEnd) closeCluster()
+    let lane = laneEnds.findIndex((end) => end <= appointment.startsAt)
+    if (lane === -1) lane = laneEnds.push(appointment.endsAt) - 1
+    else laneEnds[lane] = appointment.endsAt
+    result.set(appointment.id, { lane, lanes: 0 })
+    cluster.push(appointment.id)
+    if (appointment.endsAt > clusterEnd) clusterEnd = appointment.endsAt
+  }
+  closeCluster()
+  return result
+}

@@ -19,6 +19,7 @@ export type IconName =
   | 'eye-off'
   | 'shield'
   | 'alert'
+  | 'plus'
 
 interface AppIconProps {
   name: IconName
@@ -86,6 +87,7 @@ const paths: Record<IconName, React.ReactNode> = {
   check: <path d="m5 12 4.5 4.5L19 7" />,
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
+  plus: <path d="M12 5v14M5 12h14" />,
   'map-pin': (
     <>
       <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
