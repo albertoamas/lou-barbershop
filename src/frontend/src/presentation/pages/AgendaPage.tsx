@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { appointmentsForDate, sortAppointments, type Appointment } from '../../core/agenda/Agenda'
 import {
@@ -17,17 +17,14 @@ import { AppIcon } from '../components/AppIcon'
 import { AppointmentDetails } from '../components/AppointmentDetails'
 import { AppointmentEditor } from '../components/AppointmentEditor'
 import { Button } from '../components/Button'
+import { Toast } from '../components/Toast'
 import { AgendaTimeline, type AgendaColumn } from '../components/agenda/AgendaTimeline'
 import { AgendaWeek } from '../components/agenda/AgendaWeek'
+import { DateField } from '../components/agenda/DateField'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { tabletQuery, useMediaQuery, wideQuery } from '../hooks/useMediaQuery'
 import { cn } from '../styles/cn'
-import {
-  errorClassName,
-  fieldClassName,
-  successClassName,
-  warningClassName,
-} from '../styles/formStyles'
+import { errorClassName, warningClassName } from '../styles/formStyles'
 
 const longDate = (date: string) =>
   new Intl.DateTimeFormat('es-BO', {
@@ -63,7 +60,13 @@ const chipClassName = (active: boolean) =>
     'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors duration-150',
     active
       ? 'border-ink bg-ink text-on-ink'
-      : 'border-transparent bg-surface text-ink hover:border-line-control',
+      : 'border-transparent bg-surface text-ink shadow-raised hover:border-line-control',
+  )
+
+const segmentClassName = (active: boolean) =>
+  cn(
+    'min-h-11 rounded-lg px-3 text-sm font-semibold sm:px-4 transition-colors duration-150',
+    active ? 'bg-surface text-ink shadow-raised' : 'text-ink-soft hover:text-ink',
   )
 
 export const AgendaPage = () => {
@@ -76,12 +79,15 @@ export const AgendaPage = () => {
     (location.state as { newAppointment?: boolean } | null)?.newAppointment ? null : undefined,
   )
   const [notice, setNotice] = useState('')
+  const clearNotice = useCallback(() => setNotice(''), [])
   const client = useQueryClient()
   const disabled = useConnectivity() !== 'online'
   const isTablet = useMediaQuery(tabletQuery)
   const isWide = useMediaQuery(wideQuery)
   const now = useMinuteClock()
   const today = todayInBusinessTime(now)
+  const panel = useRef<HTMLElement>(null)
+  const opener = useRef<HTMLElement | null>(null)
 
   // Date and view live in the URL so a reload or a shared link keeps the same agenda.
   const [params, setParams] = useSearchParams()
@@ -119,6 +125,8 @@ export const AgendaPage = () => {
     queryFn: () => agendaApi.list(date, dates.at(-1) ?? date, canManage ? barberId : undefined),
     enabled: Boolean(session.data),
     refetchInterval: disabled ? false : 30_000,
+    // Keep showing the previous day while the next one loads instead of flashing a skeleton.
+    placeholderData: keepPreviousData,
   })
 
   const appointments = sortAppointments(agenda.data ?? [])
@@ -127,6 +135,13 @@ export const AgendaPage = () => {
   const team = barbers.data ?? []
   const showTeamChips = canManage && team.length > 1
   const focusedPhoneBarber = phoneBarberId || team[0]?.id || ''
+  // Phones show one barber at a time in both views; the chips choose which one.
+  const phoneFiltered = showTeamChips && !isTablet
+  const weekAppointments = phoneFiltered
+    ? appointments.filter((item) => item.barberId === focusedPhoneBarber)
+    : appointments
+  // The detail follows the latest data: the agenda refreshes every 30 seconds.
+  const current = selected && (appointments.find((item) => item.id === selected.id) ?? selected)
 
   const columns: AgendaColumn[] = canManage
     ? team
@@ -148,23 +163,44 @@ export const AgendaPage = () => {
 
   const nowMarker =
     !weekly && date === today && nowOffset(now) !== undefined
-      ? {
-          offset: nowOffset(now) ?? 0,
-          label: formatMinutes(minutesOfDay(now.toISOString())),
-        }
+      ? { offset: nowOffset(now) ?? 0, label: formatMinutes(minutesOfDay(now.toISOString())) }
       : undefined
 
+  // The inline panel is not modal: move focus into it when it opens and back on close.
+  const currentId = current?.id
+  useEffect(() => {
+    if (isWide && currentId) panel.current?.focus()
+  }, [isWide, currentId])
+
+  const closeDetails = useCallback(() => {
+    setSelected(undefined)
+    opener.current?.focus()
+  }, [])
+
+  // Escape closes the inline panel while focus is inside it, as in a dialog.
+  useEffect(() => {
+    if (!isWide || !currentId) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && panel.current?.contains(document.activeElement)) closeDetails()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [isWide, currentId, closeDetails])
   const changed = () => {
     setSelected(undefined)
     setEditor(undefined)
-    setNotice('Cambio guardado.')
+    setNotice('Cambio guardado')
     void client.invalidateQueries({ queryKey: ['agenda'] })
     void client.invalidateQueries({ queryKey: ['availability'] })
   }
   const openAppointment = (appointment: Appointment) => {
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setSelected(appointment)
     setEditor(undefined)
-    setNotice('')
+  }
+  const openEditor = () => {
+    setEditor(null)
+    setSelected(undefined)
   }
   const moveDate = (direction: -1 | 1) =>
     setDate(addCalendarDays(date, direction * (weekly ? 7 : 1)))
@@ -177,17 +213,17 @@ export const AgendaPage = () => {
     .filter(Boolean)
     .join(', ')
 
-  const details = selected && (
+  const details = current && (
     <AppointmentDetails
-      key={`${selected.id}-${selected.version}`}
-      appointment={selected}
+      key={`${current.id}-${current.version}`}
+      appointment={current}
       canManage={canManage}
       disabled={disabled}
       onChanged={changed}
-      onClose={() => setSelected(undefined)}
+      onClose={closeDetails}
       onOperationOpened={(opened) => navigate('/app/atenciones', { state: { opened } })}
       onReschedule={() => {
-        setEditor(selected)
+        setEditor(current)
         setSelected(undefined)
       }}
     />
@@ -195,147 +231,136 @@ export const AgendaPage = () => {
 
   return (
     <main className="mx-auto w-full max-w-360 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <header className="grid gap-4 lg:flex lg:items-end lg:justify-between">
+        <div className="min-w-0">
           <h1 className="font-display text-5xl leading-none font-extrabold text-balance sm:text-6xl">
             {canManage ? 'Agenda' : 'Mi agenda'}
           </h1>
-          <p className="mt-2 text-lg text-ink-soft first-letter:uppercase">
+          <p className="mt-2 text-lg text-pretty text-ink-soft first-letter:uppercase">
             {weekly
               ? `Semana del ${shortDate(date)} al ${shortDate(dates.at(-1) ?? date)}`
               : longDate(date)}
             . {agenda.data ? `${summaryText}.` : ''}
           </p>
         </div>
-        {canManage && (
-          <Button
-            disabled={disabled}
-            onClick={() => {
-              setEditor(null)
-              setSelected(undefined)
-              setNotice('')
-            }}
+        {/* On the narrowest phones the button drops to its own full-width row instead of
+            wrapping its label. */}
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <div
+            className="grid flex-1 grid-cols-2 rounded-control bg-surface-strong p-1 sm:flex-none"
+            role="group"
+            aria-label="Vista"
           >
-            <AppIcon name="calendar" size={20} />
-            Nueva cita
-          </Button>
-        )}
+            <button
+              type="button"
+              className={segmentClassName(!weekly)}
+              aria-pressed={!weekly}
+              onClick={() => setWeekly(false)}
+            >
+              Día
+            </button>
+            <button
+              type="button"
+              className={segmentClassName(weekly)}
+              aria-pressed={weekly}
+              onClick={() => setWeekly(true)}
+            >
+              Semana
+            </button>
+          </div>
+          {canManage && (
+            <Button
+              className="flex-1 whitespace-nowrap sm:flex-none"
+              disabled={disabled}
+              onClick={openEditor}
+            >
+              <AppIcon name="calendar" size={20} />
+              Nueva cita
+            </Button>
+          )}
+        </div>
       </header>
 
       <section
-        className="sticky top-0 z-20 -mx-4 mt-5 flex flex-wrap items-center gap-2 bg-canvas/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        className="sticky top-[env(safe-area-inset-top)] z-20 -mx-4 mt-5 grid grid-cols-[minmax(0,1fr)] gap-3 bg-canvas/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         aria-label="Controles de agenda"
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <Button
             variant="secondary"
             size="sm"
-            className="w-11 px-0"
+            className="w-11 shrink-0 px-0"
             aria-label={weekly ? 'Semana anterior' : 'Día anterior'}
             onClick={() => moveDate(-1)}
           >
             <AppIcon name="arrow-left" size={18} />
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => setDate(today)}>
-            Hoy
-          </Button>
+          <DateField id="fecha" label="Ir a una fecha" value={date} onChange={setDate} />
           <Button
             variant="secondary"
             size="sm"
-            className="w-11 px-0"
+            className="w-11 shrink-0 px-0"
             aria-label={weekly ? 'Semana siguiente' : 'Día siguiente'}
             onClick={() => moveDate(1)}
           >
             <AppIcon name="arrow-right" size={18} />
           </Button>
-        </div>
-        <label className="sr-only" htmlFor="agenda-date">
-          Ir a una fecha
-        </label>
-        <input
-          id="agenda-date"
-          name="fecha"
-          autoComplete="off"
-          className={cn(fieldClassName, 'min-h-11 w-auto')}
-          type="date"
-          required
-          value={date}
-          onChange={(event) => event.target.value && setDate(event.target.value)}
-        />
-        <div
-          className="ml-auto grid grid-cols-2 rounded-control bg-surface-strong p-1"
-          role="group"
-          aria-label="Vista"
-        >
-          <button
-            type="button"
-            className={cn(
-              'min-h-10 rounded-lg px-4 text-sm font-semibold',
-              !weekly && 'bg-surface shadow-raised',
-            )}
-            aria-pressed={!weekly}
-            onClick={() => setWeekly(false)}
+          <Button
+            variant="secondary"
+            size="sm"
+            className={cn('shrink-0', date === today && 'border-ink')}
+            aria-current={date === today ? 'date' : undefined}
+            onClick={() => setDate(today)}
           >
-            Día
-          </button>
-          <button
-            type="button"
-            className={cn(
-              'min-h-10 rounded-lg px-4 text-sm font-semibold',
-              weekly && 'bg-surface shadow-raised',
-            )}
-            aria-pressed={weekly}
-            onClick={() => setWeekly(true)}
-          >
-            Semana
-          </button>
-        </div>
-      </section>
-
-      {showTeamChips && (
-        <div
-          className="-mx-4 mt-1 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
-          role="group"
-          aria-label="Barbero"
-        >
-          {isTablet && (
-            <button
-              type="button"
-              className={chipClassName(!barberId)}
-              aria-pressed={!barberId}
-              onClick={() => setBarberId('')}
-            >
-              Todo el equipo
-            </button>
+            Hoy
+          </Button>
+          {agenda.isFetching && agenda.isPlaceholderData && (
+            <span className="ml-auto hidden text-sm text-ink-muted sm:block" role="status">
+              Actualizando...
+            </span>
           )}
-          {team.map((barber) => {
-            const active = isTablet ? barberId === barber.id : focusedPhoneBarber === barber.id
-            const count = dayAppointments.filter((item) => item.barberId === barber.id).length
-            return (
-              <button
-                key={barber.id}
-                type="button"
-                className={chipClassName(active)}
-                aria-pressed={active}
-                onClick={() => (isTablet ? setBarberId(barber.id) : setPhoneBarberId(barber.id))}
-              >
-                {barber.displayName}
-                {!weekly && <span className="tabular-nums opacity-75">{count}</span>}
-              </button>
-            )
-          })}
         </div>
-      )}
+
+        {showTeamChips && (
+          <div
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+            role="group"
+            aria-label="Barbero"
+          >
+            {isTablet && (
+              <button
+                type="button"
+                className={chipClassName(!barberId)}
+                aria-pressed={!barberId}
+                onClick={() => setBarberId('')}
+              >
+                Todo el equipo
+              </button>
+            )}
+            {team.map((barber) => {
+              const active = isTablet ? barberId === barber.id : focusedPhoneBarber === barber.id
+              const count = dayAppointments.filter((item) => item.barberId === barber.id).length
+              return (
+                <button
+                  key={barber.id}
+                  type="button"
+                  className={chipClassName(active)}
+                  aria-pressed={active}
+                  onClick={() => (isTablet ? setBarberId(barber.id) : setPhoneBarberId(barber.id))}
+                >
+                  {barber.displayName}
+                  {!weekly && <span className="tabular-nums opacity-75">{count}</span>}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </section>
 
       {disabled && (
         <p role="status" className={cn(warningClassName, 'mt-4')}>
           Sin conexión. Puedes consultar la agenda guardada, pero no registrar llegadas ni cambiar
           citas.
-        </p>
-      )}
-      {notice && (
-        <p role="status" className={cn(successClassName, 'mt-4')}>
-          {notice}
         </p>
       )}
 
@@ -346,12 +371,12 @@ export const AgendaPage = () => {
           ))}
         </div>
       )}
-      {agenda.isError && (
+      {agenda.isError && !agenda.data && (
         <div
           className={cn(errorClassName, 'mt-4 flex flex-wrap items-center justify-between gap-3')}
           role="alert"
         >
-          No se pudo cargar la agenda.
+          No se pudo cargar la agenda. Revisa la conexión y vuelve a intentarlo.
           <Button variant="secondary" size="sm" onClick={() => void agenda.refetch()}>
             Reintentar
           </Button>
@@ -362,17 +387,23 @@ export const AgendaPage = () => {
         <div
           className={cn(
             'mt-4 grid items-start gap-6',
-            isWide && selected && 'grid-cols-[minmax(0,1fr)_24rem]',
+            isWide && current && 'grid-cols-[minmax(0,1fr)_24rem]',
           )}
         >
-          <div className="min-w-0">
+          <div
+            className={cn(
+              'min-w-0 transition-opacity duration-150',
+              agenda.isPlaceholderData && 'opacity-60',
+            )}
+            aria-busy={agenda.isPlaceholderData}
+          >
             {weekly ? (
               <AgendaWeek
                 dates={dates}
                 today={today}
-                appointments={appointments}
-                selectedId={selected?.id}
-                showBarber={canManage && !barberId}
+                appointments={weekAppointments}
+                selectedId={current?.id}
+                showBarber={canManage && !barberId && !phoneFiltered}
                 onOpen={openAppointment}
               />
             ) : (
@@ -385,7 +416,7 @@ export const AgendaPage = () => {
                         variant="secondary"
                         size="sm"
                         disabled={disabled}
-                        onClick={() => setEditor(null)}
+                        onClick={openEditor}
                       >
                         Crear cita
                       </Button>
@@ -396,14 +427,19 @@ export const AgendaPage = () => {
                   columns={columns}
                   allAppointments={appointments}
                   now={nowMarker}
-                  selectedId={selected?.id}
+                  selectedId={current?.id}
                   onOpen={openAppointment}
                 />
               </section>
             )}
           </div>
           {isWide && details && (
-            <aside className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain rounded-sheet bg-surface p-6 shadow-floating">
+            <aside
+              ref={panel}
+              tabIndex={-1}
+              aria-label="Detalle de cita"
+              className="sticky top-[calc(env(safe-area-inset-top)+8.5rem)] max-h-[calc(100dvh-10rem)] overflow-y-auto overscroll-contain rounded-sheet bg-surface p-6 shadow-floating"
+            >
               {details}
             </aside>
           )}
@@ -411,7 +447,10 @@ export const AgendaPage = () => {
       )}
 
       {editor !== undefined && canManage && (
-        <AgendaDialog label={editor ? 'Reprogramar cita' : 'Nueva cita'}>
+        <AgendaDialog
+          label={editor ? 'Reprogramar cita' : 'Nueva cita'}
+          onClose={() => setEditor(undefined)}
+        >
           <AppointmentEditor
             key={editor?.id ?? 'new'}
             appointment={editor ?? undefined}
@@ -422,7 +461,12 @@ export const AgendaPage = () => {
           />
         </AgendaDialog>
       )}
-      {!isWide && details && <AgendaDialog label="Detalle de cita">{details}</AgendaDialog>}
+      {!isWide && details && (
+        <AgendaDialog label="Detalle de cita" onClose={closeDetails}>
+          {details}
+        </AgendaDialog>
+      )}
+      <Toast message={notice} onDone={clearNotice} />
     </main>
   )
 }

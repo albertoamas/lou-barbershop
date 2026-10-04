@@ -118,7 +118,7 @@ export const InternalNavigation = ({ roles, userName, onLogout }: InternalNaviga
   return (
     <>
       <aside
-        className="sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-ink [--color-focus:var(--color-on-ink)] px-2 py-4 text-on-ink md:flex xl:px-4 xl:py-5"
+        className="sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-ink [--color-focus:var(--color-on-ink)] px-2 py-4 text-on-ink md:flex md:pt-[calc(1rem+env(safe-area-inset-top))] md:pb-[calc(1rem+env(safe-area-inset-bottom))] md:pl-[calc(0.5rem+env(safe-area-inset-left))] xl:px-4 xl:py-5"
         aria-label="Navegación principal"
       >
         <BrandLockup compact className="mx-auto xl:hidden" to="/app" useViewTransition={false} />
