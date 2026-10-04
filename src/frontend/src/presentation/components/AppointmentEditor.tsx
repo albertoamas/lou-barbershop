@@ -8,6 +8,7 @@ import { schedulingApi } from '../../infrastructure/http/schedulingApi'
 import { agendaApi } from '../../infrastructure/http/agendaApi'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { cn } from '../styles/cn'
+import { AppIcon } from './AppIcon'
 import { CustomerPicker } from './CustomerPicker'
 import { Button } from './Button'
 import { errorClassName, fieldClassName, labelClassName } from '../styles/formStyles'
@@ -103,8 +104,15 @@ export const AppointmentEditor = ({
             </p>
           )}
         </div>
-        <Button variant="ghost" size="sm" disabled={busy} onClick={onClose}>
-          Cerrar editor
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-11 shrink-0 px-0"
+          aria-label="Cerrar editor"
+          disabled={busy}
+          onClick={onClose}
+        >
+          <AppIcon name="close" />
         </Button>
       </header>
 

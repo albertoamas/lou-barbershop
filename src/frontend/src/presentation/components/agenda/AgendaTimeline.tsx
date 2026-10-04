@@ -11,8 +11,10 @@ import {
 import { Avatar } from '../Avatar'
 import { AppointmentBlock } from './AppointmentBlock'
 
-// 96 px per hour keeps a 15 minute service tall enough to tap (24 px) on a tablet.
-const pixelsPerMinute = 1.6
+// 120 px per hour: readable at arm's length on a tablet. Blocks never draw shorter than
+// the 44 px touch target (plan section 6.2), even for a 15 minute service.
+const pixelsPerMinute = 2
+const minimumBlockHeight = 44
 const px = (minutes: number) => `${minutes * pixelsPerMinute}px`
 const dayHeight = px(timelineEndMinutes - timelineStartMinutes)
 
@@ -85,7 +87,7 @@ export const AgendaTimeline = ({
         {columns.map((column) => (
           <section
             key={column.id}
-            className="w-40 min-w-40 flex-1 border-r border-surface-muted last:border-r-0 md:w-auto md:min-w-44"
+            className="min-w-34 flex-1 border-r border-surface-muted last:border-r-0"
             aria-label={`Agenda de ${column.name}`}
           >
             <header className="flex h-16 items-center gap-3 border-b border-surface-muted px-3">
@@ -126,7 +128,10 @@ export const AgendaTimeline = ({
                     overlap={overlapsAnotherAppointment(appointment, allAppointments)}
                     density={slot.length >= 60 ? 'full' : slot.length >= 40 ? 'medium' : 'small'}
                     className="absolute inset-x-1.5 w-auto"
-                    style={{ top: px(slot.offset), height: px(slot.length) }}
+                    style={{
+                      top: px(slot.offset),
+                      height: `${Math.max(slot.length * pixelsPerMinute, minimumBlockHeight)}px`,
+                    }}
                     onOpen={() => onOpen(appointment)}
                   />
                 )
