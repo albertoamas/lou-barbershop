@@ -25,7 +25,7 @@ export const SocialLinks = () => (
       network.url ? (
         <a
           key={network.label}
-          className="grid size-11 place-items-center rounded-xl border border-lou-fog bg-lou-paper text-lou-ink transition-[translate,background-color,color] duration-300 ease-lou hover:-translate-y-0.5 hover:bg-lou-ink hover:text-white"
+          className="grid size-11 place-items-center rounded-control border border-surface-strong bg-canvas text-ink transition-colors duration-150 hover:bg-ink hover:text-on-ink"
           href={network.url}
           target="_blank"
           rel="noreferrer"
@@ -36,7 +36,7 @@ export const SocialLinks = () => (
       ) : (
         <span
           key={network.label}
-          className="grid size-11 place-items-center rounded-xl border border-lou-fog bg-lou-paper text-lou-graphite/65"
+          className="grid size-11 place-items-center rounded-control border border-surface-strong bg-canvas text-ink-muted"
           role="img"
           aria-label={`${network.label}; enlace pendiente de configuración`}
           title={`${network.label}: falta configurar el enlace oficial`}

@@ -21,16 +21,17 @@ describe('AppShell', () => {
     )
 
     expect(screen.getByRole('link', { name: 'Servicios' })).toHaveAttribute('href', '#servicios')
-    expect(screen.getByRole('link', { name: 'Cómo funciona' })).toHaveAttribute(
-      'href',
-      '#como-funciona',
-    )
+    expect(screen.getByRole('link', { name: 'Equipo' })).toHaveAttribute('href', '#equipo')
+    expect(screen.getByRole('link', { name: 'Horario' })).toHaveAttribute('href', '#ubicacion')
     expect(screen.getByRole('banner')).toHaveAttribute('data-landing-header', 'transparent')
     expect(screen.getByRole('status').parentElement).toHaveAttribute(
       'data-public-notices',
       'below-fixed-header',
     )
-    expect(screen.getByRole('status').parentElement).toHaveClass('top-[4.5625rem]', 'z-30')
+    expect(screen.getByRole('status').parentElement).toHaveClass(
+      'top-[calc(4.5rem+env(safe-area-inset-top))]',
+      'z-30',
+    )
   })
 
   it('keeps secondary public screens on the solid header without landing anchors', () => {

@@ -61,6 +61,14 @@ Surgieron en el rediseño y quedan fuera de su alcance (plan, sección 1):
 - ver el total calculado por el servidor mientras se elige el consumo, antes de guardarlo.
 - saludar por el nombre real en el inicio ("Buenas tardes, Lucía"): la sesión solo devuelve el usuario técnico.
 
+## Datos pendientes de la barbería
+
+Se completan sin tocar diseño, en `src/frontend/src/presentation/content/publicSite.ts` o en la configuración:
+
+- dirección escrita del local (hoy la portada muestra "Lou Barbershop, Tarija" y "Cómo llegar");
+- enlaces de redes y WhatsApp (`VITE_SOCIAL_*`); sin el de WhatsApp, la portada no muestra "Escribir por WhatsApp";
+- fotos del local, trabajos y barberos en `public/media/` (sin fotos, esas secciones no aparecen).
+
 ## Qué falta antes de producción
 
 1. contratar el servidor y configurar dominio/HTTPS;
