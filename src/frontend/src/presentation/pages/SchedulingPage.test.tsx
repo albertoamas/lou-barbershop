@@ -2,14 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  addCalendarDays,
-  todayInBusinessTime,
-  weekStartFor,
-} from '../../core/scheduling/Scheduling'
+import { wholeDayRange } from '../../core/scheduling/Availability'
+import { addCalendarDays, todayInBusinessTime } from '../../core/scheduling/Scheduling'
 import { authApi } from '../../infrastructure/http/authApi'
 import { salesApi } from '../../infrastructure/http/salesApi'
 import { schedulingApi } from '../../infrastructure/http/schedulingApi'
+import { MemoryRouter } from 'react-router-dom'
 import { MotionProvider } from '../components/MotionProvider'
 import { SchedulingPage } from './SchedulingPage'
 
@@ -30,14 +28,13 @@ vi.mock('../../infrastructure/http/schedulingApi', () => ({
 }))
 
 const today = todayInBusinessTime()
-const monday = weekStartFor(today)
 const schedule = {
   id: 'schedule-1',
   barberId: 'barber-1',
   weekday: 1,
   startLocalTime: '08:00',
   endLocalTime: '13:00',
-  validFrom: addCalendarDays(monday, -7),
+  validFrom: addCalendarDays(today, -30),
   active: true,
   version: 1,
 }
@@ -47,19 +44,15 @@ const renderPage = () =>
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <MotionProvider>
-        <SchedulingPage />
-      </MotionProvider>
+      <MemoryRouter>
+        <MotionProvider>
+          <SchedulingPage />
+        </MotionProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 
 beforeEach(() => {
-  HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
-    this.setAttribute('open', '')
-  })
-  HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
-    this.removeAttribute('open')
-  })
   vi.mocked(authApi.current).mockResolvedValue({
     id: 'owner-1',
     userName: 'owner',
@@ -82,65 +75,113 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const absence = (() => {
+  const range = wholeDayRange(addCalendarDays(today, 2), addCalendarDays(today, 4))
+  return {
+    id: 'exception-1',
+    barberId: 'barber-1',
+    ...range,
+    kind: 'UNAVAILABLE' as const,
+    reason: 'Vacaciones',
+    active: true,
+    version: 1,
+  }
+})()
+
 describe('SchedulingPage', () => {
-  it('presents seven days, active shifts and a contextual schedule editor', async () => {
+  it('shows the weekly shifts per day and edits one with a preset', async () => {
+    const user = userEvent.setup()
     renderPage()
-    const week = await screen.findByRole('tabpanel', { name: 'Semana' })
-    expect((await within(week).findAllByText('Lunes')).length).toBeGreaterThan(0)
-    expect(within(week).getByText('Martes')).toBeInTheDocument()
-    expect(within(week).getByText('Domingo')).toBeInTheDocument()
-    await userEvent.click(await screen.findByRole('button', { name: 'Editar turno' }))
-    const dialog = screen.getByRole('dialog', { name: 'Editar turno' })
-    expect(within(dialog).getByLabelText('Inicio')).toHaveValue('08:00')
-    await userEvent.clear(within(dialog).getByLabelText('Inicio'))
-    await userEvent.type(within(dialog).getByLabelText('Inicio'), '12:00')
-    expect(within(dialog).getByRole('button', { name: 'Guardar cambios' })).toBeEnabled()
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Disponibilidad' })).toBeVisible()
+    expect(await screen.findByRole('button', { name: /Diego/ })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(await screen.findByRole('button', { name: 'Editar turno 08:00 a 13:00' })).toBeVisible()
+    expect(screen.getAllByText('Libre')).toHaveLength(6)
+
+    await user.click(screen.getByRole('button', { name: 'Editar turno 08:00 a 13:00' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Editar turno' })
+    expect(within(dialog).getByRole('radio', { name: /Mañana/ })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    await user.click(within(dialog).getByRole('radio', { name: /Tarde/ }))
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar cambios' }))
+
     await waitFor(() =>
-      expect(schedulingApi.updateSchedule).toHaveBeenCalledWith(schedule, {
-        weekday: 1,
-        startLocalTime: '12:00',
-        endLocalTime: '13:00',
-        validFrom: schedule.validFrom,
-        active: true,
+      expect(schedulingApi.updateSchedule).toHaveBeenCalledWith(
+        schedule,
+        expect.objectContaining({ weekday: 1, startLocalTime: '15:00', endLocalTime: '21:00' }),
+      ),
+    )
+  })
+
+  it('keeps a barber on a read-only view of the own schedule', async () => {
+    vi.mocked(authApi.current).mockResolvedValue({
+      id: 'barber',
+      userName: 'diego',
+      roles: ['BARBER'],
+    })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mi horario' })).toBeVisible()
+    expect(await screen.findByText('08:00 a 13:00')).toBeVisible()
+    expect(screen.queryByRole('group', { name: 'Barbero' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Agregar/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Registrar ausencia/ })).not.toBeInTheDocument()
+  })
+
+  it('lists an upcoming absence in words and registers a whole-day one with a reason chip', async () => {
+    vi.mocked(schedulingApi.listExceptions).mockResolvedValue([absence])
+    vi.mocked(schedulingApi.createException).mockResolvedValue({
+      exception: absence,
+      conflicts: [],
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    expect(await screen.findByText(/^Del .*, todo el día$/)).toBeVisible()
+    expect(screen.getByRole('button', { name: /^Quitar ausencia/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Registrar ausencia/ }))
+    const dialog = await screen.findByRole('dialog', { name: /Registrar ausencia/ })
+    expect(within(dialog).getByRole('checkbox', { name: 'Todo el día' })).toBeChecked()
+    await user.click(within(dialog).getByRole('button', { name: 'Vacaciones' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar ausencia' }))
+
+    await waitFor(() =>
+      expect(schedulingApi.createException).toHaveBeenCalledWith('barber-1', {
+        startsAt: `${today}T08:00:00-04:00`,
+        endsAt: `${today}T21:00:00-04:00`,
+        kind: 'UNAVAILABLE',
+        reason: 'Vacaciones',
       }),
     )
   })
 
-  it('restricts a barber to the linked profile and hides modification controls', async () => {
-    vi.mocked(authApi.current).mockResolvedValue({
-      id: 'barber-user',
-      userName: 'diego',
-      roles: ['BARBER'],
+  it('points to the agenda when a change leaves appointments outside the hours', async () => {
+    vi.mocked(schedulingApi.updateSchedule).mockResolvedValue({
+      schedule,
+      conflicts: [
+        {
+          appointmentId: 'appointment-1',
+          startsAt: `${addCalendarDays(today, 7)}T14:00:00Z`,
+          endsAt: `${addCalendarDays(today, 7)}T15:00:00Z`,
+        },
+      ],
     })
-    vi.mocked(salesApi.ownBarber).mockResolvedValue({ barberId: 'barber-2' })
+    const user = userEvent.setup()
     renderPage()
-    expect(await screen.findByText('Diego')).toBeInTheDocument()
-    expect(vi.mocked(schedulingApi.listSchedules)).toHaveBeenCalledWith('barber-2')
-    expect(vi.mocked(schedulingApi.listExceptions)).toHaveBeenCalledWith('barber-2')
-    expect(screen.queryByRole('button', { name: 'Agregar turno' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Editar turno' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('combobox', { name: 'Barbero' })).not.toBeInTheDocument()
-  })
 
-  it('shows a dated exception in the weekly view and upcoming list', async () => {
-    const exceptionDate = addCalendarDays(monday, 9)
-    vi.mocked(schedulingApi.listExceptions).mockResolvedValue([
-      {
-        id: 'exception-1',
-        barberId: 'barber-1',
-        startsAt: `${exceptionDate}T09:00:00-04:00`,
-        endsAt: `${exceptionDate}T10:00:00-04:00`,
-        kind: 'UNAVAILABLE',
-        reason: 'Ausencia de prueba',
-        active: true,
-        version: 1,
-      },
-    ])
-    renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Semana siguiente' }))
-    expect(await screen.findByText('Ausencia o bloqueo · 09:00–10:00')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('tab', { name: 'Excepciones' }))
-    expect(screen.getByText('Ausencia de prueba')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: 'Editar turno 08:00 a 13:00' }))
+    await user.click(await screen.findByRole('button', { name: 'Guardar cambios' }))
+
+    expect(await screen.findByText(/1 cita queda fuera del nuevo horario/)).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Revisarlas en la agenda' })).toHaveAttribute(
+      'href',
+      `/app/agenda?fecha=${addCalendarDays(today, 7)}`,
+    )
   })
 })
