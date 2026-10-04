@@ -7,24 +7,13 @@ import {
 } from '../../../core/public-booking/PublicBooking'
 import { cn } from '../../styles/cn'
 import { AppIcon, type IconName } from '../AppIcon'
+import { serviceIcon } from './serviceIcon'
 
 const groups: { group: ServiceGroup; title: string; icon: IconName }[] = [
   { group: 'CUTS', title: 'Cortes', icon: 'scissors' },
   { group: 'BEARD', title: 'Barba y navaja', icon: 'razor' },
   { group: 'DETAILS', title: 'Detalles', icon: 'eyebrow' },
 ]
-
-// Each service gets a drawing of what it is, so the list reads at a glance.
-const iconFor = (name: string): IconName => {
-  const value = name.toLocaleLowerCase('es')
-  if (value.includes('infantil') || value.includes('niño')) return 'kid'
-  if (value.includes('corte') && value.includes('barba')) return 'beard'
-  if (value.includes('afeitado') || value.includes('navaja')) return 'razor'
-  if (value.includes('barba')) return 'beard'
-  if (value.includes('ceja')) return 'eyebrow'
-  if (value.includes('diseño')) return 'clipper'
-  return 'scissors'
-}
 
 const bookingPath = (service: PublicService) => `/reservar?servicio=${service.id}`
 const linkLabel = (service: PublicService) =>
@@ -57,7 +46,7 @@ export const ServiceCatalog = ({ services, featured, preview = false }: ServiceC
                 viewTransition
               >
                 <span className="absolute -right-6 -bottom-6 text-on-ink/10" aria-hidden="true">
-                  <AppIcon name={iconFor(service.name)} size={160} />
+                  <AppIcon name={serviceIcon(service.name)} size={160} />
                 </span>
                 <span className="w-fit rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success-ink">
                   Recomendado
@@ -138,7 +127,7 @@ export const ServiceCatalog = ({ services, featured, preview = false }: ServiceC
                         viewTransition
                       >
                         <span className="grid size-12 shrink-0 place-items-center rounded-full bg-paper-warm text-ink transition-colors duration-150 group-hover:bg-ink group-hover:text-on-ink">
-                          <AppIcon name={iconFor(service.name)} size={24} />
+                          <AppIcon name={serviceIcon(service.name)} size={24} />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-lg font-semibold">{service.name}</span>
