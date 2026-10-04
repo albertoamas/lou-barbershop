@@ -7,6 +7,7 @@ using LouBarbershop.Api.Health;
 using LouBarbershop.Api.Middleware;
 using LouBarbershop.Api.Serialization;
 using LouBarbershop.Infrastructure;
+using LouBarbershop.Infrastructure.DemoData;
 using LouBarbershop.Infrastructure.Identity;
 using LouBarbershop.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -55,6 +56,16 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
 }
 
 builder.Services.AddInfrastructure(builder.Configuration);
+var seedDemo = args.Contains("--seed-demo", StringComparer.Ordinal);
+if (seedDemo)
+{
+    if (!builder.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException("--seed-demo solo se permite con ASPNETCORE_ENVIRONMENT=Development.");
+    }
+
+    builder.Services.AddDemoSeeding();
+}
 var cookieSecurePolicy = builder.Configuration.GetValue("Security:RequireSecureCookies", true)
     ? CookieSecurePolicy.Always
     : CookieSecurePolicy.SameAsRequest;
@@ -302,6 +313,17 @@ if (args.Contains("--migrate", StringComparer.Ordinal))
     await using var scope = app.Services.CreateAsyncScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
+    return;
+}
+
+if (seedDemo)
+{
+    await using (var scope = app.Services.CreateAsyncScope())
+    {
+        await scope.ServiceProvider.GetRequiredService<OwnerBootstrapper>().BootstrapAsync(CancellationToken.None);
+    }
+
+    await app.Services.GetRequiredService<DemoSeeder>().SeedAsync(CancellationToken.None);
     return;
 }
 
