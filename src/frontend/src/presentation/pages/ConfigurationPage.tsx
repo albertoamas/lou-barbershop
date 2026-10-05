@@ -1,58 +1,108 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
-import { centsToBolivianos } from '../../core/configuration/Configuration'
+import {
+  byActiveThenName,
+  centsToBolivianos,
+  staffFunction,
+  type ConfigurationSnapshot,
+} from '../../core/configuration/Configuration'
 import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
 import { configurationApi } from '../../infrastructure/http/configurationApi'
+import { AgendaDialog } from '../components/AgendaDialog'
+import { AppIcon } from '../components/AppIcon'
 import { Button } from '../components/Button'
-import { ConfigurationEditor, type ConfigurationPanel } from '../components/ConfigurationEditor'
-import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Toast } from '../components/Toast'
+import { AccountSheet } from '../components/configuration/AccountSheet'
+import { ConfigList, type ConfigRow } from '../components/configuration/ConfigLists'
+import { ConfigurationForm } from '../components/configuration/ConfigurationForm'
+import { panelLabel, type Panel } from '../components/configuration/configPanels'
+import { PersonSheet } from '../components/configuration/PersonSheet'
+import { SheetHeader } from '../components/configuration/SheetHeader'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { cn } from '../styles/cn'
-import {
-  errorClassName,
-  fieldClassName,
-  noticeClassName,
-  panelClassName,
-} from '../styles/formStyles'
+import { errorClassName, warningClassName } from '../styles/formStyles'
 
-type Section = 'team' | 'services' | 'offerings' | 'products' | 'commissions' | 'expenses' | 'users'
-const sections: ReadonlyArray<{ id: Section; label: string; noun: string }> = [
-  { id: 'team', label: 'Equipo', noun: 'persona' },
-  { id: 'services', label: 'Servicios', noun: 'servicio' },
-  { id: 'offerings', label: 'Ofertas', noun: 'oferta' },
-  { id: 'products', label: 'Productos', noun: 'producto' },
-  { id: 'commissions', label: 'Comisiones', noun: 'regla' },
-  { id: 'expenses', label: 'Gastos', noun: 'categoría' },
-  { id: 'users', label: 'Usuarios', noun: 'usuario' },
+type Section = 'team' | 'services' | 'products' | 'expenses'
+const sections: { id: Section; param: string; label: string; create: string }[] = [
+  { id: 'team', param: 'equipo', label: 'Equipo', create: 'Agregar persona' },
+  { id: 'services', param: 'servicios', label: 'Servicios', create: 'Nuevo servicio' },
+  { id: 'products', param: 'productos', label: 'Productos', create: 'Nuevo producto' },
+  { id: 'expenses', param: 'gastos', label: 'Gastos', create: 'Nueva categoría' },
 ]
-const isSection = (value: string | null): value is Section =>
-  sections.some((item) => item.id === value)
-const roleLabel = (role: string) =>
-  ({ OWNER: 'Dueño', ADMIN: 'Administrador', BARBER: 'Barbero' })[role] ?? role
-const percent = (basisPoints: number) =>
-  `${new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(basisPoints / 100)} %`
+const createKind = {
+  team: 'create-team',
+  services: 'create-services',
+  products: 'create-products',
+  expenses: 'create-expenses',
+} as const
+
 const errorMessage = (error: unknown) =>
-  error instanceof ApiError
+  error instanceof ApiError && (error.problem.detail ?? error.problem.title)
     ? (error.problem.detail ?? error.problem.title)
-    : 'No se pudo guardar el cambio. Intenta nuevamente.'
+    : 'No se pudo guardar el cambio. Intenta otra vez.'
+
+const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
+
+const rowsFor = (section: Section, data: ConfigurationSnapshot): ConfigRow[] => {
+  if (section === 'team')
+    return [...data.staff].sort(byActiveThenName((item) => item.displayName)).map((item) => ({
+      id: item.id,
+      title: item.displayName,
+      detail: staffFunction(item, data.barbers, data.users),
+      active: item.active,
+    }))
+  if (section === 'services')
+    return [...data.services].sort(byActiveThenName((item) => item.name)).map((item) => ({
+      id: item.id,
+      title: item.name,
+      detail: `${item.defaultDurationMinutes} min, precio por defecto`,
+      aside: centsToBolivianos(item.defaultPriceCents),
+      active: item.active,
+    }))
+  if (section === 'products')
+    return [...data.products].sort(byActiveThenName((item) => item.name)).map((item) => ({
+      id: item.id,
+      title: item.name,
+      detail:
+        [item.brand, item.sku].filter(Boolean).join(', ') ||
+        `Avisar con ${item.minimumStock} o menos`,
+      aside: centsToBolivianos(item.salePriceCents),
+      active: item.active,
+    }))
+  return [...data.expenseCategories].sort(byActiveThenName((item) => item.name)).map((item) => ({
+    id: item.id,
+    title: item.name,
+    detail: 'Categoría de gasto',
+    active: item.active,
+  }))
+}
+
+const summaryFor = (section: Section, data: ConfigurationSnapshot) => {
+  const active = <T extends { active: boolean }>(items: T[]) =>
+    items.filter((item) => item.active).length
+  if (section === 'team') {
+    const barbers = data.barbers.filter((item) => item.active).length
+    return `${plural(active(data.staff), 'persona activa', 'personas activas')}, ${plural(barbers, 'atiende', 'atienden')} como barbero.`
+  }
+  if (section === 'services')
+    return `${plural(active(data.services), 'servicio activo', 'servicios activos')}. El precio de cada barbero se define en su ficha del Equipo.`
+  if (section === 'products')
+    return `${plural(active(data.products), 'producto activo', 'productos activos')}. Las existencias se manejan en Inventario.`
+  return `${plural(active(data.expenseCategories), 'categoría activa', 'categorías activas')} para clasificar los gastos.`
+}
 
 export const ConfigurationPage = () => {
   const [params, setParams] = useSearchParams()
-  const section: Section = isSection(params.get('seccion'))
-    ? (params.get('seccion') as Section)
-    : 'team'
-  const [selectedId, setSelectedId] = useState('')
-  const [selectedBarberId, setSelectedBarberId] = useState('')
-  const [panel, setPanel] = useState<ConfigurationPanel | null>(null)
-  const [confirm, setConfirm] = useState<{ label: string; action: () => Promise<unknown> } | null>(
-    null,
-  )
+  const section = sections.find((item) => item.param === params.get('seccion'))?.id ?? 'team'
+  const [panel, setPanel] = useState<Panel | null>(null)
   const [busy, setBusy] = useState(false)
-  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const clearNotice = useCallback(() => setNotice(''), [])
   const queryClient = useQueryClient()
-  const connectivity = useConnectivity()
+  const online = useConnectivity() === 'online'
   const session = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: authApi.current,
@@ -64,687 +114,308 @@ export const ConfigurationPage = () => {
     queryFn: configurationApi.load,
     enabled: isOwner,
   })
-  const data = snapshot.data
-  const activeBarberId = selectedBarberId || data?.barbers.find((item) => item.active)?.id || ''
-  const offerings = useQuery({
-    queryKey: ['offerings', activeBarberId],
-    queryFn: () => configurationApi.listOfferings(activeBarberId),
-    enabled: isOwner && section === 'offerings' && Boolean(activeBarberId),
-  })
-  const rules = useQuery({
-    queryKey: ['commission-rules', activeBarberId],
-    queryFn: () => configurationApi.listCommissionRules(activeBarberId),
-    enabled: isOwner && section === 'commissions' && Boolean(activeBarberId),
-  })
 
-  const save = async (action: () => Promise<unknown>, extra: string[][] = []) => {
-    if (connectivity !== 'online') {
-      setNotice({ text: 'Recupera la conexión para guardar cambios.', error: true })
-      return false
-    }
+  const open = (next: Panel | null) => {
+    setError('')
+    setPanel(next)
+  }
+  const close = () => !busy && open(null)
+  const save = async (
+    action: () => Promise<unknown>,
+    refresh: string[][] = [],
+    after: Panel | null = null,
+  ) => {
     setBusy(true)
-    setNotice(null)
+    setError('')
     try {
       await action()
       await queryClient.invalidateQueries({ queryKey: ['configuration'] })
-      for (const key of extra) await queryClient.invalidateQueries({ queryKey: key })
-      setNotice({ text: 'Cambio guardado. El historial anterior permanece intacto.', error: false })
-      setPanel(null)
-      setConfirm(null)
-      return true
-    } catch (error) {
-      setNotice({ text: errorMessage(error), error: true })
-      return false
+      for (const key of refresh) await queryClient.invalidateQueries({ queryKey: key })
+      setPanel(after)
+      setNotice('Cambio guardado')
+    } catch (caught) {
+      setError(errorMessage(caught))
     } finally {
       setBusy(false)
     }
   }
-  const requestToggle = (label: string, action: () => Promise<unknown>) =>
-    setConfirm({ label, action })
-  const changeSection = (next: Section) => {
-    const nextParams = new URLSearchParams(params)
-    nextParams.set('seccion', next)
-    setParams(nextParams, { replace: true })
-    setSelectedId('')
-    setNotice(null)
-  }
 
-  if (session.isPending) return <Loading title="Comprobando acceso" />
-  if (session.isError)
+  if (session.isPending || (isOwner && snapshot.isPending))
     return (
-      <main className="mx-auto max-w-360 px-4 py-8">
-        <p className={errorClassName} role="alert">
-          No se pudo comprobar tu sesión.{' '}
-          <button className="font-bold underline" onClick={() => void session.refetch()}>
+      <main
+        className="mx-auto w-full max-w-360 px-4 py-6"
+        role="status"
+        aria-label="Cargando configuración"
+      >
+        <div className="h-96 animate-pulse rounded-panel bg-surface-strong" />
+      </main>
+    )
+  if (session.isError || snapshot.isError || (isOwner && !snapshot.data))
+    return (
+      <main className="mx-auto w-full max-w-360 px-4 py-6">
+        <div
+          className={cn(errorClassName, 'flex flex-wrap items-center justify-between gap-3')}
+          role="alert"
+        >
+          No pudimos cargar la configuración.
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void (session.isError ? session.refetch() : snapshot.refetch())}
+          >
             Reintentar
-          </button>
-        </p>
+          </Button>
+        </div>
       </main>
     )
   if (!isOwner) return <Navigate to="/app/acceso-denegado" replace />
-  if (snapshot.isPending) return <Loading title="Cargando configuración" />
-  if (snapshot.isError || !data)
-    return (
-      <main className="mx-auto max-w-360 px-4 py-8">
-        <p className={errorClassName} role="alert">
-          No se pudo cargar la configuración.{' '}
-          <button className="font-bold underline" onClick={() => void snapshot.refetch()}>
-            Reintentar
-          </button>
-        </p>
-      </main>
-    )
+  const data = snapshot.data!
 
-  const barber = data.barbers.find((item) => item.id === activeBarberId)
-  const barberName = (staffId: string) =>
-    data.staff.find((item) => item.id === staffId)?.displayName ?? 'Barbero'
-  const sectionRows: Array<{ id: string; title: string; subtitle: string; active: boolean }> =
-    section === 'team'
-      ? data.staff.map((item) => ({
-          id: item.id,
-          title: item.displayName,
-          subtitle: `${data.barbers.some((barber) => barber.staffProfileId === item.id) ? 'Barbero' : 'Personal'} · ${item.active ? 'Activo' : 'Inactivo'}`,
-          active: item.active,
-        }))
-      : section === 'services'
-        ? data.services.map((item) => ({
-            id: item.id,
-            title: item.name,
-            subtitle: `${item.defaultDurationMinutes} min · ${centsToBolivianos(item.defaultPriceCents)}`,
-            active: item.active,
-          }))
-        : section === 'offerings'
-          ? (offerings.data ?? []).map((item) => ({
-              id: item.id,
-              title:
-                data.services.find((service) => service.id === item.serviceId)?.name ?? 'Servicio',
-              subtitle: `${centsToBolivianos(item.priceCents)} · desde ${item.validFrom}`,
-              active: item.active,
-            }))
-          : section === 'products'
-            ? data.products.map((item) => ({
-                id: item.id,
-                title: item.name,
-                subtitle: `${item.brand || 'Sin marca'} · ${centsToBolivianos(item.salePriceCents)}`,
-                active: item.active,
-              }))
-            : section === 'commissions'
-              ? (rules.data ?? []).map((item) => ({
-                  id: item.id,
-                  title: item.kind === 'SERVICE' ? 'Servicios' : 'Productos',
-                  subtitle: `${percent(item.rateBasisPoints)} · desde ${item.validFrom}`,
-                  active: item.active,
-                }))
-              : section === 'expenses'
-                ? data.expenseCategories.map((item) => ({
-                    id: item.id,
-                    title: item.name,
-                    subtitle: item.active ? 'Activa' : 'Inactiva',
-                    active: item.active,
-                  }))
-                : data.users.map((item) => ({
-                    id: item.id,
-                    title: item.userName,
-                    subtitle: item.roles.map(roleLabel).join(' · '),
-                    active: item.active,
-                  }))
-  const currentId = sectionRows.some((item) => item.id === selectedId)
-    ? selectedId
-    : (sectionRows[0]?.id ?? '')
-  const current = sectionRows.find((item) => item.id === currentId)
-  const selectedStaff = data.staff.find((item) => item.id === currentId)
-  const selectedBarber = data.barbers.find((item) => item.staffProfileId === currentId)
-  const selectedService = data.services.find((item) => item.id === currentId)
-  const selectedOffering = offerings.data?.find((item) => item.id === currentId)
-  const selectedProduct = data.products.find((item) => item.id === currentId)
-  const selectedRule = rules.data?.find((item) => item.id === currentId)
-  const selectedExpense = data.expenseCategories.find((item) => item.id === currentId)
-  const selectedUser = data.users.find((item) => item.id === currentId)
-  const createPanel: ConfigurationPanel = { kind: `create-${section}` }
+  const current = sections.find((item) => item.id === section)!
+  const rows = rowsFor(section, data)
+  const looseAccounts = data.users.filter(
+    (user) => !data.staff.some((person) => person.userId === user.id),
+  )
+  const disabled = busy || !online
+  const openRow = (id: string) => {
+    if (section === 'team') return open({ kind: 'person', staffId: id })
+    if (section === 'services') return open({ kind: 'edit-services', id })
+    if (section === 'products') return open({ kind: 'edit-products', id })
+    return open({ kind: 'edit-expenses', id })
+  }
+  const changeSection = (next: (typeof sections)[number]) => {
+    const nextParams = new URLSearchParams(params)
+    nextParams.set('seccion', next.param)
+    setParams(nextParams, { replace: true })
+  }
+
+  // Deactivating a catalog record from its edit form.
+  const toggleFooter = (id: string | undefined, target: Panel) => {
+    const record =
+      section === 'services'
+        ? data.services.find((item) => item.id === id)
+        : section === 'products'
+          ? data.products.find((item) => item.id === id)
+          : data.expenseCategories.find((item) => item.id === id)
+    if (!record) return undefined
+    const noun =
+      section === 'services' ? 'servicio' : section === 'products' ? 'producto' : 'categoría'
+    const action = () =>
+      section === 'services'
+        ? configurationApi.updateService(
+            data.services.find((item) => item.id === record.id)!,
+            !record.active,
+          )
+        : section === 'products'
+          ? configurationApi.updateProduct(
+              data.products.find((item) => item.id === record.id)!,
+              !record.active,
+            )
+          : configurationApi.updateExpenseCategory(
+              data.expenseCategories.find((item) => item.id === record.id)!,
+              !record.active,
+            )
+    const label = `${record.active ? 'Desactivar' : 'Activar'} ${noun}`
+    return (
+      <div className="mt-2 grid justify-items-start gap-2 border-t border-line pt-4">
+        <p className="text-pretty text-ink-soft">
+          {record.active
+            ? 'Deja de ofrecerse desde ahora. Lo registrado antes se conserva.'
+            : 'Vuelve a estar disponible.'}
+        </p>
+        <Button
+          type="button"
+          variant={record.active ? 'dangerSoft' : 'secondary'}
+          size="sm"
+          disabled={disabled}
+          onClick={() =>
+            open({
+              kind: 'confirm',
+              title: label,
+              detail: record.active
+                ? `${record.name} dejará de estar disponible. Las citas, ventas y gastos anteriores no cambian.`
+                : `${record.name} volverá a estar disponible.`,
+              confirmLabel: label,
+              action,
+              back: target,
+            })
+          }
+        >
+          {label}
+        </Button>
+      </div>
+    )
+  }
+
+  const renderPanel = (value: Panel) => {
+    if (value.kind === 'person')
+      return (
+        <PersonSheet
+          staffId={value.staffId}
+          data={data}
+          disabled={disabled}
+          onClose={close}
+          onOpen={open}
+        />
+      )
+    if (value.kind === 'account')
+      return (
+        <AccountSheet
+          userId={value.userId}
+          data={data}
+          disabled={disabled}
+          onClose={close}
+          onOpen={open}
+        />
+      )
+    if (value.kind === 'confirm')
+      return (
+        <div className="grid gap-5">
+          <SheetHeader title={value.title} busy={busy} onClose={close} />
+          <p className="text-pretty">{value.detail}</p>
+          {error && (
+            <p className={errorClassName} role="alert">
+              {error}
+            </p>
+          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button variant="ghost" disabled={busy} onClick={() => open(value.back ?? null)}>
+              Volver
+            </Button>
+            <Button
+              disabled={disabled}
+              onClick={() => void save(value.action, value.refresh, value.back ?? null)}
+            >
+              {busy ? 'Guardando' : value.confirmLabel}
+            </Button>
+          </div>
+        </div>
+      )
+    const editing =
+      value.kind === 'edit-services' ||
+      value.kind === 'edit-products' ||
+      value.kind === 'edit-expenses'
+    return (
+      <ConfigurationForm
+        kind={value.kind}
+        id={value.id}
+        barberId={value.barberId}
+        data={data}
+        busy={busy}
+        online={online}
+        error={error}
+        footer={editing ? toggleFooter(value.id, value) : undefined}
+        onBack={value.back ? () => open(value.back ?? null) : undefined}
+        onClose={close}
+        onCreateAccount={() => open({ kind: 'create-users', back: value })}
+        onSave={(action, refresh) =>
+          void save(action, refresh, value.kind === 'create-team' ? null : (value.back ?? null))
+        }
+      />
+    )
+  }
 
   return (
-    <main className="mx-auto w-full max-w-360 px-4 py-7 sm:px-6 lg:px-10 lg:py-10">
-      <header className="border-b border-lou-fog pb-7">
-        <p className="mb-2 text-xs font-bold tracking-[0.2em] text-lou-graphite/50 uppercase">
-          Gestión del dueño
-        </p>
-        <h1 className="font-display text-5xl leading-[0.9] font-bold sm:text-6xl">Configuración</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-lou-graphite/65">
-          Personas y catálogo en un solo lugar. Las nuevas condiciones tienen vigencia; las
-          operaciones pasadas no se reescriben.
-        </p>
+    <main className="mx-auto w-full max-w-360 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="font-display text-5xl leading-none font-extrabold text-balance sm:text-6xl">
+            Configuración
+          </h1>
+          <p className="mt-2 max-w-3xl text-lg text-pretty text-ink-soft">
+            {summaryFor(section, data)}
+          </p>
+        </div>
+        <Button
+          className="max-sm:w-full"
+          disabled={disabled}
+          onClick={() => open({ kind: createKind[section] })}
+        >
+          <AppIcon name="plus" size={20} />
+          {current.create}
+        </Button>
       </header>
-      <nav
-        className="mt-5 flex gap-1 overflow-x-auto rounded-2xl border border-lou-fog bg-white p-1.5 xl:grid xl:grid-cols-7"
+
+      {!online && (
+        <p className={cn(warningClassName, 'mt-4')} role="status">
+          Sin conexión. Puedes consultar, pero no guardar cambios.
+        </p>
+      )}
+
+      <div
+        className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        role="tablist"
         aria-label="Secciones de configuración"
       >
         {sections.map((item) => (
           <button
             key={item.id}
             type="button"
-            aria-current={section === item.id ? 'page' : undefined}
+            role="tab"
+            id={`config-tab-${item.id}`}
+            aria-controls={`config-panel-${item.id}`}
+            aria-selected={section === item.id}
             className={cn(
-              'min-h-11 shrink-0 rounded-xl px-4 text-sm font-bold whitespace-nowrap transition-colors duration-200 xl:px-3',
+              'inline-flex min-h-11 shrink-0 items-center rounded-full border-2 px-4 font-semibold transition-colors duration-150',
               section === item.id
-                ? 'bg-lou-ink text-white'
-                : 'text-lou-graphite/60 hover:bg-lou-paper hover:text-lou-ink',
+                ? 'border-ink bg-ink text-on-ink'
+                : 'border-transparent bg-surface shadow-raised hover:border-line-control',
             )}
-            onClick={() => changeSection(item.id)}
+            onClick={() => changeSection(item)}
           >
             {item.label}
           </button>
         ))}
-      </nav>
-      {notice && (
-        <p
-          className={cn('mt-4', notice.error ? errorClassName : noticeClassName)}
-          role={notice.error ? 'alert' : 'status'}
-        >
-          {notice.text}
-        </p>
-      )}
-      {(section === 'offerings' || section === 'commissions') && (
-        <section className={cn(panelClassName, 'mt-5')} aria-label="Barbero seleccionado">
-          <label className="grid max-w-sm gap-1.5 text-xs font-bold text-lou-graphite">
-            Barbero
-            <select
-              className={fieldClassName}
-              value={activeBarberId}
-              onChange={(event) => {
-                setSelectedBarberId(event.target.value)
-                setSelectedId('')
-              }}
-            >
-              {data.barbers
-                .filter((item) => item.active)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {barberName(item.staffProfileId)}
-                  </option>
-                ))}
-            </select>
-          </label>
-          {barber?.employmentType === 'OWNER' && section === 'commissions' && (
-            <p className="mt-3 text-sm text-lou-graphite/60">
-              El dueño también atiende, pero su producción no genera deuda de comisión.
-            </p>
-          )}
-        </section>
-      )}
-      <div className="mt-5 grid items-start gap-4 lg:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.6fr)]">
-        <section
-          className={panelClassName}
-          aria-label={`Lista de ${sections.find((item) => item.id === section)?.label.toLowerCase()}`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-display text-2xl font-bold">
-                {sections.find((item) => item.id === section)?.label}
-              </h2>
-              <p className="text-xs text-lou-graphite/50">
-                {sectionRows.length} {sectionRows.length === 1 ? 'registro' : 'registros'}
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              disabled={
-                busy ||
-                ((section === 'offerings' || section === 'commissions') && !activeBarberId) ||
-                (section === 'commissions' && barber?.employmentType === 'OWNER')
-              }
-              onClick={() => setPanel(createPanel)}
-            >
-              Crear
-            </Button>
-          </div>
-          {(section === 'offerings' && offerings.isPending) ||
-          (section === 'commissions' && rules.isPending) ? (
-            <div className="mt-5 space-y-2" role="status" aria-label="Cargando condiciones">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="h-16 animate-pulse rounded-xl bg-lou-paper" />
-              ))}
-            </div>
-          ) : (section === 'offerings' && offerings.isError) ||
-            (section === 'commissions' && rules.isError) ? (
-            <p className={cn('mt-4', errorClassName)} role="alert">
-              No se pudo cargar esta lista.{' '}
-              <button
-                className="font-bold underline"
-                onClick={() =>
-                  void (section === 'offerings' ? offerings.refetch() : rules.refetch())
-                }
-              >
-                Reintentar
-              </button>
-            </p>
-          ) : sectionRows.length ? (
-            <div className="mt-4 space-y-1" aria-label="Registros">
-              {sectionRows.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-current={currentId === item.id ? 'true' : undefined}
-                  onClick={() => setSelectedId(item.id)}
-                  className={cn(
-                    'w-full rounded-xl border px-4 py-3 text-left transition-colors duration-200',
-                    currentId === item.id
-                      ? 'border-lou-ink bg-lou-paper'
-                      : 'border-transparent hover:bg-lou-paper/60',
-                  )}
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <strong className="text-sm">{item.title}</strong>
-                    <span
-                      className={cn(
-                        'h-2 w-2 shrink-0 rounded-full',
-                        item.active ? 'bg-emerald-600' : 'bg-lou-steel',
-                      )}
-                      aria-label={item.active ? 'Activo' : 'Inactivo'}
-                    />
-                  </span>
-                  <span className="mt-1 block text-xs text-lou-graphite/55">{item.subtitle}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-5 rounded-xl bg-lou-paper p-5 text-sm text-lou-graphite/60">
-              Aún no hay {sections.find((item) => item.id === section)?.noun}s. Usa Crear para
-              añadir el primero.
-            </p>
-          )}
-        </section>
-        <section className={panelClassName} aria-label="Detalle seleccionado">
-          {current ? (
-            <>
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-lou-fog pb-5">
-                <div>
-                  <p className="text-xs font-bold tracking-[0.16em] text-lou-graphite/45 uppercase">
-                    Detalle
-                  </p>
-                  <h2 className="mt-1 font-display text-3xl font-bold">{current.title}</h2>
-                  <p className="mt-1 text-sm text-lou-graphite/55">{current.subtitle}</p>
-                </div>
-                <span
-                  className={cn(
-                    'rounded-full px-3 py-1 text-xs font-bold',
-                    current.active
-                      ? 'bg-emerald-50 text-emerald-800'
-                      : 'bg-lou-paper text-lou-graphite/60',
-                  )}
-                >
-                  {current.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </div>
-              <div className="mt-5 space-y-5 text-sm">
-                {selectedStaff && section === 'team' && (
-                  <>
-                    <Detail
-                      label="Cuenta"
-                      value={
-                        data.users.find((user) => user.id === selectedStaff.userId)?.userName ??
-                        'Sin cuenta'
-                      }
-                    />
-                    <Detail label="Teléfono" value={selectedStaff.phone || 'No registrado'} />
-                    <Detail
-                      label="Función"
-                      value={
-                        selectedBarber
-                          ? selectedBarber.employmentType === 'OWNER'
-                            ? 'Dueño y barbero'
-                            : 'Barbero contratado'
-                          : 'Personal'
-                      }
-                    />
-                    {selectedBarber && (
-                      <Detail
-                        label="Liquidación"
-                        value={
-                          selectedBarber.settlementFrequency === 'BIWEEKLY'
-                            ? 'Quincenal'
-                            : 'Mensual'
-                        }
-                      />
-                    )}
-                  </>
-                )}
-                {selectedService && section === 'services' && (
-                  <>
-                    <Detail
-                      label="Precio de referencia"
-                      value={centsToBolivianos(selectedService.defaultPriceCents)}
-                    />
-                    <Detail
-                      label="Duración"
-                      value={`${selectedService.defaultDurationMinutes} min`}
-                    />
-                    <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
-                      Cambiar esta referencia no modifica reservas, atenciones ni precios
-                      históricos.
-                    </p>
-                  </>
-                )}
-                {selectedOffering && section === 'offerings' && (
-                  <>
-                    <Detail
-                      label="Barbero"
-                      value={barber ? barberName(barber.staffProfileId) : '—'}
-                    />
-                    <Detail
-                      label="Precio acordado"
-                      value={centsToBolivianos(selectedOffering.priceCents)}
-                    />
-                    <Detail label="Duración" value={`${selectedOffering.durationMinutes} min`} />
-                    <Detail
-                      label="Vigencia"
-                      value={`${selectedOffering.validFrom} — ${selectedOffering.validTo || 'sin fin'}`}
-                    />
-                    <HistoryHint />
-                  </>
-                )}
-                {selectedProduct && section === 'products' && (
-                  <>
-                    <Detail
-                      label="Marca / SKU"
-                      value={`${selectedProduct.brand || 'Sin marca'} · ${selectedProduct.sku || 'Sin SKU'}`}
-                    />
-                    <Detail
-                      label="Precio de venta"
-                      value={centsToBolivianos(selectedProduct.salePriceCents)}
-                    />
-                    <Detail
-                      label="Stock mínimo"
-                      value={`${selectedProduct.minimumStock} unidades`}
-                    />
-                    <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
-                      Las existencias y movimientos reales se gestionan en Inventario.
-                    </p>
-                  </>
-                )}
-                {selectedRule && section === 'commissions' && (
-                  <>
-                    <Detail
-                      label="Tipo"
-                      value={selectedRule.kind === 'SERVICE' ? 'Servicio' : 'Producto'}
-                    />
-                    <Detail label="Tasa" value={percent(selectedRule.rateBasisPoints)} />
-                    <Detail
-                      label="Vigencia"
-                      value={`${selectedRule.validFrom} — ${selectedRule.validTo || 'sin fin'}`}
-                    />
-                    <HistoryHint />
-                  </>
-                )}
-                {selectedExpense && section === 'expenses' && (
-                  <p className="text-lou-graphite/60">
-                    Esta categoría clasifica gastos; desactivarla no modifica los gastos ya
-                    registrados.
-                  </p>
-                )}
-                {selectedUser && section === 'users' && (
-                  <>
-                    <Detail label="Roles" value={selectedUser.roles.map(roleLabel).join(', ')} />
-                    <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
-                      Cambiar roles, contraseña o estado revoca las sesiones existentes de esta
-                      cuenta.
-                    </p>
-                  </>
-                )}
-              </div>
-              <div className="mt-7 flex flex-wrap gap-2 border-t border-lou-fog pt-5">
-                {section === 'team' && selectedStaff && (
-                  <>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setPanel({ kind: 'edit-team', id: selectedStaff.id })}
-                    >
-                      Editar persona
-                    </Button>
-                    {selectedBarber ? (
-                      <Button
-                        variant="secondary"
-                        onClick={() => setPanel({ kind: 'edit-barber', id: selectedBarber.id })}
-                      >
-                        Editar barbero
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        onClick={() => setPanel({ kind: 'create-barber', id: selectedStaff.id })}
-                      >
-                        Habilitar barbero
-                      </Button>
-                    )}
-                  </>
-                )}
-                {section === 'services' && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setPanel({ kind: 'edit-services', id: currentId })}
-                  >
-                    Editar servicio
-                  </Button>
-                )}
-                {section === 'products' && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setPanel({ kind: 'edit-products', id: currentId })}
-                  >
-                    Editar producto
-                  </Button>
-                )}
-                {section === 'expenses' && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => setPanel({ kind: 'edit-expenses', id: currentId })}
-                  >
-                    Editar categoría
-                  </Button>
-                )}
-                {section === 'users' && (
-                  <>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setPanel({ kind: 'roles-users', id: currentId })}
-                    >
-                      Cambiar roles
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setPanel({ kind: 'password-users', id: currentId })}
-                    >
-                      Nueva contraseña
-                    </Button>
-                  </>
-                )}
-                {section === 'team' && selectedBarber && (
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(
-                        `${selectedBarber.active ? 'Desactivar' : 'Activar'} barbería de ${current.title}`,
-                        () => configurationApi.updateBarber(selectedBarber, !selectedBarber.active),
-                      )
-                    }
-                  >
-                    {selectedBarber.active ? 'Desactivar barbería' : 'Activar barbería'}
-                  </Button>
-                )}
-                {section === 'team' && selectedStaff && (
-                  <ToggleButton
-                    active={selectedStaff.active}
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(
-                        `${selectedStaff.active ? 'Desactivar' : 'Activar'} a ${current.title}`,
-                        () => configurationApi.updateStaff(selectedStaff, !selectedStaff.active),
-                      )
-                    }
-                  />
-                )}
-                {section === 'services' && selectedService && (
-                  <ToggleButton
-                    active={selectedService.active}
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(
-                        `${selectedService.active ? 'Desactivar' : 'Activar'} ${current.title}`,
-                        () =>
-                          configurationApi.updateService(selectedService, !selectedService.active),
-                      )
-                    }
-                  />
-                )}
-                {section === 'offerings' && selectedOffering?.active && (
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(`Desactivar oferta de ${current.title}`, () =>
-                        configurationApi.deactivateOffering(selectedOffering),
-                      )
-                    }
-                  >
-                    Desactivar vigencia
-                  </Button>
-                )}
-                {section === 'products' && selectedProduct && (
-                  <ToggleButton
-                    active={selectedProduct.active}
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(
-                        `${selectedProduct.active ? 'Desactivar' : 'Activar'} ${current.title}`,
-                        () =>
-                          configurationApi.updateProduct(selectedProduct, !selectedProduct.active),
-                      )
-                    }
-                  />
-                )}
-                {section === 'commissions' && selectedRule?.active && (
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(`Desactivar tasa de ${current.title}`, () =>
-                        configurationApi.deactivateCommissionRule(selectedRule),
-                      )
-                    }
-                  >
-                    Desactivar vigencia
-                  </Button>
-                )}
-                {section === 'expenses' && selectedExpense && (
-                  <ToggleButton
-                    active={selectedExpense.active}
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(
-                        `${selectedExpense.active ? 'Desactivar' : 'Activar'} ${current.title}`,
-                        () =>
-                          configurationApi.updateExpenseCategory(
-                            selectedExpense,
-                            !selectedExpense.active,
-                          ),
-                      )
-                    }
-                  />
-                )}
-                {section === 'users' && selectedUser && (
-                  <ToggleButton
-                    active={selectedUser.active}
-                    disabled={busy}
-                    onClick={() =>
-                      requestToggle(
-                        `${selectedUser.active ? 'Desactivar' : 'Activar'} cuenta ${current.title}`,
-                        () => configurationApi.setUserActive(selectedUser.id, !selectedUser.active),
-                      )
-                    }
-                  />
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-lou-graphite/55">
-              Selecciona un registro para ver sus detalles.
-            </p>
-          )}
-        </section>
       </div>
-      {panel && (
-        <ConfigurationEditor
-          key={`${panel.kind}-${panel.id ?? ''}`}
-          panel={panel}
-          data={data}
-          barberId={activeBarberId}
-          busy={busy}
-          error={notice?.error ? notice.text : undefined}
-          onClose={() => setPanel(null)}
-          onSave={save}
-        />
-      )}
-      {confirm && (
-        <ConfirmDialog
-          busy={busy}
-          title={confirm.label}
-          confirmLabel="Confirmar cambio"
-          cancelLabel="Cancelar"
-          onCancel={() => setConfirm(null)}
-          onConfirm={() =>
-            void save(
-              confirm.action,
-              section === 'offerings'
-                ? [['offerings', activeBarberId]]
-                : section === 'commissions'
-                  ? [['commission-rules', activeBarberId]]
-                  : [],
-            )
+
+      <section
+        id={`config-panel-${section}`}
+        role="tabpanel"
+        aria-labelledby={`config-tab-${section}`}
+        className="mt-4 grid gap-4 rounded-panel bg-surface p-3 shadow-raised sm:p-4"
+      >
+        <ConfigList
+          rows={rows}
+          people={section === 'team'}
+          inactiveLabel={
+            section === 'team' || section === 'expenses' ? 'Desactivada' : 'Desactivado'
           }
-        >
-          <p>Revisa el registro antes de continuar. Los cambios no reescriben el historial.</p>
-          {notice?.error && (
-            <p className={cn('mt-3', errorClassName)} role="alert">
-              {notice.text}
+          empty={`Todavía no hay registros. Usa "${current.create}" para empezar.`}
+          onOpen={openRow}
+        />
+        {section === 'team' && looseAccounts.length > 0 && (
+          <div className="border-t border-line px-3 pt-4">
+            <h2 className="font-display text-xl font-extrabold">Cuentas sin persona</h2>
+            <p className="mb-2 text-ink-soft">
+              Cuentas de acceso que todavía no están asignadas a nadie del equipo.
             </p>
-          )}
-        </ConfirmDialog>
+            <ConfigList
+              rows={looseAccounts.map((user) => ({
+                id: user.id,
+                title: user.userName,
+                detail: 'Cuenta de acceso',
+                active: user.active,
+              }))}
+              inactiveLabel="Desactivada"
+              empty=""
+              onOpen={(userId) => open({ kind: 'account', userId })}
+            />
+          </div>
+        )}
+      </section>
+
+      {panel && (
+        <AgendaDialog label={panelLabel(panel)} onClose={close}>
+          {/* Each new view starts at the top of the sheet. */}
+          <div
+            key={`${panel.kind}-${'id' in panel ? panel.id : ''}-${panelLabel(panel)}`}
+            ref={(element) => element?.parentElement?.scrollTo?.({ top: 0 })}
+          >
+            {renderPanel(panel)}
+          </div>
+        </AgendaDialog>
       )}
+      <Toast message={notice} onDone={clearNotice} />
     </main>
   )
 }
-
-const Detail = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 border-b border-lou-fog pb-3">
-    <span className="text-lou-graphite/55">{label}</span>
-    <strong className="text-right">{value}</strong>
-  </div>
-)
-const HistoryHint = () => (
-  <p className="rounded-xl bg-lou-paper p-4 text-xs leading-5 text-lou-graphite/60">
-    Una condición nueva requiere otra vigencia. Desactivar ésta no modifica citas ni operaciones
-    históricas.
-  </p>
-)
-const ToggleButton = ({
-  active,
-  disabled,
-  onClick,
-}: {
-  active: boolean
-  disabled: boolean
-  onClick: () => void
-}) => (
-  <Button variant="secondary" disabled={disabled} onClick={onClick}>
-    {active ? 'Desactivar' : 'Activar'}
-  </Button>
-)
-const Loading = ({ title }: { title: string }) => (
-  <main className="mx-auto max-w-360 px-4 py-8" role="status" aria-label={title}>
-    <div className="h-12 w-52 animate-pulse rounded-xl bg-lou-fog" />
-    <div className="mt-8 grid gap-4 lg:grid-cols-2">
-      <div className="h-80 animate-pulse rounded-2xl bg-lou-fog" />
-      <div className="h-80 animate-pulse rounded-2xl bg-lou-fog" />
-    </div>
-  </main>
-)
