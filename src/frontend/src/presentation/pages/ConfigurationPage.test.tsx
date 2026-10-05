@@ -158,58 +158,72 @@ describe('ConfigurationPage', () => {
     expect(configurationApi.load).not.toHaveBeenCalled()
   })
 
-  it('keeps the secondary section in the URL and shows list/detail rather than open forms', async () => {
+  it('gathers everything about a person in one file', async () => {
     renderPage()
-    expect(await screen.findByRole('heading', { name: 'Configuración' })).toBeInTheDocument()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: /^Servicios$/ }))
-    expect(screen.getByTestId('location')).toHaveTextContent('seccion=services')
-    expect(screen.getByRole('heading', { name: 'Corte' })).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        'Cambiar esta referencia no modifica reservas, atenciones ni precios históricos.',
-      ),
-    ).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Editar servicio' }))
-    expect(screen.getAllByRole('dialog')).toHaveLength(1)
-    expect(within(screen.getByRole('dialog')).getByLabelText('Precio Bs')).toHaveValue('60.00')
+    await userEvent.click(await screen.findByRole('button', { name: /Diego/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Ficha de la persona' })
+    expect(within(sheet).getByRole('heading', { name: 'Diego' })).toBeInTheDocument()
+    expect(within(sheet).getByText('diego.demo')).toBeInTheDocument()
+    expect(within(sheet).getByText('Contratado, genera comisión')).toBeInTheDocument()
+    expect(await within(sheet).findByText('Bs 65,00')).toBeInTheDocument()
+    expect(within(sheet).getByText('45 min, desde el 1 sept 2026')).toBeInTheDocument()
+    expect(await within(sheet).findByText('Sin comisión vigente.')).toBeInTheDocument()
+    expect(configurationApi.listCommissionRules).toHaveBeenCalledWith('barber-diego')
   })
 
-  it('separates deactivation from editing and requires confirmation', async () => {
-    renderPage('/app/configuracion?seccion=services')
-    expect(await screen.findByRole('heading', { name: 'Corte' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: /^Desactivar$/ }))
+  it('tells the owner that their own work does not earn commission', async () => {
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: /Alex/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Ficha de la persona' })
+    expect(within(sheet).getByText('Dueño y barbero')).toBeInTheDocument()
+    expect(
+      within(sheet).getByText('El dueño no genera comisión por lo que atiende.'),
+    ).toBeInTheDocument()
+    expect(within(sheet).queryByRole('button', { name: 'Nueva comisión' })).not.toBeInTheDocument()
+    expect(configurationApi.listCommissionRules).not.toHaveBeenCalled()
+  })
+
+  it('asks before removing a price and returns to the person', async () => {
+    vi.mocked(configurationApi.deactivateOffering).mockResolvedValue(undefined)
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: /Diego/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Quitar precio de Corte' }))
+    expect(configurationApi.deactivateOffering).not.toHaveBeenCalled()
+    expect(screen.getByText(/Las citas ya agendadas no cambian/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar precio' }))
+    expect(configurationApi.deactivateOffering).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'offering-1' }),
+    )
+    expect(await screen.findByRole('heading', { name: 'Diego' })).toBeInTheDocument()
+  })
+
+  it('edits a service with a comma price and deactivates it only after confirming', async () => {
+    renderPage('/app/configuracion?seccion=servicios')
+    await userEvent.click(await screen.findByRole('button', { name: /Corte/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Editar servicio' })
+    expect(within(sheet).getByLabelText('Precio por defecto en Bs')).toHaveValue('60,00')
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Desactivar servicio' }))
     expect(configurationApi.updateService).not.toHaveBeenCalled()
-    await userEvent.click(screen.getByRole('button', { name: 'Confirmar cambio' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Desactivar servicio' }))
     expect(configurationApi.updateService).toHaveBeenCalledWith(snapshot.services[0], false)
+    expect(screen.getByTestId('location')).toHaveTextContent('seccion=servicios')
   })
 
-  it('keeps commission creation disabled for the owner barber', async () => {
-    renderPage('/app/configuracion?seccion=commissions')
-    expect(
-      await screen.findByText(
-        'El dueño también atiende, pero su producción no genera deuda de comisión.',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Crear' })).toBeDisabled()
-    await userEvent.selectOptions(screen.getByLabelText('Barbero'), 'barber-diego')
-    expect(screen.getByRole('button', { name: 'Crear' })).toBeEnabled()
-  })
-
-  it('exposes user administration with a single creation panel', async () => {
-    renderPage('/app/configuracion?seccion=users')
-    expect(await screen.findByRole('heading', { name: 'owner.demo' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Crear' }))
-    const dialog = screen.getByRole('dialog')
-    expect(within(dialog).getByLabelText('Contraseña inicial')).toHaveAttribute('type', 'password')
-    expect(within(dialog).getByRole('checkbox', { name: 'Barbero' })).toBeChecked()
-    await userEvent.type(within(dialog).getByLabelText('Usuario'), 'nueva.cuenta')
-    await userEvent.type(within(dialog).getByLabelText('Contraseña inicial'), 'Clave-demo!8426')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar cambio' }))
+  it('offers to create an access account when every account already has a person', async () => {
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Agregar persona' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta de acceso' }))
+    const sheet = screen.getByRole('dialog', { name: 'Nueva cuenta de acceso' })
+    expect(within(sheet).getByLabelText('Contraseña inicial')).toHaveAttribute('type', 'password')
+    expect(within(sheet).getByRole('checkbox', { name: 'Barbero' })).toBeChecked()
+    await userEvent.type(within(sheet).getByLabelText('Usuario'), 'nueva.cuenta')
+    await userEvent.type(within(sheet).getByLabelText('Contraseña inicial'), 'Clave-demo!8426')
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Guardar' }))
     expect(configurationApi.createUser).toHaveBeenCalledWith({
       userName: 'nueva.cuenta',
       password: 'Clave-demo!8426',
       roles: ['BARBER'],
     })
+    expect(await screen.findByRole('dialog', { name: 'Agregar persona' })).toBeInTheDocument()
   })
 })

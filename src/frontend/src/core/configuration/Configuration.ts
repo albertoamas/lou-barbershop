@@ -141,6 +141,41 @@ export const bolivianosToCents = (value: string): number | null => {
 export const centsToBolivianos = (cents: number) =>
   new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(cents / 100)
 
+// "50,00": the editable form of a stored amount, with the Spanish decimal comma.
+export const centsToInput = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
+
+export const roleLabel = (role: string) =>
+  ({ OWNER: 'Dueño', ADMIN: 'Administración', BARBER: 'Barbero' })[role] ?? role
+
+// What the person does in the shop, in one phrase.
+export const staffFunction = (
+  staff: Pick<StaffProfile, 'id' | 'userId'>,
+  barbers: BarberProfile[],
+  users: UserSummary[],
+) => {
+  const barber = barbers.find((item) => item.staffProfileId === staff.id && item.active)
+  if (barber) return barber.employmentType === 'OWNER' ? 'Dueño y barbero' : 'Barbero contratado'
+  const roles = users.find((item) => item.id === staff.userId)?.roles ?? []
+  if (roles.includes('OWNER')) return 'Dueño'
+  if (roles.includes('ADMIN')) return 'Administración'
+  return 'Personal'
+}
+
+// Active conditions first (newest start first), then the history.
+export const splitByValidity = <T extends { active: boolean; validFrom: string }>(items: T[]) => {
+  const newest = (a: T, b: T) => b.validFrom.localeCompare(a.validFrom)
+  return {
+    current: items.filter((item) => item.active).sort(newest),
+    past: items.filter((item) => !item.active).sort(newest),
+  }
+}
+
+// Active first, then by name, so deactivated records sink to the end.
+export const byActiveThenName =
+  <T extends { active: boolean }>(name: (item: T) => string) =>
+  (a: T, b: T) =>
+    Number(b.active) - Number(a.active) || name(a).localeCompare(name(b), 'es')
+
 export const percentToBasisPoints = (value: string): number | null => {
   const normalized = value.trim().replace(',', '.')
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return null
