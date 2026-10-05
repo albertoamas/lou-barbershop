@@ -87,7 +87,8 @@ const LocationProbe = () => {
   const location = useLocation()
   return <span data-testid="location">{location.search}</span>
 }
-const renderPage = (initial = '/app/reportes?desde=2026-09-01&hasta=2026-09-17') =>
+const custom = '/app/reportes?periodo=fechas&desde=2026-09-01&hasta=2026-09-17'
+const renderPage = (initial = custom) =>
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -115,18 +116,21 @@ beforeEach(() => {
     userName: 'owner.demo',
     roles: ['OWNER', 'BARBER'],
   })
-  vi.mocked(reportingApi.period).mockResolvedValue(period)
-  vi.mocked(reportingApi.daily).mockResolvedValue({
-    date: '2026-09-17',
-    appointmentCount: 1,
-    appointmentsByStatus: { CONFIRMED: 1 },
-    paidOperationCount: 1,
-    chargesCents: 7000,
-    cashCollectedCents: 3000,
-    qrCollectedCents: 4000,
-    appointments: [],
-    operations: [],
-  })
+  // The comparison period sold half as much.
+  vi.mocked(reportingApi.period).mockImplementation((from) =>
+    Promise.resolve(
+      from === '2026-09-01'
+        ? period
+        : {
+            ...period,
+            serviceRevenueCents: 2500,
+            productRevenueCents: 1000,
+            paidOperationCount: 1,
+            averageTicketCents: 7000,
+            operations: [],
+          },
+    ),
+  )
   vi.mocked(reportingApi.barbers).mockResolvedValue([
     {
       barberId: 'barber-1',
@@ -147,10 +151,12 @@ beforeEach(() => {
     items: [
       {
         id: 'audit-1',
-        action: 'UPDATED',
-        entityType: 'schedule',
-        entityId: 'schedule-1',
+        action: 'Modified',
+        entityType: 'settlement',
+        entityId: 'settlement-1',
         actorName: 'Lou',
+        beforeData: '{"Status": 1}',
+        afterData: '{"Status": 2}',
         createdAt: '2026-09-17T14:00:00Z',
       },
     ],
@@ -162,36 +168,50 @@ afterEach(() => {
 })
 
 describe('ReportsPage', () => {
-  it('keeps the same period across tabs and exports only the source supported by the API', async () => {
+  it('summarises the period against the previous one and explains the result', async () => {
     renderPage()
     expect(
-      await screen.findByRole('heading', { name: 'Operación y resultado' }),
+      await screen.findByText('Comparado con el periodo del 15 ago a 31 ago 2026.'),
     ).toBeInTheDocument()
-    const link = screen.getByRole('link', { name: 'Descargar operaciones CSV' })
-    expect(link).toHaveAttribute(
+    expect(reportingApi.period).toHaveBeenCalledWith('2026-08-15', '2026-08-31')
+    expect(await screen.findAllByText('100 % más')).toHaveLength(1)
+    expect(screen.getAllByText('Igual')).toHaveLength(2)
+    expect(screen.getByText('Resultado: ganancia')).toBeInTheDocument()
+    expect(screen.getByText('Jose, con Diego')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Descargar CSV' })).toHaveAttribute(
       'href',
       '/api/v1/reports/export?report=period&dateFrom=2026-09-01&dateTo=2026-09-17',
     )
-    await userEvent.click(screen.getByRole('tab', { name: 'Caja' }))
-    expect(await screen.findByRole('heading', { name: 'Caja del período' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Descargar.*CSV/ })).not.toBeInTheDocument()
-    expect(screen.getByTestId('location')).toHaveTextContent('desde=2026-09-01')
-    await userEvent.click(screen.getByRole('tab', { name: 'Equipo' }))
-    expect(await screen.findByText('Sin deuda de comisión')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Descargar producción CSV' })).toHaveAttribute(
+  })
+
+  it('switches periods with one tap and keeps them in the address', async () => {
+    renderPage('/app/reportes')
+    await screen.findByRole('tab', { name: 'Resumen' })
+    expect(screen.getByRole('button', { name: 'Este mes' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: 'Mes pasado' }))
+    expect(screen.getByTestId('location')).toHaveTextContent('periodo=mes-pasado')
+    await userEvent.click(screen.getByRole('button', { name: 'Elegir fechas' }))
+    expect(screen.getByLabelText('Desde')).toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent('periodo=fechas')
+  })
+
+  it('separates money in, money out and commission debt', async () => {
+    renderPage(`${custom}&vista=dinero`)
+    const money = await screen.findByRole('tabpanel', { name: 'Dinero' })
+    expect(await within(money).findByRole('heading', { name: 'Entró' })).toBeInTheDocument()
+    expect(within(money).getByText('Compra de productos')).toBeInTheDocument()
+    expect(within(money).getByText('Servicios: Luz')).toBeInTheDocument()
+    expect(within(money).getByRole('link', { name: /Ir a Comisiones/ })).toBeInTheDocument()
+  })
+
+  it('shows team production and exports it', async () => {
+    renderPage(`${custom}&vista=equipo`)
+    expect(await screen.findByText('50 % del horario con citas')).toBeInTheDocument()
+    expect(screen.getByText('Dueño')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Descargar CSV' })).toHaveAttribute(
       'href',
       '/api/v1/reports/export?report=barbers&dateFrom=2026-09-01&dateTo=2026-09-17',
     )
-  })
-
-  it('separates purchase, expense and payment sources from the operating result', async () => {
-    renderPage('/app/reportes?desde=2026-09-01&hasta=2026-09-17&vista=cash')
-    const cash = await screen.findByRole('tabpanel', { name: 'Caja' })
-    expect(within(cash).getByText('Compras para reventa')).toBeInTheDocument()
-    expect(within(cash).getAllByText('Gastos operativos').length).toBeGreaterThan(0)
-    expect(within(cash).getByText('Liquidaciones pagadas')).toBeInTheDocument()
-    expect(within(cash).getByText('Recepción confirmada')).toBeInTheDocument()
-    expect(within(cash).getByText('Servicios · Luz')).toBeInTheDocument()
   })
 
   it('does not query economic reports for an administrator', async () => {
@@ -203,16 +223,16 @@ describe('ReportsPage', () => {
     renderPage()
     expect(await screen.findByText('Acceso restringido')).toBeInTheDocument()
     expect(reportingApi.period).not.toHaveBeenCalled()
-    expect(reportingApi.daily).not.toHaveBeenCalled()
     expect(reportingApi.barbers).not.toHaveBeenCalled()
     expect(reportingApi.audit).not.toHaveBeenCalled()
   })
 
-  it('opens audit with the same period and permits filtering by entity', async () => {
-    renderPage('/app/reportes?desde=2026-09-01&hasta=2026-09-17&vista=audit')
-    expect(await screen.findByRole('heading', { name: 'Auditoría' })).toBeInTheDocument()
+  it('tells who did what in plain words and filters by kind', async () => {
+    renderPage(`${custom}&vista=actividad`)
+    expect(await screen.findByText('registró el pago de una liquidación')).toBeInTheDocument()
     expect(reportingApi.audit).toHaveBeenCalledWith('2026-09-01', '2026-09-17', '', 1)
-    await userEvent.type(screen.getByRole('textbox', { name: 'Tipo de entidad' }), 'schedule')
-    expect(await screen.findByText('UPDATED · schedule')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Descargar CSV' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Liquidaciones' }))
+    expect(reportingApi.audit).toHaveBeenLastCalledWith('2026-09-01', '2026-09-17', 'settlement', 1)
   })
 })
