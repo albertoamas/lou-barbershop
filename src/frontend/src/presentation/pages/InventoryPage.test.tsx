@@ -57,12 +57,6 @@ const renderPage = () =>
   )
 
 beforeEach(() => {
-  HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
-    this.setAttribute('open', '')
-  })
-  HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
-    this.removeAttribute('open')
-  })
   vi.mocked(authApi.current).mockResolvedValue({
     id: 'owner',
     userName: 'owner.demo',
@@ -109,103 +103,109 @@ afterEach(() => {
 })
 
 describe('InventoryPage', () => {
-  it('shows stock alerts before the tabs and opens immutable movement history', async () => {
+  it('shows each product state and opens its sheet with the movement history', async () => {
+    const user = userEvent.setup()
     renderPage()
 
     expect(
-      await screen.findByRole('heading', { name: '1 producto con stock bajo' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Existencias' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    await userEvent.click(screen.getAllByRole('button', { name: 'Historial' })[0]!)
-    const dialog = await screen.findByRole('dialog', { name: 'Historial de producto' })
-    expect(await within(dialog).findByText('Compra recibida')).toBeInTheDocument()
-    expect(within(dialog).queryByRole('button', { name: 'Borrar' })).not.toBeInTheDocument()
+      await screen.findByText('1 producto necesita reposición.', { exact: false }),
+    ).toBeVisible()
+    expect(screen.getByRole('button', { name: /Stock bajo\s*1/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^Cera mate/ }))
+
+    const sheet = await screen.findByRole('dialog', { name: 'Ficha del producto' })
+    expect(await within(sheet).findByText('Compra recibida')).toBeInTheDocument()
+    expect(within(sheet).getByText('+2')).toBeInTheDocument()
   })
 
-  it('converts purchase unit cost from bolivianos before sending the receipt', async () => {
-    vi.mocked(inventoryApi.receive).mockResolvedValue({
-      id: 'receipt-1',
-      receiptDate: '2026-09-17',
+  it('restocks from the list with the product chosen and the cost in cents', async () => {
+    vi.mocked(inventoryApi.receive).mockResolvedValue({} as never)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Reponer Cera mate' }))
+    const form = await screen.findByRole('dialog', { name: 'Registrar compra' })
+    expect(within(form).getByLabelText('Producto 1')).toHaveValue('product-1')
+    await user.click(within(form).getByRole('button', { name: 'Agregar uno de Cera mate' }))
+    await user.type(within(form).getByLabelText('Costo por unidad, Bs'), '25,50')
+    expect(within(form).getAllByText(/Bs\s*51,00/).length).toBeGreaterThan(0)
+    await user.click(within(form).getByRole('button', { name: 'Confirmar compra' }))
+
+    expect(inventoryApi.receive).toHaveBeenCalledWith({
+      receiptDate: expect.any(String),
       paymentMethod: 'CASH',
-      totalCents: 5_100,
-      status: 'CONFIRMED',
-      items: [],
+      items: [{ productId: 'product-1', quantity: 2, unitCostCents: 2550 }],
     })
-    renderPage()
-
-    await userEvent.click(await screen.findByRole('tab', { name: 'Compras' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar compra' }))
-    const dialog = screen.getByRole('dialog', { name: 'Registrar compra' })
-    await userEvent.selectOptions(within(dialog).getByLabelText('Producto'), 'product-1')
-    await userEvent.type(within(dialog).getByLabelText('Cantidad'), '2')
-    await userEvent.type(within(dialog).getByLabelText('Costo unitario en Bs'), '25,50')
-    await userEvent.click(
-      within(dialog).getByRole('button', { name: /Confirmar compra de Bs\s*51,00/ }),
-    )
-
-    expect(inventoryApi.receive).toHaveBeenCalledWith(
-      expect.objectContaining({
-        items: [{ productId: 'product-1', quantity: 2, unitCostCents: 2_550 }],
-      }),
-    )
   })
 
-  it('rejects an adjustment that would make stock negative', async () => {
+  it('corrects stock from a count without asking for signed numbers', async () => {
+    vi.mocked(inventoryApi.adjust).mockResolvedValue({} as never)
+    const user = userEvent.setup()
     renderPage()
 
-    await userEvent.click((await screen.findAllByRole('button', { name: 'Ajustar' }))[0]!)
-    const dialog = screen.getByRole('dialog', { name: 'Ajustar inventario' })
-    await userEvent.type(within(dialog).getByLabelText('Cambio de unidades'), '-3')
-    await userEvent.type(within(dialog).getByLabelText('Motivo'), 'Conteo físico')
+    await user.click(await screen.findByRole('button', { name: /^Cera mate/ }))
+    await user.click(await screen.findByRole('button', { name: 'Corregir stock' }))
+    const form = await screen.findByRole('dialog', { name: 'Corregir stock' })
+    await user.type(within(form).getByLabelText('¿Cuántas hay ahora?'), '1')
+    expect(within(form).getByText('Se restan 1 unidad. Quedarán 1.')).toBeInTheDocument()
 
-    expect(
-      within(dialog).getByText('El ajuste no puede dejar existencias negativas.'),
-    ).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Registrar ajuste' })).toBeDisabled()
-    expect(inventoryApi.adjust).not.toHaveBeenCalled()
+    await user.click(within(form).getByRole('radio', { name: 'Daño' }))
+    await user.type(within(form).getByLabelText('¿Cuántas salen?'), '5')
+    expect(within(form).getByRole('alert')).toHaveTextContent('No pueden salir más unidades')
+    expect(within(form).getByRole('button', { name: 'Guardar corrección' })).toBeDisabled()
+
+    await user.clear(within(form).getByLabelText('¿Cuántas salen?'))
+    await user.type(within(form).getByLabelText('¿Cuántas salen?'), '1')
+    await user.type(within(form).getByLabelText('Motivo'), 'Se cayó')
+    await user.click(within(form).getByRole('button', { name: 'Guardar corrección' }))
+    expect(inventoryApi.adjust).toHaveBeenCalledWith('product-1', {
+      quantityDelta: -1,
+      type: 'DAMAGE',
+      reason: 'Se cayó',
+    })
   })
 
-  it('converts a paid operating expense to cents without treating it as a purchase', async () => {
-    vi.mocked(inventoryApi.createExpense).mockResolvedValue({
-      id: 'expense-1',
+  it('registers a paid expense with a category chip and QR, in cents', async () => {
+    vi.mocked(inventoryApi.createExpense).mockResolvedValue({} as never)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: /Registrar gasto/ }))
+    const form = await screen.findByRole('dialog', { name: 'Registrar gasto' })
+    await user.click(await within(form).findByRole('radio', { name: 'Servicios básicos' }))
+    await user.type(within(form).getByLabelText('Concepto'), 'Luz')
+    await user.type(within(form).getByLabelText('Importe, Bs'), '45,50')
+    await user.click(within(form).getByRole('radio', { name: 'QR' }))
+    await user.click(within(form).getByRole('button', { name: /Registrar gasto de Bs\s*45,50/ }))
+
+    expect(inventoryApi.createExpense).toHaveBeenCalledWith({
       categoryId: 'category-1',
-      categoryName: 'Servicios básicos',
-      expenseDate: '2026-09-17',
+      expenseDate: expect.any(String),
       description: 'Luz',
-      amountCents: 4_550,
-      paymentMethod: 'CASH',
-      status: 'RECORDED',
-      version: 1,
+      amountCents: 4550,
+      paymentMethod: 'QR',
     })
+  })
+
+  it('shows what is left in the till by payment method', async () => {
+    const user = userEvent.setup()
     renderPage()
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Gastos' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar gasto' }))
-    const dialog = screen.getByRole('dialog', { name: 'Registrar gasto' })
-    await userEvent.selectOptions(within(dialog).getByLabelText('Categoría'), 'category-1')
-    await userEvent.type(within(dialog).getByLabelText('Concepto'), 'Luz')
-    await userEvent.type(within(dialog).getByLabelText('Importe en Bs'), '45,50')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Registrar gasto pagado' }))
-
-    expect(inventoryApi.createExpense).toHaveBeenCalledWith(
-      expect.objectContaining({ description: 'Luz', amountCents: 4_550 }),
-    )
-    expect(inventoryApi.receive).not.toHaveBeenCalled()
+    await user.click(await screen.findByRole('tab', { name: 'Caja de hoy' }))
+    const cash = await screen.findByRole('region', { name: 'Efectivo' })
+    expect(within(cash).getByText(/menos Bs\s*20,00/)).toBeInTheDocument()
+    expect(within(cash).getByText(/Bs\s*40,00/)).toBeInTheDocument()
   })
 
   it('does not load inventory data for a barber opening the URL directly', async () => {
     vi.mocked(authApi.current).mockResolvedValue({
       id: 'barber',
-      userName: 'barber.diego',
+      userName: 'barber',
       roles: ['BARBER'],
     })
     renderPage()
 
     expect(await screen.findByText('Acceso restringido')).toBeInTheDocument()
     expect(inventoryApi.inventory).not.toHaveBeenCalled()
-    expect(inventoryApi.cashFlow).not.toHaveBeenCalled()
   })
 })
