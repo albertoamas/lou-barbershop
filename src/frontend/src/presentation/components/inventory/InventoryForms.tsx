@@ -14,6 +14,7 @@ import {
 import type { PaymentMethod } from '../../../core/sales/Sales'
 import { cn } from '../../styles/cn'
 import {
+  choiceClassName,
   errorClassName,
   fieldClassName,
   labelClassName,
@@ -21,13 +22,8 @@ import {
 } from '../../styles/formStyles'
 import { AppIcon } from '../AppIcon'
 import { Button } from '../Button'
+import { MethodToggle } from '../MethodToggle'
 import { QuantityStepper } from '../operations/QuantityStepper'
-
-const choiceClassName = (active: boolean) =>
-  cn(
-    'min-h-12 rounded-control border-2 px-3 font-semibold transition-colors duration-150',
-    active ? 'border-ink bg-ink text-on-ink' : 'border-line bg-surface hover:border-line-control',
-  )
 
 export const FormHeader = ({
   title,
@@ -50,38 +46,6 @@ export const FormHeader = ({
     >
       <AppIcon name="close" size={22} />
     </Button>
-  </div>
-)
-
-const MethodToggle = ({
-  value,
-  onChange,
-}: {
-  value: PaymentMethod
-  onChange: (method: PaymentMethod) => void
-}) => (
-  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Medio de pago">
-    {(
-      [
-        ['CASH', 'Efectivo', 'cash'],
-        ['QR', 'QR', 'qr'],
-      ] as const
-    ).map(([method, label, icon]) => (
-      <button
-        key={method}
-        type="button"
-        role="radio"
-        aria-checked={value === method}
-        className={cn(
-          choiceClassName(value === method),
-          'inline-flex items-center justify-center gap-2',
-        )}
-        onClick={() => onChange(method)}
-      >
-        <AppIcon name={icon} size={20} />
-        {label}
-      </button>
-    ))}
   </div>
 )
 

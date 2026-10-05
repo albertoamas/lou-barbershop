@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CommissionEntry, Settlement } from '../../core/commissions/Commissions'
@@ -129,21 +129,78 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const owner = () =>
+  vi.mocked(authApi.current).mockResolvedValue({
+    id: 'owner',
+    userName: 'owner.demo',
+    roles: ['OWNER', 'BARBER'],
+  })
+
 describe('CommissionsPage', () => {
-  it('shows the owner team scope and keeps commission debt separate from collected money', async () => {
-    vi.mocked(authApi.current).mockResolvedValue({
-      id: 'owner',
-      userName: 'owner.demo',
-      roles: ['OWNER', 'BARBER'],
-    })
+  it('tells the owner what is owed to each barber and the next step', async () => {
+    owner()
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Comisiones' })).toBeInTheDocument()
-    expect(screen.getByText('No forma parte del dinero cobrado')).toBeInTheDocument()
-    expect(await screen.findByLabelText('Barbero')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Nueva liquidación' })).toBeInTheDocument()
-    expect(screen.getAllByText('Bs 35,00').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Bs 20,00').length).toBeGreaterThan(0)
+    expect(
+      await screen.findByText('Debes Bs 70,00 a 1 barbero. 1 liquidación está lista para pagar.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Diego' })).toBeInTheDocument()
+    expect(screen.getByText(/Bs 35,00 sin liquidar, 1 comisión/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Registrar pago de Diego' })).toBeInTheDocument()
+  })
+
+  it('lists movements by day with plain rates and filters by state', async () => {
+    owner()
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Movimientos' }))
+    expect(screen.getByText(/50 % de Bs 70,00/)).toBeInTheDocument()
+    expect(screen.queryByText(/operation-/)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /^Pagadas/ }))
+    expect(screen.queryByText('Corte clásico')).not.toBeInTheDocument()
+    expect(screen.getByText('Barba')).toBeInTheDocument()
+  })
+
+  it('previews what a new settlement will include before creating it', async () => {
+    owner()
+    vi.mocked(commissionApi.create).mockResolvedValue({ ...settlement, status: 'DRAFT' })
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: /^Preparar liquidación$/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Preparar liquidación' })
+    expect(within(dialog).getByRole('button', { name: 'Crear borrador' })).toBeDisabled()
+    await userEvent.selectOptions(within(dialog).getByLabelText('Barbero'), 'barber-1')
+    expect(within(dialog).getByRole('status')).toHaveTextContent(
+      /Se incluirán 1 comisión de Diego por Bs\s*35,00/,
+    )
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Crear borrador' }))
+    expect(commissionApi.create).toHaveBeenCalledWith('barber-1', expect.any(String))
+    expect(
+      await screen.findByRole('dialog', { name: 'Detalle de liquidación' }),
+    ).toBeInTheDocument()
+  })
+
+  it('asks for confirmation before recording a payment', async () => {
+    owner()
+    vi.mocked(commissionApi.pay).mockResolvedValue({
+      ...settlement,
+      status: 'PAID',
+      paymentMethod: 'QR',
+      paymentDate: '2026-09-16',
+    })
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Registrar pago de Diego' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Detalle de liquidación' })
+    expect(within(dialog).getByLabelText('Estado: Cerrada')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'QR' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: /Registrar pago de Bs/ }))
+    expect(commissionApi.pay).not.toHaveBeenCalled()
+    expect(within(dialog).getByText(/Ya entregaste Bs\s*35,00 a Diego en QR/)).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Sí, registrar pago' }))
+    expect(commissionApi.pay).toHaveBeenCalledWith(settlement, expect.any(String), 'QR')
+    expect(await screen.findByText(/Pagada el 16 sept 2026 en QR/)).toBeInTheDocument()
   })
 
   it('limits the barber view to personal data and never exposes settlement actions', async () => {
@@ -155,26 +212,15 @@ describe('CommissionsPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Mis comisiones' })).toBeInTheDocument()
-    expect(screen.queryByLabelText('Barbero')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Nueva liquidación' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Bs 70,00')).toBeInTheDocument()
+    expect(screen.getByText('Tu pago de Bs 35,00 está listo.')).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Por pagar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Preparar liquidación/ })).not.toBeInTheDocument()
     expect(configurationApi.load).not.toHaveBeenCalled()
-    expect(commissionApi.commissions).toHaveBeenCalledWith(undefined, undefined)
-  })
 
-  it('opens a closed settlement with its timeline and payment control only for the owner', async () => {
-    vi.mocked(authApi.current).mockResolvedValue({
-      id: 'owner',
-      userName: 'owner.demo',
-      roles: ['OWNER'],
-    })
-    renderPage()
-
-    await userEvent.click(await screen.findByRole('button', { name: /Diego/ }))
-    expect(
-      await screen.findByRole('dialog', { name: 'Detalle de liquidación' }),
-    ).toBeInTheDocument()
-    expect(screen.getByLabelText('Estado: Cerrada')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Confirmar pago de Bs\s*35,00/ })).toBeInTheDocument()
-    expect(screen.getByText('No es efectivo o QR cobrado')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Ver detalle' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Detalle de liquidación' })
+    expect(within(dialog).getByText(/El dueño registrará el pago/)).toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: /Registrar pago/ })).not.toBeInTheDocument()
   })
 })
