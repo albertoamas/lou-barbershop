@@ -19,7 +19,7 @@ import { ConfigList, type ConfigRow } from '../components/configuration/ConfigLi
 import { ConfigurationForm } from '../components/configuration/ConfigurationForm'
 import { panelLabel, type Panel } from '../components/configuration/configPanels'
 import { PersonSheet } from '../components/configuration/PersonSheet'
-import { SheetHeader } from '../components/configuration/SheetHeader'
+import { SheetHeader } from '../components/SheetHeader'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { cn } from '../styles/cn'
 import { errorClassName, warningClassName } from '../styles/formStyles'

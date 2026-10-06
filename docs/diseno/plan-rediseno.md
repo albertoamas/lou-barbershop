@@ -153,7 +153,7 @@ Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) ante
 | 10 | Comisiones | 5 | Dueño y barberos; liquidaciones | ✔ Cerrada |
 | 11 | Reportes | 5 | Dueño; cifras y gráficos | ✔ Cerrada |
 | 12 | Configuración | 5 | Dueño; se usa solo cuando cambia algo | ✔ Cerrada |
-| 13 | Login | 5 | Una pantalla simple; usa la marca y los campos ya hechos | Pendiente |
+| 13 | Login | 5 | Una pantalla simple; usa la marca y los campos ya hechos | ✔ Cerrada |
 | 14 | Seguridad | 5 | Contraseña y verificación en dos pasos | Pendiente |
 | 15 | Estados del sistema | 5 | Sesión expirada, acceso denegado, página no encontrada y error | Pendiente |
 
@@ -401,7 +401,7 @@ Lista de lo que se rediseña. Sirve como punto de partida del análisis de cada 
 | Disponibilidad | `/app/disponibilidad` | Dueño, Administrador (barbero: la suya, solo lectura) | Tablet y PC | Barberos en chips; Horario semanal (una fila por día con turnos como píldoras, agregar y editar); Ausencias y horarios especiales (próximas, historial plegado); aviso de citas afectadas con enlace a la agenda | Panel de turno (día, Mañana/Tarde/Personalizado, vigencia en Más opciones); panel de ausencia u horario especial (todo el día, motivos rápidos) |
 | Reportes | `/app/reportes` | Dueño | PC y celular | Periodo con botones (Hoy, Esta semana, Este mes, Mes pasado, Elegir fechas); pestañas Resumen (ventas, atenciones y ticket con comparación, gráfico de ventas, cómo se forma el resultado, atenciones), Dinero (entró, salió, queda, comisiones, salidas), Equipo (producción y ocupación con barras) y Actividad (quién hizo qué, filtros por tipo); listas de 10 con Mostrar más; descargar CSV | Ninguno |
 | Configuración | `/app/configuracion` | Dueño | PC y celular | Pestañas Equipo (personas con su función y cuentas sin persona), Servicios, Productos y Gastos; listas tocables con estado escrito; botón de alta por sección | Ficha de la persona (`AgendaDialog`): datos, cuenta de acceso (rol, contraseña, activar), como barbero, precios y comisión vigentes con historial, dar de baja; formularios y confirmaciones dentro de la misma hoja con Volver |
-| Seguridad | `/app/seguridad` | Todos | Celular y PC | Cambiar contraseña; verificación en dos pasos (activar con QR, desactivar); códigos de recuperación | Ninguno |
+| Seguridad | `/app/seguridad` | Todos | Celular y PC | Resumen de la cuenta: contraseña y verificación en dos pasos con su estado; aviso al dueño sin verificación | Hojas (`AgendaDialog`): cambiar contraseña con requisitos en vivo; activar en 3 pasos con código QR, clave agrupada y código; códigos de recuperación para copiar o descargar con confirmación obligatoria; desactivar con contraseña y código |
 
 ### 11.5 Transversales a revisar en todas las pantallas internas
 

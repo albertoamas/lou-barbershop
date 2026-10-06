@@ -14,7 +14,7 @@ import { Button } from '../Button'
 import { StatusBadge } from '../StatusBadge'
 import type { Panel } from './configPanels'
 import { validityText } from './configText'
-import { SheetHeader } from './SheetHeader'
+import { SheetHeader } from '../SheetHeader'
 
 const Block = ({
   title,

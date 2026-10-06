@@ -1,297 +1,267 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
-import { authApi } from '../../infrastructure/http/authApi'
+import { useCallback, useState, type ReactNode } from 'react'
 import { ApiError } from '../../infrastructure/http/apiClient'
+import { authApi } from '../../infrastructure/http/authApi'
+import { AgendaDialog } from '../components/AgendaDialog'
+import { AppIcon, type IconName } from '../components/AppIcon'
 import { Button } from '../components/Button'
+import { StatusBadge } from '../components/StatusBadge'
+import { Toast } from '../components/Toast'
+import { MfaDisableSheet, MfaSetupSheet } from '../components/security/MfaSheets'
+import { PasswordSheet } from '../components/security/PasswordSheet'
+import { useConnectivity } from '../hooks/useConnectivity'
+import { cn } from '../styles/cn'
+import { errorClassName, warningClassName } from '../styles/formStyles'
 
-const fieldClassName =
-  'min-h-12 w-full rounded-xl border border-lou-steel/60 bg-white px-4 text-base text-lou-ink shadow-sm outline-none transition-[border-color,box-shadow] duration-200 focus:border-lou-ink focus:ring-3 focus:ring-lou-ink/10'
+type Panel = 'password' | 'mfa-on' | 'mfa-off'
 
-const errorMessage = (error: unknown) =>
-  error instanceof ApiError
-    ? (error.problem.detail ?? error.problem.title)
-    : 'No pudimos completar la operación. Revisa tu conexión e inténtalo nuevamente.'
+const errorMessage = (error: unknown) => {
+  if (!(error instanceof ApiError))
+    return 'No pudimos completar el cambio. Revisa tu conexión y vuelve a intentarlo.'
+  if (error.problem.status === 429)
+    return 'Demasiados intentos. Espera unos minutos antes de volver a intentar.'
+  return (
+    error.problem.detail ??
+    error.problem.title ??
+    'No pudimos completar el cambio. Vuelve a intentarlo.'
+  )
+}
+
+const today = () =>
+  new Intl.DateTimeFormat('es-BO', {
+    timeZone: 'America/La_Paz',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+    .format(new Date())
+    .replace(/\./g, '')
+
+const Row = ({
+  icon,
+  title,
+  status,
+  children,
+  action,
+}: {
+  icon: IconName
+  title: string
+  status?: ReactNode
+  children: ReactNode
+  action: ReactNode
+}) => (
+  <li className="grid grid-cols-[minmax(0,1fr)] gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6">
+    <div className="flex min-w-0 gap-4">
+      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-surface-muted">
+        <AppIcon name={icon} size={22} />
+      </span>
+      <div className="min-w-0">
+        <h2 className="flex flex-wrap items-center gap-2 font-display text-2xl font-extrabold">
+          {title}
+          {status}
+        </h2>
+        <div className="mt-1 text-pretty text-ink-soft">{children}</div>
+      </div>
+    </div>
+    <div className="grid sm:justify-items-end">{action}</div>
+  </li>
+)
 
 export const SecurityPage = () => {
   const queryClient = useQueryClient()
+  const online = useConnectivity() === 'online'
   const session = useQuery({ queryKey: ['auth', 'session'], queryFn: authApi.current })
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [mfaPassword, setMfaPassword] = useState('')
-  const [currentFactor, setCurrentFactor] = useState('')
-  const [verificationCode, setVerificationCode] = useState('')
-  const [sharedKey, setSharedKey] = useState('')
-  const [authenticatorUri, setAuthenticatorUri] = useState('')
-  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
-  const [notice, setNotice] = useState('')
-  const [error, setError] = useState('')
+  const [panel, setPanel] = useState<Panel | null>(null)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const clearNotice = useCallback(() => setNotice(''), [])
 
-  const run = async (action: () => Promise<void>) => {
+  const open = (next: Panel | null) => {
+    setError('')
+    setPanel(next)
+  }
+  const run = async <T,>(action: () => Promise<T>): Promise<T | undefined> => {
     setBusy(true)
     setError('')
-    setNotice('')
     try {
-      await action()
+      return await action()
     } catch (caught) {
       setError(errorMessage(caught))
+      return undefined
     } finally {
       setBusy(false)
     }
   }
+  const refreshSession = () => queryClient.invalidateQueries({ queryKey: ['auth', 'session'] })
 
-  const changePassword = (event: FormEvent) => {
-    event.preventDefault()
-    if (newPassword !== confirmPassword) {
-      setError('La confirmación no coincide con la nueva contraseña.')
-      return
-    }
-    void run(async () => {
-      await authApi.changePassword(currentPassword, newPassword)
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-      setNotice('Contraseña actualizada. Las demás sesiones quedaron revocadas.')
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'session'] })
-    })
-  }
+  if (session.isPending)
+    return (
+      <main
+        className="mx-auto w-full max-w-4xl px-4 py-6"
+        role="status"
+        aria-label="Cargando seguridad"
+      >
+        <div className="h-64 animate-pulse rounded-panel bg-surface-strong" />
+      </main>
+    )
+  if (session.isError || !session.data)
+    return (
+      <main className="mx-auto w-full max-w-4xl px-4 py-6">
+        <div
+          className={cn(errorClassName, 'flex flex-wrap items-center justify-between gap-3')}
+          role="alert"
+        >
+          No pudimos comprobar tu sesión.
+          <Button variant="secondary" size="sm" onClick={() => void session.refetch()}>
+            Reintentar
+          </Button>
+        </div>
+      </main>
+    )
 
-  const prepareMfa = () =>
-    void run(async () => {
-      const setup = await authApi.setupMfa(mfaPassword, currentFactor || undefined)
-      setSharedKey(setup.sharedKey)
-      setAuthenticatorUri(setup.authenticatorUri)
-      setRecoveryCodes([])
-      setNotice('Agrega la cuenta en tu aplicación autenticadora y confirma con un código.')
-    })
-
-  const enableMfa = () =>
-    void run(async () => {
-      const enabled = await authApi.enableMfa(mfaPassword, verificationCode)
-      setRecoveryCodes(enabled.recoveryCodes)
-      setSharedKey('')
-      setAuthenticatorUri('')
-      setVerificationCode('')
-      setCurrentFactor('')
-      setMfaPassword('')
-      setNotice('Verificación en dos pasos activada. Guarda los códigos de recuperación ahora.')
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'session'] })
-    })
-
-  const disableMfa = () =>
-    void run(async () => {
-      await authApi.disableMfa(mfaPassword, currentFactor)
-      setMfaPassword('')
-      setCurrentFactor('')
-      setRecoveryCodes([])
-      setNotice('Verificación en dos pasos desactivada.')
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'session'] })
-    })
-
-  const mfaEnabled = session.data?.mfaEnabled === true
-  const validAuthenticatorUri = authenticatorUri.startsWith('otpauth://totp/')
+  const account = session.data
+  const mfaEnabled = account.mfaEnabled === true
+  const isOwner = account.roles.includes('OWNER')
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
-      <header className="border-b border-lou-fog pb-7">
-        <p className="text-xs font-bold tracking-[0.18em] text-lou-graphite/50 uppercase">
-          Cuenta y acceso
-        </p>
-        <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Seguridad</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-lou-graphite/65">
-          Cambia tu contraseña y protege tu cuenta con una aplicación autenticadora. Los códigos y
-          contraseñas nunca se guardan en este dispositivo.
+    <main className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <header>
+        <h1 className="font-display text-5xl leading-none font-extrabold sm:text-6xl">Seguridad</h1>
+        <p className="mt-2 text-lg text-pretty text-ink-soft">
+          Protege tu cuenta <strong className="text-ink">{account.userName}</strong>.
         </p>
       </header>
 
-      {session.data?.mfaRequired && !mfaEnabled && (
-        <p
-          className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-950"
-          role="alert"
-        >
-          La cuenta propietaria debe activar la verificación en dos pasos antes de usar las demás
-          secciones.
+      {account.mfaRequired && !mfaEnabled ? (
+        <p className={cn(warningClassName, 'mt-5')} role="alert">
+          Debes activar la verificación en dos pasos antes de usar las demás secciones.
         </p>
-      )}
-      {notice && (
-        <p
-          className="mt-6 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-900"
-          role="status"
-        >
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p
-          className="mt-6 rounded-xl bg-red-50 p-4 text-sm font-semibold text-lou-danger"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <form
-          className="rounded-2xl border border-lou-fog bg-white p-6 shadow-lou-sm"
-          onSubmit={changePassword}
-        >
-          <h2 className="font-display text-2xl font-bold">Cambiar contraseña</h2>
-          <p className="mt-2 text-sm leading-6 text-lou-graphite/60">
-            Usa al menos 12 caracteres. Al guardar se revocan las demás sesiones de esta cuenta.
+      ) : (
+        isOwner &&
+        !mfaEnabled && (
+          <p className={cn(warningClassName, 'mt-5')} role="status">
+            Te recomendamos activar la verificación en dos pasos: tu cuenta puede ver el dinero y
+            cambiar la configuración.
           </p>
-          <div className="mt-6 grid gap-4">
-            <label className="grid gap-2 text-sm font-bold">
-              Contraseña actual
-              <input
-                className={fieldClassName}
-                type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(event) => setCurrentPassword(event.target.value)}
-                required
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-bold">
-              Nueva contraseña
-              <input
-                className={fieldClassName}
-                type="password"
-                autoComplete="new-password"
-                minLength={12}
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-                required
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-bold">
-              Repite la nueva contraseña
-              <input
-                className={fieldClassName}
-                type="password"
-                autoComplete="new-password"
-                minLength={12}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                required
-              />
-            </label>
-          </div>
-          <Button className="mt-6" type="submit" disabled={busy}>
-            Actualizar contraseña
-          </Button>
-        </form>
+        )
+      )}
+      {!online && (
+        <p className={cn(warningClassName, 'mt-5')} role="status">
+          Sin conexión. Vuelve a conectarte para hacer cambios de seguridad.
+        </p>
+      )}
 
-        <section className="rounded-2xl border border-lou-fog bg-white p-6 shadow-lou-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-2xl font-bold">Verificación en dos pasos</h2>
-              <p className="mt-2 text-sm leading-6 text-lou-graphite/60">
-                Compatible con Google Authenticator, Microsoft Authenticator, 1Password y otras
-                aplicaciones TOTP.
-              </p>
-            </div>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${mfaEnabled ? 'bg-emerald-100 text-emerald-900' : 'bg-lou-fog text-lou-graphite'}`}
-            >
-              {mfaEnabled ? 'Activa' : 'Inactiva'}
-            </span>
-          </div>
-
-          <div className="mt-6 grid gap-4">
-            <label className="grid gap-2 text-sm font-bold">
-              Contraseña actual
-              <input
-                className={fieldClassName}
-                type="password"
-                autoComplete="current-password"
-                value={mfaPassword}
-                onChange={(event) => setMfaPassword(event.target.value)}
-                required
-              />
-            </label>
-            {mfaEnabled && (
-              <label className="grid gap-2 text-sm font-bold">
-                Código actual o de recuperación
-                <input
-                  className={fieldClassName}
-                  autoComplete="one-time-code"
-                  value={currentFactor}
-                  onChange={(event) => setCurrentFactor(event.target.value)}
-                  required
-                />
-              </label>
-            )}
-          </div>
-
-          {!sharedKey && (
-            <Button
-              className="mt-6"
-              type="button"
-              disabled={busy || !mfaPassword || (mfaEnabled && !currentFactor)}
-              onClick={mfaEnabled ? disableMfa : prepareMfa}
-              variant={mfaEnabled ? 'danger' : 'primary'}
-            >
-              {mfaEnabled ? 'Desactivar segundo factor' : 'Configurar segundo factor'}
+      <ul className="mt-6 divide-y divide-surface-strong rounded-panel bg-surface shadow-raised">
+        <Row
+          icon="shield"
+          title="Contraseña"
+          action={
+            <Button variant="secondary" disabled={!online} onClick={() => open('password')}>
+              Cambiar contraseña
             </Button>
-          )}
-
-          {sharedKey && (
-            <div className="mt-6 rounded-xl bg-lou-fog/70 p-4">
-              <p className="text-sm font-bold">Clave de configuración</p>
-              <code className="mt-2 block break-all rounded-lg bg-white p-3 text-sm">
-                {sharedKey}
-              </code>
-              {validAuthenticatorUri && (
-                <a
-                  className="mt-3 inline-block text-sm font-bold underline"
-                  href={authenticatorUri}
-                >
-                  Abrir en mi autenticador
-                </a>
-              )}
-              <label className="mt-5 grid gap-2 text-sm font-bold">
-                Código de seis dígitos
-                <input
-                  className={fieldClassName}
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  value={verificationCode}
-                  onChange={(event) => setVerificationCode(event.target.value)}
-                  required
-                />
-              </label>
-              <Button
-                className="mt-4"
-                type="button"
-                disabled={busy || verificationCode.length < 6}
-                onClick={enableMfa}
-              >
-                Confirmar y activar
+          }
+        >
+          La que usas para entrar. Elige una que no uses en otro lugar.
+        </Row>
+        <Row
+          icon="check"
+          title="Verificación en dos pasos"
+          status={
+            <StatusBadge tone={mfaEnabled ? 'success' : 'muted'}>
+              {mfaEnabled ? 'Activada' : 'Desactivada'}
+            </StatusBadge>
+          }
+          action={
+            mfaEnabled ? (
+              <Button variant="dangerSoft" disabled={!online} onClick={() => open('mfa-off')}>
+                Desactivar
               </Button>
-            </div>
-          )}
+            ) : (
+              <Button disabled={!online} onClick={() => open('mfa-on')}>
+                Activar
+              </Button>
+            )
+          }
+        >
+          {mfaEnabled
+            ? 'Al entrar te pedimos un código de la aplicación de tu teléfono.'
+            : 'Agrega un código de tu teléfono al entrar. Así nadie entra solo con tu contraseña.'}
+        </Row>
+      </ul>
 
-          {recoveryCodes.length > 0 && (
-            <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4">
-              <h3 className="font-bold text-amber-950">Códigos de recuperación</h3>
-              <p className="mt-1 text-sm text-amber-900">
-                Guárdalos fuera de la aplicación. Cada código funciona una sola vez.
-              </p>
-              <ul
-                className="mt-3 grid grid-cols-2 gap-2 font-mono text-sm"
-                aria-label="Códigos de recuperación"
-              >
-                {recoveryCodes.map((code) => (
-                  <li key={code} className="rounded bg-white px-2 py-1">
-                    {code}
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {panel && (
+        <AgendaDialog
+          label={
+            panel === 'password'
+              ? 'Cambiar contraseña'
+              : panel === 'mfa-on'
+                ? 'Activar verificación en dos pasos'
+                : 'Desactivar verificación'
+          }
+          // Recovery codes must not be dismissed by accident; the setup sheet closes itself.
+          {...(panel === 'mfa-on' ? {} : { onClose: () => !busy && open(null) })}
+        >
+          {panel === 'password' && (
+            <PasswordSheet
+              busy={busy}
+              online={online}
+              error={error}
+              onClose={() => open(null)}
+              onSave={(current, next) =>
+                void run(async () => {
+                  await authApi.changePassword(current, next)
+                  return true
+                }).then(async (done) => {
+                  if (!done) return
+                  await refreshSession()
+                  open(null)
+                  setNotice('Contraseña cambiada. Se cerró la sesión en tus otros dispositivos.')
+                })
+              }
+            />
           )}
-        </section>
-      </div>
+          {panel === 'mfa-on' && (
+            <MfaSetupSheet
+              userName={account.userName}
+              date={today()}
+              busy={busy}
+              online={online}
+              error={error}
+              onClose={() => {
+                open(null)
+                void refreshSession()
+              }}
+              onSetup={(password) => run(() => authApi.setupMfa(password))}
+              onEnable={async (password, code) => {
+                const enabled = await run(() => authApi.enableMfa(password, code))
+                if (enabled) setNotice('Verificación en dos pasos activada')
+                return enabled?.recoveryCodes
+              }}
+            />
+          )}
+          {panel === 'mfa-off' && (
+            <MfaDisableSheet
+              busy={busy}
+              online={online}
+              error={error}
+              onClose={() => open(null)}
+              onDisable={(password, code) =>
+                void run(async () => {
+                  await authApi.disableMfa(password, code)
+                  return true
+                }).then(async (done) => {
+                  if (!done) return
+                  await refreshSession()
+                  open(null)
+                  setNotice('Verificación en dos pasos desactivada')
+                })
+              }
+            />
+          )}
+        </AgendaDialog>
+      )}
+      <Toast message={notice} onDone={clearNotice} />
     </main>
   )
 }
