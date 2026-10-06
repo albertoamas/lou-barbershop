@@ -12,7 +12,7 @@ import { cn } from '../../styles/cn'
 import { errorClassName, fieldClassName, labelClassName } from '../../styles/formStyles'
 import { Button } from '../Button'
 import { editorTitles, type EditorKind } from './configPanels'
-import { SheetHeader } from './SheetHeader'
+import { SheetHeader } from '../SheetHeader'
 
 const read = (data: FormData, key: string) => String(data.get(key) ?? '').trim()
 

@@ -2,7 +2,7 @@ import { roleLabel, type ConfigurationSnapshot } from '../../../core/configurati
 import { configurationApi } from '../../../infrastructure/http/configurationApi'
 import { Button } from '../Button'
 import type { Panel } from './configPanels'
-import { SheetHeader } from './SheetHeader'
+import { SheetHeader } from '../SheetHeader'
 
 // An access account that no team member uses yet.
 export const AccountSheet = ({

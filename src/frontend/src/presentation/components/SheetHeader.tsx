@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { AppIcon } from '../AppIcon'
-import { Button } from '../Button'
+import { AppIcon } from './AppIcon'
+import { Button } from './Button'
 
 export const SheetHeader = ({
   title,
