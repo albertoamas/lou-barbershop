@@ -30,18 +30,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.failed) {
       return (
         <SystemStateCard
-          eyebrow="Error inesperado"
-          title="No pudimos mostrar esta pantalla"
-          message="No se confirmó ninguna acción por este error. Recarga la aplicación y comprueba el estado antes de volver a enviar datos. Si continúa, comunica el identificador de solicitud cuando aparezca."
+          icon="alert"
+          title="Algo salió mal"
+          message="No pudimos mostrar esta pantalla y no se guardó nada por este error."
+          note="Recarga la aplicación y revisa antes de volver a enviar datos."
           requestId={this.state.requestId}
-          fullHeight
+          standalone
         >
           <button
             className={buttonStyles({ variant: 'primary' })}
             type="button"
             onClick={() => window.location.reload()}
           >
-            Recargar aplicación
+            Recargar
           </button>
           <a
             className={buttonStyles({ variant: 'secondary' })}

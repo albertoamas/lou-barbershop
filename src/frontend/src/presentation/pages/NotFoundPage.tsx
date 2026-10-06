@@ -5,24 +5,33 @@ import { buttonStyles } from '../components/buttonStyles'
 export const NotFoundPage = () => {
   const location = useLocation()
   const internal = location.pathname === '/app' || location.pathname.startsWith('/app/')
-  return (
+  return internal ? (
     <SystemStateCard
-      eyebrow="Página no encontrada"
-      title="Este enlace no existe"
-      message={
-        internal
-          ? 'La sección que buscas no está disponible. Vuelve a tu inicio para seguir trabajando.'
-          : 'Puede que el enlace haya cambiado. Puedes volver al inicio o comenzar una reserva.'
-      }
+      icon="map-pin"
+      title="No encontramos esta sección"
+      message="Puede que el enlace esté mal escrito o que la sección ya no exista."
     >
-      <Link className={buttonStyles({ variant: 'primary' })} to={internal ? '/app' : '/'}>
-        {internal ? 'Volver a mi inicio' : 'Ir al inicio'}
+      <Link className={buttonStyles({ variant: 'primary' })} to="/app">
+        Volver a mi inicio
       </Link>
-      <Link
-        className={buttonStyles({ variant: 'secondary' })}
-        to={internal ? '/app/agenda' : '/reservar'}
-      >
-        {internal ? 'Ver agenda' : 'Reservar una cita'}
+      <Link className={buttonStyles({ variant: 'secondary' })} to="/app/agenda">
+        Ver agenda
+      </Link>
+    </SystemStateCard>
+  ) : (
+    <SystemStateCard
+      icon="map-pin"
+      title="No encontramos esta página"
+      message="Puede que el enlace haya cambiado. Desde aquí puedes seguir."
+    >
+      <Link className={buttonStyles({ variant: 'primary' })} to="/">
+        Ir al inicio
+      </Link>
+      <Link className={buttonStyles({ variant: 'secondary' })} to="/reservar">
+        Reservar una cita
+      </Link>
+      <Link className={buttonStyles({ variant: 'ghost' })} to="/servicios">
+        Ver servicios
       </Link>
     </SystemStateCard>
   )

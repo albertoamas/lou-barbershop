@@ -10,7 +10,9 @@ import { SessionBoundary } from '../components/SessionBoundary'
 import { AuthStatePage } from './AuthStatePage'
 import { NotFoundPage } from './NotFoundPage'
 
-vi.mock('../../infrastructure/http/authApi', () => ({ authApi: { current: vi.fn() } }))
+vi.mock('../../infrastructure/http/authApi', () => ({
+  authApi: { current: vi.fn(), logout: vi.fn() },
+}))
 vi.mock('../layout/InternalNavigation', () => ({ InternalNavigation: () => <nav>Interno</nav> }))
 
 const LoginProbe = () => {
@@ -20,11 +22,16 @@ const LoginProbe = () => {
 
 const renderRoute = (initial: string, element: React.ReactNode) =>
   render(
-    <MemoryRouter initialEntries={[initial]}>
-      <Routes>
-        <Route path="*" element={element} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <MemoryRouter initialEntries={[initial]}>
+        <Routes>
+          <Route path="*" element={element} />
+          <Route path="/app/login" element={<p>Pantalla de ingreso</p>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 const renderSession = () =>
   render(
@@ -57,7 +64,8 @@ describe('system routes', () => {
     )
     renderSession()
 
-    expect(await screen.findByRole('heading', { name: 'Vuelve a ingresar' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Tu sesión se cerró' })).toBeInTheDocument()
+    expect(screen.getByText('Lo que no alcanzaste a guardar no se envió.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('link', { name: 'Iniciar sesión' }))
     expect(screen.getByTestId('return-path')).toHaveTextContent('/app/reportes?vista=cash')
   })
@@ -70,18 +78,36 @@ describe('system routes', () => {
       await screen.findByRole('heading', { name: 'No pudimos verificar tu sesión' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Vuelve a ingresar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Tu sesión se cerró' })).not.toBeInTheDocument()
   })
 
-  it('gives a role-specific way out of access denied', () => {
+  it('says which account was denied and lets the person switch accounts', async () => {
+    vi.mocked(authApi.current).mockResolvedValue({
+      id: 'diego',
+      userName: 'barbero.diego',
+      roles: ['BARBER'],
+    })
+    vi.mocked(authApi.logout).mockResolvedValue(undefined)
     renderRoute('/app/acceso-denegado', <AuthStatePage kind="denied" />)
-    expect(screen.getByRole('heading', { name: 'Acceso restringido' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Esta sección no está disponible para tu cuenta' }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('barbero.diego')).toBeInTheDocument()
+    expect(screen.getByText(/\(Barbero\)/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Volver a mi inicio' })).toHaveAttribute('href', '/app')
+    await userEvent.click(screen.getByRole('button', { name: 'Usar otra cuenta' }))
+    expect(authApi.logout).toHaveBeenCalled()
+    expect(await screen.findByText('Pantalla de ingreso')).toBeInTheDocument()
   })
 
   it('uses the correct destination on public and internal 404 pages', () => {
     const publicView = renderRoute('/direccion-inexistente', <NotFoundPage />)
+    expect(screen.getByRole('heading', { name: 'No encontramos esta página' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ir al inicio' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Ver servicios' })).toHaveAttribute(
+      'href',
+      '/servicios',
+    )
     publicView.unmount()
     renderRoute('/app/direccion-inexistente', <NotFoundPage />)
     expect(screen.getByRole('link', { name: 'Volver a mi inicio' })).toHaveAttribute('href', '/app')

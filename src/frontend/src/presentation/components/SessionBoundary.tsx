@@ -7,6 +7,7 @@ import { ApiError } from '../../infrastructure/http/apiClient'
 import { authApi } from '../../infrastructure/http/authApi'
 import { InternalNavigation } from '../layout/InternalNavigation'
 import { Button } from './Button'
+import { SystemStateCard } from './SystemStateCard'
 
 interface SessionBoundaryProps {
   children?: ReactNode
@@ -42,18 +43,14 @@ export const SessionBoundary = ({ children }: SessionBoundaryProps) => {
   }
   if (session.isError && !session.data) {
     return (
-      <main className="grid min-h-[65dvh] place-items-center px-4 py-10">
-        <section className="w-full max-w-lg rounded-panel bg-surface p-7 shadow-raised">
-          <h1 className="font-display text-3xl font-extrabold">No pudimos verificar tu sesión</h1>
-          <p className="mt-3 leading-6 text-ink-muted">
-            Revisa tu conexión y vuelve a intentarlo. No se enviará ninguna operación mientras no
-            podamos confirmar el acceso.
-          </p>
-          <Button className="mt-5" onClick={() => void session.refetch()}>
-            Reintentar
-          </Button>
-        </section>
-      </main>
+      <SystemStateCard
+        icon="alert"
+        title="No pudimos verificar tu sesión"
+        message="Revisa tu conexión y vuelve a intentarlo."
+        note="No se envía nada mientras no podamos confirmar tu acceso."
+      >
+        <Button onClick={() => void session.refetch()}>Reintentar</Button>
+      </SystemStateCard>
     )
   }
   if (!session.data) return <Navigate to="/app/sesion-expirada" replace state={{ from }} />

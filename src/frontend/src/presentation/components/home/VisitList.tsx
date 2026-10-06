@@ -20,7 +20,8 @@ export const VisitList = ({ appointments, showBarber, empty, date }: VisitListPr
   appointments.length === 0 ? (
     <p className="rounded-control bg-surface-muted p-4 text-ink-soft">{empty}</p>
   ) : (
-    <ul className="grid gap-2">
+    // minmax(0,1fr) lets long names truncate instead of widening the page on phones.
+    <ul className="grid grid-cols-[minmax(0,1fr)] gap-2">
       {appointments.map((item) => (
         <li key={item.id}>
           <Link
