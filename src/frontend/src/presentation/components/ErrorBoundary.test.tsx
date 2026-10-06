@@ -19,10 +19,10 @@ describe('ErrorBoundary', () => {
         <FailingView />
       </ErrorBoundary>,
     )
-    expect(
-      screen.getByRole('heading', { name: 'No pudimos mostrar esta pantalla' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/request-123/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Recargar aplicación' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Algo salió mal' })).toBeInTheDocument()
+    expect(screen.getByText(/no se guardó nada/)).toBeInTheDocument()
+    expect(screen.getByText('request-123')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copiar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Recargar' })).toBeInTheDocument()
   })
 })

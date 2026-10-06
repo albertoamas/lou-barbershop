@@ -154,8 +154,8 @@ Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) ante
 | 11 | Reportes | 5 | Dueño; cifras y gráficos | ✔ Cerrada |
 | 12 | Configuración | 5 | Dueño; se usa solo cuando cambia algo | ✔ Cerrada |
 | 13 | Login | 5 | Una pantalla simple; usa la marca y los campos ya hechos | ✔ Cerrada |
-| 14 | Seguridad | 5 | Contraseña y verificación en dos pasos | Pendiente |
-| 15 | Estados del sistema | 5 | Sesión expirada, acceso denegado, página no encontrada y error | Pendiente |
+| 14 | Seguridad | 5 | Contraseña y verificación en dos pasos | ✔ Cerrada |
+| 15 | Estados del sistema | 5 | Sesión expirada, acceso denegado, página no encontrada y error | ✔ Cerrada |
 
 ### 4.2 Ciclo por pantalla
 
@@ -385,8 +385,8 @@ Lista de lo que se rediseña. Sirve como punto de partida del análisis de cada 
 | Pantalla | Ruta | Secciones y componentes | Estados |
 |---|---|---|---|
 | Login | `/app/login` | Marca en franja negra (celular y tablet) o panel con espacio para foto del local (PC); tarjeta sobre papel cálido; usuario; contraseña con mostrar/ocultar y aviso de Bloq Mayús; botón "Ingresar"; nota para contraseña olvidada; paso aparte de verificación en dos pasos con código de recuperación y "Usar otra cuenta" | Credenciales inválidas (borra solo la contraseña); demasiados intentos; código incorrecto; ingresando o verificando |
-| Sesión expirada | `/app/sesion-expirada` | `SystemStateCard` | Ninguno |
-| Acceso denegado | `/app/acceso-denegado` | `SystemStateCard` | Ninguno |
+| Sesión expirada | `/app/sesion-expirada` | `SystemStateCard` independiente: logo, papel cálido, ícono de reloj; "Iniciar sesión" vuelve a la pantalla que se estaba usando | Ninguno |
+| Acceso denegado | `/app/acceso-denegado` | `SystemStateCard` independiente con ícono de escudo; dice con qué cuenta se entró; "Volver a mi inicio" y "Usar otra cuenta" | Ninguno |
 | 404 interna | `/app/*` | `SystemStateCard` dentro del shell | Ninguno |
 
 ### 11.4 App interna

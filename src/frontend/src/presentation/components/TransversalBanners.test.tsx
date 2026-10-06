@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { serviceWorkerUpdateSource } from '../../infrastructure/pwa/serviceWorkerUpdateSource'
@@ -22,11 +22,21 @@ afterEach(() => {
 })
 
 describe('transversal banners', () => {
-  it('identifies potentially stale content and blocks the idea of offline writes', () => {
+  it('says offline writes are blocked and confirms when the connection returns', () => {
+    vi.useFakeTimers()
     const { rerender } = render(<ConnectivityBanner connectivity="offline" />)
-    expect(screen.getByRole('status')).toHaveTextContent('puede estar desactualizado')
-    expect(screen.getByRole('status')).toHaveTextContent('no puedes reservar ni guardar cambios')
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Sin conexión. Puedes ver lo guardado, pero no guardar cambios.',
+    )
     rerender(<ConnectivityBanner connectivity="online" />)
+    expect(screen.getByRole('status')).toHaveTextContent('Conexión recuperada')
+    act(() => vi.advanceTimersByTime(4000))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('stays hidden while the device has always been online', () => {
+    render(<ConnectivityBanner connectivity="online" />)
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 

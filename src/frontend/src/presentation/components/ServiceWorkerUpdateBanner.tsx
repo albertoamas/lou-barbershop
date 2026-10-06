@@ -40,7 +40,7 @@ export const ServiceWorkerUpdateBanner = () => {
         disabled={applying}
         onClick={() => void apply()}
       >
-        {applying ? 'Actualizando...' : 'Actualizar ahora'}
+        {applying ? 'Actualizando' : 'Actualizar ahora'}
       </Button>
       <Button
         size="sm"

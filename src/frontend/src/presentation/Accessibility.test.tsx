@@ -33,7 +33,7 @@ describe('shared accessibility baseline', () => {
         <AppShell>
           <main>
             <SystemStateCard
-              eyebrow="Página no encontrada"
+              icon="map-pin"
               title="Este enlace no existe"
               message="Vuelve al inicio para continuar."
             >
