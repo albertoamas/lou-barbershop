@@ -7,10 +7,9 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql("Host=localhost;Database=lou_design;Username=lou;Password=design_time_only")
-            .Options;
+        var builder = new DbContextOptionsBuilder<AppDbContext>();
+        builder.UseLouPostgreSql("Host=localhost;Database=lou_design;Username=lou;Password=design_time_only");
 
-        return new AppDbContext(options);
+        return new AppDbContext(builder.Options);
     }
 }
