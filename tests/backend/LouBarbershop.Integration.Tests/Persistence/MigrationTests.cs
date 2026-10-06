@@ -18,9 +18,9 @@ public sealed class MigrationTests
             await postgreSql.StartAsync();
         }
 
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(externalConnectionString ?? postgreSql!.GetConnectionString())
-            .Options;
+        var builder = new DbContextOptionsBuilder<AppDbContext>();
+        builder.UseLouPostgreSql(externalConnectionString ?? postgreSql!.GetConnectionString());
+        var options = builder.Options;
 
         var phoneNumber = PhoneNumber.Create("+59171234567").Value;
         var customer = Customer.Create(
@@ -70,5 +70,35 @@ public sealed class MigrationTests
         {
             await postgreSql.DisposeAsync();
         }
+    }
+
+    // Production runs as a user named "lou", whose "$user" search path resolves to the
+    // "lou" schema once the first migration creates it. Migrating again must still find
+    // the history and apply nothing.
+    [Fact]
+    public async Task MigrationsCanRunAgainWhenTheDatabaseUserOwnsTheLouSchema()
+    {
+        await using var postgreSql = new PostgreSqlBuilder("postgres:18.6-alpine3.24")
+            .WithUsername("lou")
+            .WithDatabase("lou_barbershop")
+            .Build();
+        await postgreSql.StartAsync();
+        var builder = new DbContextOptionsBuilder<AppDbContext>();
+        builder.UseLouPostgreSql(postgreSql.GetConnectionString());
+
+        await using (var first = new AppDbContext(builder.Options))
+        {
+            await first.Database.MigrateAsync();
+        }
+
+        await using var second = new AppDbContext(builder.Options);
+        await second.Database.MigrateAsync();
+
+        Assert.Empty(await second.Database.GetPendingMigrationsAsync());
+        var historySchemas = await second.Database
+            .SqlQueryRaw<string>(
+                "SELECT table_schema AS \"Value\" FROM information_schema.tables WHERE table_name = '__EFMigrationsHistory'")
+            .ToListAsync();
+        Assert.Equal([PostgreSqlOptions.MigrationsHistorySchema], historySchemas);
     }
 }

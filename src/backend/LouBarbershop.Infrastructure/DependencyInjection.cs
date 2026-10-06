@@ -34,10 +34,7 @@ public static class DependencyInjection
                 "ConnectionStrings:Database must be configured. Use user secrets or environment variables outside local development.");
         }
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(
-                connectionString,
-                npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+        services.AddDbContext<AppDbContext>(options => options.UseLouPostgreSql(connectionString));
         services.AddIdentityCore<AppUser>(options =>
             {
                 options.Password.RequiredLength = 12;
