@@ -1,7 +1,7 @@
 # Plan de rediseño visual de Lou Barbershop
 
 **Fecha:** 3 de octubre de 2026  
-**Estado:** vigente. Las fases 0 y 1 están cerradas y la fase 2 (fundaciones) espera aprobación.
+**Estado:** fases 0 a 5 cerradas el 6 de octubre de 2026: las 15 pantallas están rediseñadas (sección 14). Queda la fase 6, el cierre técnico.
 
 Este documento fija las reglas que debe cumplir el rediseño completo de la aplicación. No dice qué cambiar en cada pantalla. Eso se decide cuando se trabaja cada una, con el análisis de la sección 12. Aquí está el marco común: para quién se diseña, en qué dispositivos, con qué marca, con qué reglas visuales, técnicas y de calidad, y el inventario de lo que hay que rediseñar.
 
@@ -127,11 +127,11 @@ Franjas del poste de barbero en blanco y negro (diagonal a -45°). Se usan solo 
 |---|---|---|
 | **0. Plan** | Este documento | ✔ Aprobado |
 | **1. Dirección visual** | Dos o tres direcciones aplicadas a contenido real de Lou: portada en celular, agenda en tablet horizontal y cobro en celular. Se presentan como página navegable antes de tocar la app | ✔ Aprobada (sección 3.4) |
-| **2. Fundaciones** | Tokens (color, tipo, espaciado, radios, sombras, movimiento), logo oficial, iconos PWA, shell y navegación por dispositivo, y los componentes base de la sección 11.1 con sus historias de Storybook | Aprobación del sistema en Storybook y en el shell real |
-| **3. Operación diaria** | Inicio por rol, Agenda, Atender y cobrar | Aprobación por pantalla |
-| **4. Sitio público** | Portada, Reservar, Mi cita, Privacidad | Aprobación por pantalla |
-| **5. Gestión** | Comisiones, Inventario y gastos, Disponibilidad, Reportes, Configuración, Seguridad, Login y estados del sistema | Aprobación por pantalla |
-| **6. Cierre** | Revisión global con `web-design-guidelines`, accesibilidad, rendimiento, pruebas E2E de flujos críticos con Playwright y decisión final sobre Storybook | Listo para despliegue |
+| **2. Fundaciones** | Tokens (color, tipo, espaciado, radios, sombras, movimiento), logo oficial, iconos PWA, shell y navegación por dispositivo, y los componentes base de la sección 11.1 con sus historias de Storybook | ✔ Aprobadas |
+| **3. Operación diaria** | Inicio por rol, Agenda, Atender y cobrar | ✔ Cerrada |
+| **4. Sitio público** | Portada, Reservar, Mi cita, Privacidad | ✔ Cerrada |
+| **5. Gestión** | Comisiones, Inventario y gastos, Disponibilidad, Reportes, Configuración, Seguridad, Login y estados del sistema | ✔ Cerrada |
+| **6. Cierre** | Revisión global con `web-design-guidelines`, accesibilidad, rendimiento, pruebas E2E de flujos críticos con Playwright y decisión final sobre Storybook | Pendiente (sección 14.3) |
 
 Se respeta el orden. Una pantalla no empieza hasta que las fundaciones están aprobadas, porque los componentes base cambian todas las pantallas a la vez.
 
@@ -432,3 +432,28 @@ Se completa al empezar cada pantalla, en el PR o en un comentario de la tarea; n
 | Fotos del local, cortes y equipo | Cuando estén disponibles | Barbería |
 | Navegación de tablet: lateral compacta o completa | 2 | Dueño, con propuesta |
 | Mantener o retirar Storybook | 6 | Equipo |
+
+## 14. Cierre del rediseño de pantallas
+
+**Fecha:** 6 de octubre de 2026.
+
+### 14.1 Resultado
+
+- Las 15 pantallas de la sección 4.1.1 están cerradas, cada una con análisis, propuesta aprobada, pruebas y la revisión completa antes del push.
+- Barrido final de todas las rutas públicas e internas con los roles dueño, recepción y barbero en 320, 390, 820, 1180 y 1440 px: 135 comprobaciones sin desborde horizontal, sin objetivos táctiles menores de 44 px, sin textos menores de 14 px y sin los símbolos de la sección 5.2.1.
+- Revisión vigente: frontend con 228 pruebas, lint, formato, build y Storybook; backend con 105 pruebas (incluidas las de integración con PostgreSQL real).
+- Papel cálido (`paper-warm`) aplicado en el sitio público, Login y los estados del sistema independientes.
+- Dependencia nueva: `uqr` (MIT, sin dependencias) para dibujar el código QR de la verificación en dos pasos en el propio dispositivo.
+
+### 14.2 Fuera del alcance del rediseño
+
+- Mejoras que requieren backend: ver la sección "Mejoras detectadas que requieren backend" de [estado actual](../estado-actual.md).
+- Datos y fotos de la barbería: ver "Datos pendientes de la barbería" en el mismo documento.
+
+### 14.3 Pendiente de la fase 6
+
+1. Revisión global con `web-design-guidelines` sobre el código final.
+2. Pruebas E2E de los flujos críticos con Playwright: reservar, atender y cobrar, liquidar comisiones.
+3. Medición de rendimiento (Lighthouse en celular) y revisión de accesibilidad con lector de pantalla.
+4. Prueba de la verificación en dos pasos con un teléfono real.
+5. Decidir si Storybook se mantiene (sección 13).
