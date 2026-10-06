@@ -107,4 +107,80 @@ describe('LoginPage', () => {
     )
     expect(screen.getByLabelText('Usuario')).toHaveValue('owner.demo')
   })
+
+  it('clears only the password after a wrong attempt and puts the cursor there', async () => {
+    vi.mocked(authApi.login).mockRejectedValue(
+      new ApiError({ status: 401, title: 'No autorizado.' }),
+    )
+    const user = userEvent.setup()
+    renderLogin()
+
+    await user.type(screen.getByLabelText('Usuario'), 'owner.demo')
+    await user.type(screen.getByLabelText('Contraseña'), 'Clave-incorrecta!8426')
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Usuario o contraseña incorrectos.')
+    expect(screen.getByLabelText('Usuario')).toHaveValue('owner.demo')
+    expect(screen.getByLabelText('Contraseña')).toHaveValue('')
+    expect(screen.getByLabelText('Contraseña')).toHaveFocus()
+  })
+
+  it('warns when Caps Lock is on while typing the password', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+
+    await user.type(screen.getByLabelText('Contraseña'), '{CapsLock}a')
+    expect(screen.getByText('Bloq Mayús está activado.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Contraseña')).toHaveAccessibleDescription(
+      'Bloq Mayús está activado.',
+    )
+  })
+
+  it('asks for the second factor as its own step and can go back to another account', async () => {
+    vi.mocked(authApi.login)
+      .mockRejectedValueOnce(
+        new ApiError({ status: 401, title: 'Código', code: 'auth.two_factor_required' }),
+      )
+      .mockResolvedValueOnce(undefined)
+    const user = userEvent.setup()
+    renderLogin()
+
+    await user.type(screen.getByLabelText('Usuario'), 'owner.demo')
+    await user.type(screen.getByLabelText('Contraseña'), 'Clave-local!8426')
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Verificación en dos pasos' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    const code = screen.getByLabelText('Código de verificación')
+    expect(code).toHaveAttribute('inputmode', 'numeric')
+    expect(code).toHaveAttribute('autocomplete', 'one-time-code')
+
+    await user.click(screen.getByRole('button', { name: 'Usar un código de recuperación' }))
+    expect(screen.getByLabelText('Código de recuperación')).toHaveAttribute('inputmode', 'text')
+    await user.type(screen.getByLabelText('Código de recuperación'), 'abcd-1234')
+    await user.click(screen.getByRole('button', { name: 'Verificar' }))
+
+    expect(await screen.findByText('Inicio interno')).toBeInTheDocument()
+    expect(authApi.login).toHaveBeenLastCalledWith('owner.demo', 'Clave-local!8426', 'abcd-1234')
+  })
+
+  it('returns to the credentials when choosing another account', async () => {
+    vi.mocked(authApi.login).mockRejectedValue(
+      new ApiError({ status: 401, title: 'Código', code: 'auth.two_factor_required' }),
+    )
+    const user = userEvent.setup()
+    renderLogin()
+
+    await user.type(screen.getByLabelText('Usuario'), 'owner.demo')
+    await user.type(screen.getByLabelText('Contraseña'), 'Clave-local!8426')
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+    await user.click(await screen.findByRole('button', { name: 'Usar otra cuenta' }))
+
+    expect(await screen.findByRole('heading', { name: 'Ingresa a Lou' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Usuario')).toHaveValue('owner.demo')
+    expect(screen.getByLabelText('Contraseña')).toHaveValue('')
+  })
 })

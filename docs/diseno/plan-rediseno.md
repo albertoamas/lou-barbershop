@@ -152,7 +152,7 @@ Se trabajan en este orden, una a la vez, y cada una se cierra (sección 10) ante
 | 9 | Inventario y gastos | 5 | Uso diario de recepción en tablet | ✔ Cerrada |
 | 10 | Comisiones | 5 | Dueño y barberos; liquidaciones | ✔ Cerrada |
 | 11 | Reportes | 5 | Dueño; cifras y gráficos | ✔ Cerrada |
-| 12 | Configuración | 5 | Dueño; se usa solo cuando cambia algo | Pendiente |
+| 12 | Configuración | 5 | Dueño; se usa solo cuando cambia algo | ✔ Cerrada |
 | 13 | Login | 5 | Una pantalla simple; usa la marca y los campos ya hechos | Pendiente |
 | 14 | Seguridad | 5 | Contraseña y verificación en dos pasos | Pendiente |
 | 15 | Estados del sistema | 5 | Sesión expirada, acceso denegado, página no encontrada y error | Pendiente |
@@ -384,7 +384,7 @@ Lista de lo que se rediseña. Sirve como punto de partida del análisis de cada 
 
 | Pantalla | Ruta | Secciones y componentes | Estados |
 |---|---|---|---|
-| Login | `/app/login` | `BrandLockup`; usuario; contraseña con mostrar/ocultar; código de verificación en dos pasos (cuando aplica); botón "Ingresar" | Credenciales inválidas; demasiados intentos; código de verificación requerido; verificando |
+| Login | `/app/login` | Marca en franja negra (celular y tablet) o panel con espacio para foto del local (PC); tarjeta sobre papel cálido; usuario; contraseña con mostrar/ocultar y aviso de Bloq Mayús; botón "Ingresar"; nota para contraseña olvidada; paso aparte de verificación en dos pasos con código de recuperación y "Usar otra cuenta" | Credenciales inválidas (borra solo la contraseña); demasiados intentos; código incorrecto; ingresando o verificando |
 | Sesión expirada | `/app/sesion-expirada` | `SystemStateCard` | Ninguno |
 | Acceso denegado | `/app/acceso-denegado` | `SystemStateCard` | Ninguno |
 | 404 interna | `/app/*` | `SystemStateCard` dentro del shell | Ninguno |
