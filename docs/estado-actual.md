@@ -1,6 +1,6 @@
 # Estado actual de Lou Barbershop
 
-**Fecha de corte:** 19 de septiembre de 2026  
+**Fecha de corte:** 6 de octubre de 2026  
 **Estado local:** `FUNCIONAL Y VALIDADO`  
 **Estado productivo:** `PENDIENTE DE DESPLIEGUE`
 
@@ -11,7 +11,7 @@
 - cambio de contraseña y MFA TOTP con códigos de recuperación; exigencia configurable para dueño;
 - panel por rol, agenda, atención, cobro, comisiones, inventario, gastos, disponibilidad, reportes y configuración;
 - PWA responsive con estados offline y actualización controlada;
-- diseño Tailwind y checkpoints visuales 00–14 aprobados;
+- rediseño visual completo de las 15 pantallas según el [plan de rediseño](diseno/plan-rediseno.md), cerrado el 6 de octubre de 2026;
 - backend Clean Architecture, persistencia PostgreSQL y autorización por rol;
 - Docker local reproducible, migraciones y procedimientos de backup/restauración.
 
@@ -19,16 +19,15 @@
 
 | Control | Resultado |
 |---|---|
-| Backend | 102/102 pruebas |
-| Frontend | 116/116 pruebas |
-| Arquitectura | 5/5 pruebas |
-| Integración y seguridad | 22/22; 20 escenarios con PostgreSQL real |
-| Migraciones | 17 aplicadas; modelo sin cambios pendientes |
+| Backend | 105/105 pruebas (Domain 66, Application 9, Architecture 5, Integration 25) |
+| Frontend | 228/228 pruebas, lint, formato, build y Storybook |
+| Integración y seguridad | 25/25 con PostgreSQL real, incluida la migración repetida con el usuario `lou` |
+| Migraciones | 17 aplicadas; el migrador puede repetirse (historial fijado en `public`) |
 | Docker | DB, API y web saludables; migrador en código 0 |
 | Restauración | backup restaurado con huella idéntica |
 | Dependencias .NET | sin vulnerabilidades conocidas |
 | Imágenes API/web | 0 críticas y 0 altas |
-| Dependencias | NuGet y npm sin vulnerabilidades conocidas reportadas |
+| Dependencias | NuGet sin vulnerabilidades conocidas; npm con una alerta alta en `source-map-js`, dependencia de las herramientas de build (Vite, Tailwind), que no llega al navegador; se corrige con `npm audit fix` |
 
 ## Qué puede probarse
 
@@ -44,7 +43,7 @@ Consulta [páginas, secciones y roles](diseno/paginas-y-roles.md) para el propó
 
 ## Próximos pasos
 
-1. rediseño visual completo según el [plan de rediseño](diseno/plan-rediseno.md);
+1. fase 6 del rediseño: revisión global, pruebas E2E con Playwright, rendimiento y accesibilidad (plan, sección 14.3);
 2. cargar datos reales de la barbería: servicios, precios, barberos, horarios y comisiones;
 3. desplegar en un servidor (VPS recomendado: Compose y Caddy ya cubren HTTPS) con backups externos;
 4. piloto de dos semanas en paralelo al sistema actual, conciliando la caja diaria.
@@ -61,7 +60,10 @@ Surgieron en el rediseño y quedan fuera de su alcance (plan, sección 1):
 - ver el total calculado por el servidor mientras se elige el consumo, antes de guardarlo.
 - recordatorio automático por WhatsApp antes de la cita;
 - ausencias que se repiten (por ejemplo, todos los lunes en la tarde);
-- saludar por el nombre real en el inicio ("Buenas tardes, Lucía"): la sesión solo devuelve el usuario técnico.
+- saludar por el nombre real en el inicio ("Buenas tardes, Lucía"): la sesión solo devuelve el usuario técnico;
+- nombrar al barbero o al cliente en la pestaña Actividad de Reportes ("cerró la liquidación de Diego"): el registro solo guarda identificadores;
+- distinguir servicios y productos dentro de una liquidación: el detalle no trae el tipo de cada comisión;
+- verificar con datos reales que se pueda cargar un precio nuevo cuando el barbero ya tiene uno vigente para ese servicio.
 
 ## Datos pendientes de la barbería
 
